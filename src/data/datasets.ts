@@ -1,0 +1,271 @@
+import { DemandResult } from "../types";
+
+export const tiktokDataset: DemandResult[] = [
+  {
+    id: 'tk1',
+    platform: 'TikTok',
+    content: 'Searching for a reliable SEO agency that specifically works with SaaS startups. Any recommendations? #saas #seo #marketing',
+    views: '35K',
+    likes: '2K',
+    hashtags: ['#saas', '#seo', '#marketing'],
+    location: 'San Francisco, CA',
+    contactStatus: 'Verified Lead',
+    time: 'Jan 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=saas+seo+agency'
+  },
+  {
+    id: 'tk2',
+    platform: 'TikTok',
+    content: 'Does anyone know a personal trainer in London who specializes in weightlifting for beginners? #londonfitness #personaltrainer',
+    views: '489K',
+    likes: '141K',
+    hashtags: ['#london', '#fitness', '#weightlifting'],
+    location: 'London, UK',
+    contactStatus: 'Hot Prospect',
+    time: 'Feb 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=london+personal+trainer'
+  },
+  {
+    id: 'tk3',
+    platform: 'TikTok',
+    content: 'Looking for a destination wedding photographer for Italy 2026! Must have experience with Lake Como. #weddingphotographer #lakecomo',
+    views: '206K',
+    likes: '64K',
+    hashtags: ['#wedding', '#italy', '#photographer'],
+    location: 'Global / Italy',
+    contactStatus: 'Verified Lead',
+    time: 'Mar 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=lake+como+wedding+photographer'
+  },
+  {
+    id: 'tk4',
+    platform: 'TikTok',
+    content: 'Need help finding a modern interior designer for my new condo. Minimalist vibes only! #interiordesign #minimalism',
+    views: '38K',
+    likes: '8K',
+    hashtags: ['#interiordesign', '#minimalist'],
+    location: 'New York, NY',
+    contactStatus: 'Verified Lead',
+    time: 'Apr 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=minimalist+interior+designer+nyc'
+  },
+  {
+    id: 'tk_realestate',
+    platform: 'TikTok',
+    content: 'Thinking about moving to Austin. Who is the best local realtor to talk to? #austinrealestate #movingtoaustin',
+    views: '12K',
+    likes: '1.2K',
+    hashtags: ['#realestate', '#austin', '#realtor'],
+    location: 'Austin, TX',
+    contactStatus: 'Hot Prospect',
+    time: 'May 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=austin+realtor'
+  },
+  {
+    id: 'tk_crypto',
+    platform: 'TikTok',
+    content: 'Looking for a professional crypto tax consultant. This tax season is going to be wild. #crypto #taxes #finance',
+    views: '88K',
+    likes: '15K',
+    hashtags: ['#crypto', '#taxes', '#finance'],
+    location: 'Remote / Global',
+    contactStatus: 'Verified Lead',
+    time: 'Jan 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=crypto+tax+consultant'
+  },
+  {
+    id: 'tk_coffee',
+    platform: 'TikTok',
+    content: 'Searching for the best specialty coffee roasters who ship to the US. I need that fresh bean fix! #coffee #espresso #roastery',
+    views: '42K',
+    likes: '6K',
+    hashtags: ['#coffee', '#espresso', '#roastery'],
+    location: 'USA',
+    contactStatus: 'Verified Lead',
+    time: 'Mar 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=specialty+coffee+roasters'
+  },
+  {
+    id: 'tk_gardening',
+    platform: 'TikTok',
+    content: 'I need a landscape architect for my backyard renovation in Seattle. Looking for sustainable designs! #gardening #landscaping',
+    views: '15K',
+    likes: '1.2K',
+    hashtags: ['#gardening', '#landscaping', '#seattle'],
+    location: 'Seattle, WA',
+    contactStatus: 'Hot Prospect',
+    time: 'Apr 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=seattle+landscape+architect'
+  },
+  {
+    id: 'tk_ai',
+    platform: 'TikTok',
+    content: 'Who knows a developer who can build a custom AI chatbot for customer support? No-code or low-code preferred. #ai #automation #dev',
+    views: '55K',
+    likes: '9K',
+    hashtags: ['#ai', '#automation', '#developer'],
+    location: 'Global',
+    contactStatus: 'Verified Lead',
+    time: 'May 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=ai+chatbot+developer'
+  },
+  {
+    id: 'tk_ecommerce',
+    platform: 'TikTok',
+    content: 'Need a recommendation for a high-converting Shopify theme specifically for jewelry brands. #shopify #ecommerce #biz',
+    views: '22K',
+    likes: '3.1K',
+    hashtags: ['#shopify', '#ecommerce', '#jewelry'],
+    location: 'New York, NY',
+    contactStatus: 'Verified Lead',
+    time: 'Feb 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=shopify+jewelry+theme'
+  },
+  {
+    id: 'tk_saas_2',
+    platform: 'TikTok',
+    content: 'Looking for an outsourced SDR team for a B2B SaaS startup. Must be US-based! #saas #sales #sdr',
+    views: '18K',
+    likes: '1.5K',
+    hashtags: ['#saas', '#sales', '#sdr'],
+    location: 'Austin, TX',
+    contactStatus: 'Hot Prospect',
+    time: 'Mar 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=saas+sdr+team'
+  },
+  {
+    id: 'tk_legal_3',
+    platform: 'TikTok',
+    content: 'Any lawyers here who specialize in creator economy contracts? I need a review ASAP. #lawyer #creatoreconomy #legal',
+    views: '65K',
+    likes: '12K',
+    hashtags: ['#lawyer', '#creator', '#legal'],
+    location: 'Los Angeles, CA',
+    contactStatus: 'Verified Lead',
+    time: 'May 2026',
+    sourceUrl: 'https://www.tiktok.com/search?q=creator+economy+lawyer'
+  }
+];
+
+export const instagramDataset: DemandResult[] = [
+  {
+    id: 'ig_roofing',
+    platform: 'Instagram',
+    content: 'Any recommendations for a local roofing contractor? Need a full inspection after the storm. #roofing #repair #homemaintenance',
+    views: '5.2K',
+    likes: '340',
+    hashtags: ['#roofing', '#repair', '#home'],
+    location: 'Miami, FL',
+    contactStatus: 'Verified Lead',
+    time: 'Jan 2026',
+    sourceUrl: 'https://www.instagram.com/explore/tags/miamiroofing/'
+  },
+  {
+    id: 'ig_hvac',
+    platform: 'Instagram',
+    content: 'My AC just died in the middle of this heatwave! Need a reliable HVAC tech in Phoenix ASAP. #hvac #phoenix #emergency',
+    views: '3.1K',
+    likes: '200',
+    hashtags: ['#hvac', '#phoenix', '#repair'],
+    location: 'Phoenix, AZ',
+    contactStatus: 'Verified Lead',
+    time: 'Feb 2026',
+    sourceUrl: 'https://www.instagram.com/explore/tags/phoenixhvac/'
+  },
+  {
+    id: 'ig_painting',
+    platform: 'Instagram',
+    content: 'Looking for a professional painter for my new studio. I want someone who knows how to handle textured walls. #painting #interiordesign',
+    views: '6.7K',
+    likes: '450',
+    hashtags: ['#painting', '#decor', '#studio'],
+    location: 'Boston, MA',
+    contactStatus: 'Hot Prospect',
+    time: 'Mar 2026',
+    sourceUrl: 'https://www.instagram.com/explore/tags/bostonpainter/'
+  },
+  {
+    id: 'ig_pet_sitting',
+    platform: 'Instagram',
+    content: 'Need a trusted pet sitter for my two golden retrievers while I am away next week. #petsitting #dogs #atlanta',
+    views: '2.5K',
+    likes: '180',
+    hashtags: ['#pet', '#dogs', '#atlanta'],
+    location: 'Atlanta, GA',
+    contactStatus: 'Verified Lead',
+    time: 'Apr 2026',
+    sourceUrl: 'https://www.instagram.com/explore/tags/atlantapetsitting/'
+  },
+  {
+    id: 'ig_marketing_2',
+    platform: 'Instagram',
+    content: 'Does anyone have a contact for a high-end social media manager for luxury travel? #marketing #travel #luxury',
+    views: '11K',
+    likes: '1.2K',
+    hashtags: ['#luxury', '#travel', '#marketing'],
+    location: 'New York, NY',
+    contactStatus: 'Hot Prospect',
+    time: 'May 2026',
+    sourceUrl: 'https://www.instagram.com/explore/tags/luxurytravelmarketing/'
+  },
+  {
+    id: 'ig_fitness_2',
+    platform: 'Instagram',
+    content: 'Looking for organic meal prep services in San Francisco. Must be gluten-free! #mealprep #organic #fitness',
+    views: '4.8K',
+    likes: '310',
+    hashtags: ['#fitness', '#mealprep', '#organic'],
+    location: 'San Francisco, CA',
+    contactStatus: 'Verified Lead',
+    time: 'Feb 2026',
+    sourceUrl: 'https://www.instagram.com/explore/tags/sfmealprep/'
+  },
+  {
+    id: 'ig_legal_2',
+    platform: 'Instagram',
+    content: 'Looking for a firm that specializes in Web3 legal compliance. Anyone with experience? #web3 #legal #crypto',
+    views: '2.9K',
+    likes: '150',
+    hashtags: ['#web3', '#legal', '#crypto'],
+    location: 'London, UK',
+    contactStatus: 'Hot Prospect',
+    time: 'May 2026',
+    sourceUrl: 'https://www.instagram.com/explore/tags/web3legal/'
+  },
+  {
+    id: 'ig_design_2',
+    platform: 'Instagram',
+    content: 'I need a brand identity designer for a new organic skincare line. Minimalist and earth-toned! #design #skincare #branding',
+    views: '15K',
+    likes: '2.2K',
+    hashtags: ['#branding', '#skincare', '#design'],
+    location: 'Miami, FL',
+    contactStatus: 'Verified Lead',
+    time: 'Jan 2026',
+    sourceUrl: 'https://www.instagram.com/explore/tags/skincarebranding/'
+  },
+  {
+    id: 'ig_realtor_2',
+    platform: 'Instagram',
+    content: 'Searching for a luxury real estate agent in Aspen for a winter home. #aspen #realestate #luxury',
+    views: '33K',
+    likes: '5K',
+    hashtags: ['#aspen', '#realestate', '#luxury'],
+    location: 'Aspen, CO',
+    contactStatus: 'Hot Prospect',
+    time: 'Feb 2026',
+    sourceUrl: 'https://www.instagram.com/explore/tags/aspenrealestate/'
+  },
+  {
+    id: 'ig_marketing_3',
+    platform: 'Instagram',
+    content: 'Who is the BEST performance marketer for Meta ads? My ROAS is tanking. #facebookads #marketing #roas',
+    views: '9K',
+    likes: '800',
+    hashtags: ['#facebookads', '#marketing', '#meta'],
+    location: 'Global',
+    contactStatus: 'Verified Lead',
+    time: 'Apr 2026',
+    sourceUrl: 'https://www.instagram.com/explore/tags/performancemarketing/'
+  }
+];
