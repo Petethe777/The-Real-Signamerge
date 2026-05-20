@@ -34,6 +34,7 @@ import { searchSocialMedia } from "@/services/geminiService";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { AnimatePresence } from "motion/react";
+import { TermsModal } from "./TermsModal";
 
 const PlatformIcon = ({ platform }: { platform: DemandResult['platform'] }) => {
   switch (platform) {
@@ -591,6 +592,7 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
   useEffect(() => {
     const checkProfile = async () => {
@@ -772,7 +774,13 @@ export default function Dashboard() {
                 </Button>
 
                 <p className="text-center text-[10px] font-bold text-gray-400">
-                  Terms and Conditions Apply
+                  <button 
+                    type="button" 
+                    onClick={() => setIsTermsModalOpen(true)}
+                    className="hover:text-primary underline cursor-pointer focus:outline-none transition-colors"
+                  >
+                    Terms and Conditions Apply
+                  </button>
                 </p>
               </div>
             )}
@@ -967,7 +975,7 @@ export default function Dashboard() {
     );
   }
 
-  if (isAuthLoading || isProfileLoading || isScanning) {
+  if (isAuthLoading || isProfileLoading) {
     return (
       <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6 text-center">
         <motion.div 
@@ -1170,7 +1178,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filteredResults.length > 0 ? (
+                {filteredResults.length > 0 && !isScanning ? (
                   filteredResults.map((result, idx) => (
                     <motion.tr 
                       key={result.id} 
@@ -1248,16 +1256,26 @@ export default function Dashboard() {
                   <tr>
                     <td colSpan={6} className="px-8 py-32 text-center">
                        <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex flex-col items-center gap-4"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex flex-col items-center gap-6 justify-center"
                        >
-                         <div className="w-20 h-20 bg-gray-50 border border-gray-100 rounded-[2rem] flex items-center justify-center mb-2">
-                           <Search className="w-8 h-8 text-gray-200" />
+                         {/* High-fidelity orange line loader */}
+                         <div className="w-64 h-1.5 bg-orange-50 border border-orange-100/30 rounded-full overflow-hidden relative mx-auto">
+                           <motion.div 
+                             className="absolute top-0 bottom-0 bg-primary rounded-full animate-progress"
+                             initial={{ left: "-45%", width: "45%" }}
+                             animate={{ left: "100%", width: ["45%", "35%", "45%"] }}
+                             transition={{ 
+                               duration: 1.6, 
+                               repeat: Infinity, 
+                               ease: "easeInOut" 
+                             }}
+                           />
                          </div>
-                         <h3 className="text-sm font-black text-[#111] uppercase tracking-[0.2em]">Zero Social Signals</h3>
-                         <p className="text-gray-400 text-xs font-bold max-w-xs mx-auto leading-relaxed">
-                           No discovery records matched your query in the 2026 social archive. Try adjusting your signals for better intelligence discovery.
+                         <p className="text-gray-400 text-xs font-black max-w-md mx-auto leading-relaxed uppercase tracking-[0.1em] text-center">
+                           Begin audit process to get your own customer search engine built for better results.
                          </p>
                        </motion.div>
                     </td>
@@ -1324,8 +1342,13 @@ export default function Dashboard() {
           <span className="text-primary flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" /> System Online
           </span>
-          <span className="hover:text-primary cursor-pointer transition-colors">Privacy</span>
-          <span className="hover:text-primary cursor-pointer transition-colors">Terms</span>
+          <button 
+            type="button"
+            onClick={() => setIsTermsModalOpen(true)}
+            className="hover:text-primary cursor-pointer transition-colors focus:outline-none font-bold text-[10px] uppercase tracking-[0.2em]"
+          >
+            Terms
+          </button>
         </div>
       </footer>
 
@@ -1450,6 +1473,8 @@ export default function Dashboard() {
           </div>
         )}
       </AnimatePresence>
+
+      <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
     </div>
   );
 }

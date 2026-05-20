@@ -1,9 +1,11 @@
+import React, { useState } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { Footer } from "@/components/Footer";
 import { OrangeDots } from "@/components/ui/OrangeDots";
 import { Globe } from "@/components/Globe";
 import { AboutCarousel } from "@/components/AboutCarousel";
 import { Logo } from "@/components/Logo";
+import { TermsModal } from "@/components/TermsModal";
 
 const timelineEvents = [
   {
@@ -33,6 +35,7 @@ const timelineEvents = [
 ];
 
 export default function AboutPage() {
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const { scrollYProgress } = useScroll();
 
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
@@ -193,7 +196,8 @@ export default function AboutPage() {
       </section>
     </main>
 
-    <Footer />
+    <Footer onTermsClick={() => setIsTermsModalOpen(true)} />
+    <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
     </div>
   );
 }

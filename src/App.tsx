@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import AboutPage from "@/app/about/page";
 import Dashboard from "@/components/Dashboard";
+import { TermsModal } from "@/components/TermsModal";
 
 const testimonials = [
   { name: "Chris B.", role: "Freelancer", text: "Went from struggling to find clients to having a waitlist. Unreal results.", initials: "CB" },
@@ -37,6 +38,7 @@ function HomePage() {
   const [searchValue, setSearchValue] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const phrases = [
@@ -192,12 +194,19 @@ function HomePage() {
       {/* Footer */}
       <footer className="max-w-7xl mx-auto px-12 py-8 mt-auto border-t border-[#E5E7EB] flex justify-between items-center text-[11px] font-medium text-[#9CA3AF] uppercase tracking-wider">
         <div>© 2026 Signalmerge</div>
-        <div className="flex gap-6">
-          <span>Privacy</span>
-          <span>Terms</span>
+        <div className="flex gap-6 items-center">
+          <button 
+            type="button" 
+            onClick={() => setIsTermsModalOpen(true)}
+            className="hover:text-primary cursor-pointer transition-colors focus:outline-none uppercase"
+          >
+            Terms
+          </button>
           <span>Support</span>
         </div>
       </footer>
+
+      <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
     </div>
   );
 }
