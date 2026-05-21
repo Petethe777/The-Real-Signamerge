@@ -1,14 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_CONFIG } from '../supabase-config/keys';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const rawUrl = SUPABASE_CONFIG.supabaseUrl || '';
+const rawAnonKey = SUPABASE_CONFIG.supabaseAnonKey || '';
 
-export const isSupabaseConfigured = !!(supabaseUrl && supabaseUrl.startsWith('http') && supabaseAnonKey);
+// Ensure we have a valid URL and is not a generic placeholder
+export const isSupabaseConfigured = !!(
+  rawUrl && 
+  rawUrl.startsWith('http') && 
+  !rawUrl.includes('your-project-url') &&
+  rawAnonKey && 
+  !rawAnonKey.includes('your-anon-key-here')
+);
+
+const supabaseUrl = isSupabaseConfigured ? rawUrl : '';
+const supabaseAnonKey = isSupabaseConfigured ? rawAnonKey : '';
 
 if (isSupabaseConfigured) {
   console.log('Supabase initialized with URL:', supabaseUrl.substring(0, 10) + '...');
 } else {
-  console.warn('Supabase configuration missing or invalid URL');
+  console.warn('Supabase configuration missing or invalid URL placeholders detected');
 }
 
 // If keys are missing, we still want to avoid crashing the app on load.
