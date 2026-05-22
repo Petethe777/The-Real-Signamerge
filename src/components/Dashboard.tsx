@@ -37,7 +37,7 @@ import { DemandResult } from "@/types";
 import { tiktokDataset, instagramDataset } from "@/data/datasets";
 import { mockClients } from "@/data/mockClients";
 import { searchSocialMedia } from "@/services/geminiService";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured, saveSearchQuery } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { AnimatePresence } from "motion/react";
 import { TermsModal } from "./TermsModal";
@@ -275,6 +275,10 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   const handleLocalSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!innerSearchValue.trim()) return;
+    
+    // Save inner keyword search to Supabase
+    saveSearchQuery(innerSearchValue, session?.user?.email);
+    
     setIsSearchingTransition(true);
     setTimeout(() => {
       setActiveQuery(innerSearchValue);
@@ -1181,6 +1185,9 @@ export default function Dashboard() {
         setError(null);
         return;
       }
+      
+      // Save query input to Supabase
+      saveSearchQuery(query, session?.user?.email);
       
       setIsLoading(true);
       setError(null);

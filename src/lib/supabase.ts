@@ -82,7 +82,13 @@ const saveMockProfiles = (profiles: any[]) => {
 };
 
 const createQueryBuilder = (tableName: string) => {
-  let profiles = getMockProfiles();
+  let profiles = tableName === 'profiles' ? getMockProfiles() : [];
+  if (tableName !== 'profiles') {
+    const listData = localStorage.getItem(`mock_${tableName}`) || '[]';
+    try {
+      profiles = JSON.parse(listData);
+    } catch (e) {}
+  }
   
   const builder = {
     select: (cols?: string) => {
@@ -103,28 +109,64 @@ const createQueryBuilder = (tableName: string) => {
     maybeSingle: () => {
       return Promise.resolve({ data: profiles[0] || null, error: null });
     },
+    insert: (fields: any) => {
+      const listData = localStorage.getItem(`mock_${tableName}`) || '[]';
+      let items: any[] = [];
+      try {
+        items = JSON.parse(listData);
+      } catch (e) {}
+      
+      const newItems = Array.isArray(fields) ? fields : [fields];
+      items.push(...newItems);
+      localStorage.setItem(`mock_${tableName}`, JSON.stringify(items));
+      return Promise.resolve({ error: null });
+    },
     update: (fields: any) => {
       return {
         eq: (colName: string, val: any) => {
-          const all = getMockProfiles();
-          const index = all.findIndex((p: any) => p[colName] === val);
-          if (index !== -1) {
-            all[index] = { ...all[index], ...fields };
-            saveMockProfiles(all);
+          if (tableName === 'profiles') {
+            const all = getMockProfiles();
+            const index = all.findIndex((p: any) => p[colName] === val);
+            if (index !== -1) {
+              all[index] = { ...all[index], ...fields };
+              saveMockProfiles(all);
+            }
+          } else {
+            const listData = localStorage.getItem(`mock_${tableName}`) || '[]';
+            let items: any[] = [];
+            try { items = JSON.parse(listData); } catch (e) {}
+            const index = items.findIndex((item: any) => item[colName] === val);
+            if (index !== -1) {
+              items[index] = { ...items[index], ...fields };
+              localStorage.setItem(`mock_${tableName}`, JSON.stringify(items));
+            }
           }
           return Promise.resolve({ error: null });
         }
       };
     },
     upsert: (fields: any) => {
-      const all = getMockProfiles();
-      const index = all.findIndex((p: any) => p.id === fields.id);
-      if (index !== -1) {
-        all[index] = { ...all[index], ...fields };
+      if (tableName === 'profiles') {
+        const all = getMockProfiles();
+        const index = all.findIndex((p: any) => p.id === fields.id);
+        if (index !== -1) {
+          all[index] = { ...all[index], ...fields };
+        } else {
+          all.push(fields);
+        }
+        saveMockProfiles(all);
       } else {
-        all.push(fields);
+        const listData = localStorage.getItem(`mock_${tableName}`) || '[]';
+        let items: any[] = [];
+        try { items = JSON.parse(listData); } catch (e) {}
+        const index = items.findIndex((item: any) => item.id === fields.id);
+        if (index !== -1) {
+          items[index] = { ...items[index], ...fields };
+        } else {
+          items.push(fields);
+        }
+        localStorage.setItem(`mock_${tableName}`, JSON.stringify(items));
       }
-      saveMockProfiles(all);
       return Promise.resolve({ error: null });
     },
     then: (resolve: any) => {
@@ -295,12 +337,94 @@ export const supabase = {
   },
 
   from: (tableName: string) => {
-    if (useMockEngine()) {
-      return createQueryBuilder(tableName);
-    }
-    if (realClient) {
+    const isMock = useMockEngine();
+    
+    // If NOT in mock sandbox mode, query real Supabase directly
+    if (!isMock && realClient) {
       return realClient.from(tableName);
     }
-    return createQueryBuilder(tableName);
+    
+    // If in sandbox/mock session, return the mock builder
+    const mockBuilder = createQueryBuilder(tableName);
+    
+    // BUT if realClient is ALSO configured (meaning it's active in the background),
+    // replicate ALL write operations (inserts, updates, upserts) to the real database as well!
+    if (realClient) {
+      return {
+        ...mockBuilder,
+        insert: (fields: any) => {
+          // Dual-write to real Supabase
+          (async () => {
+            try {
+              const { error } = await realClient.from(tableName).insert(fields);
+              if (error) console.warn(`[Supabase Hybrid] Background insert to "${tableName}" failed:`, error.message);
+            } catch (err) {
+              console.warn(`[Supabase Hybrid] Background insert exception for "${tableName}":`, err);
+            }
+          })();
+          // Perform standard local storage write
+          return mockBuilder.insert(fields);
+        },
+        upsert: (fields: any) => {
+          // Dual-write to real Supabase
+          (async () => {
+            try {
+              const { error } = await realClient.from(tableName).upsert(fields);
+              if (error) console.warn(`[Supabase Hybrid] Background upsert to "${tableName}" failed:`, error.message);
+            } catch (err) {
+              console.warn(`[Supabase Hybrid] Background upsert exception for "${tableName}":`, err);
+            }
+          })();
+          // Perform standard local storage write
+          return mockBuilder.upsert(fields);
+        },
+        update: (fields: any) => {
+          const mockUpdate = mockBuilder.update(fields);
+          return {
+            eq: (colName: string, val: any) => {
+              // Dual-write to real Supabase
+              (async () => {
+                try {
+                  const { error } = await realClient.from(tableName).update(fields).eq(colName, val);
+                  if (error) console.warn(`[Supabase Hybrid] Background update to "${tableName}" failed:`, error.message);
+                } catch (err) {
+                  console.warn(`[Supabase Hybrid] Background update exception for "${tableName}":`, err);
+                }
+              })();
+              // Perform standard local storage write
+              return mockUpdate.eq(colName, val);
+            }
+          };
+        }
+      };
+    }
+    
+    return mockBuilder;
   }
 } as any;
+
+/**
+ * Helper to save search queries into Supabase (and mock LocalStorage) dynamically.
+ */
+export const saveSearchQuery = async (queryText: string, userEmail?: string) => {
+  const cleanQuery = queryText ? queryText.trim() : "";
+  if (!cleanQuery) return;
+  
+  try {
+    const { error } = await supabase
+      .from('search_queries')
+      .insert({
+        query: cleanQuery,
+        user_email: userEmail || 'anonymous',
+        created_at: new Date().toISOString()
+      });
+      
+    if (error) {
+      console.warn(`Could not save search query "${cleanQuery}" to Supabase:`, error);
+    } else {
+      console.log(`Successfully saved search query: "${cleanQuery}"`);
+    }
+  } catch (err) {
+    console.warn("Exception in saveSearchQuery:", err);
+  }
+};

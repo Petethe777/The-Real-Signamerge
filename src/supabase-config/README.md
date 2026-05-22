@@ -34,9 +34,67 @@ export const SUPABASE_CONFIG = {
 
 ## 🛠️ Required Supabase Database Schema
 
-To make sure the website connects and functions correctly, ensure that you have configured the following tables/policies in your new Supabase project:
+To make sure the website connects and functions correctly on external hosting, open the **SQL Editor** in your Supabase project dashboard and run the following queries to create the necessary tables and structure:
 
-1. **Email Auths**: Go to Authentication in Supabase, make sure **Email provider** is enabled.
-2. **Users / Profiles (if applicable)**: A clean connection schema for handling session logins.
+### 1. `profiles` Table
+This table holds user business credentials and answers gathered during the Customer Audit Process.
+
+```sql
+-- Create the profiles table
+create table public.profiles (
+  id uuid references auth.users on delete cascade primary key,
+  email text not null,
+  company_name text,
+  location text,
+  socials jsonb default '{}'::jsonb,
+  customer_phrases jsonb default '[]'::jsonb,
+  customer_keywords jsonb default '[]'::jsonb,
+  usp text,
+  selling_region jsonb default '{}'::jsonb,
+  audit_completed boolean default false,
+  is_approved boolean default false,
+  updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- Enable Row Level Security (RLS)
+alter table public.profiles enable row level security;
+
+-- Policies to allow read/write operations (disable/adjust as needed according to security standards)
+create policy "Allow public profiles read access" 
+  on public.profiles for select 
+  using (true);
+
+create policy "Allow users to upsert their own profile" 
+  on public.profiles for all 
+  using (auth.uid() = id)
+  with check (auth.uid() = id);
+```
+
+### 2. `search_queries` Table
+This table is populated with every query entered into the top navigation search engine and the dashboard’s keyword search.
+
+```sql
+-- Create the search queries tracker table
+create table public.search_queries (
+  id bigint generated always as identity primary key,
+  query text not null,
+  user_email text default 'anonymous'::text,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- Enable Row Level Security (RLS)
+alter table public.search_queries enable row level security;
+
+-- Policies
+create policy "Allow inserts to search_queries" 
+  on public.search_queries for insert 
+  with check (true);
+
+create policy "Allow select access for admins or authenticated users" 
+  on public.search_queries for select 
+  using (true);
+```
+
+---
 
 All files (including the main dashboard router) now load credentials exclusively from this new folder dynamically, making cross-platform transfers smooth and frictionless.
