@@ -852,127 +852,148 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
               </div>
             </div>
 
-            {/* Keyword Search Field */}
-            <form onSubmit={handleLocalSearch} className="relative w-full max-w-2xl mx-auto">
-              <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-2xl p-2.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all shadow-sm">
-                <Search className="w-5 h-5 text-gray-400 ml-3" />
-                <Input 
-                  value={innerSearchValue}
-                  onChange={(e) => setInnerSearchValue(e.target.value)}
-                  placeholder="Enter custom keywords (e.g. 'n8n tools', 'need figma designer', 'fitness coach')..."
-                  className="border-none shadow-none focus-visible:ring-0 text-sm bg-transparent pl-3 pr-2 h-10 w-full font-bold placeholder:font-medium placeholder:text-gray-400"
-                />
-                <Button 
-                  type="submit" 
-                  disabled={isLoadingResults || isSearchingTransition} 
-                  className="h-10 px-6 rounded-xl bg-primary hover:bg-orange-600 text-white text-xs font-black uppercase tracking-wider gap-2 shadow-md shadow-orange-500/20"
-                >
-                  {isLoadingResults || isSearchingTransition ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>Run Agents <Zap className="w-3.5 h-3.5 fill-white" /></>
-                  )}
-                </Button>
-              </div>
-              <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-3">
-                {activeQuery ? `Currently searching: "${activeQuery}"` : `Default matching workspace keyword: "${userKeywords[0] || 'leads'}"`}
-              </p>
-            </form>
+            {/* Locked Content Container */}
+            <div className="relative">
+              {!isAdmin && (
+                <div className="absolute inset-x-0 bottom-0 top-0 z-10 flex flex-col items-center justify-center p-6 bg-white/20 backdrop-blur-[6px] select-none pointer-events-none">
+                  <div className="text-center max-w-md mx-auto bg-white border border-orange-100/80 shadow-2xl rounded-[2rem] p-8 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200 pointer-events-auto">
+                    <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center shadow-inner relative animate-pulse">
+                      <Lock className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-black text-[#111] tracking-tight">Intent Search Engine Secured</h4>
+                      <p className="text-[11px] text-gray-500 font-semibold leading-relaxed">
+                        The Intent Search Engine is locked. Non-admin users must wait for system administrator approval. Please contact Pete Mkhize for authorized workspace activation.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-            {/* Live Search Table View */}
-            <div className="border border-gray-100 rounded-[2rem] overflow-hidden bg-gray-50/20">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[1000px]">
-                  <thead>
-                    <tr className="border-b border-gray-100 bg-gray-100/30 text-[11px] font-black text-gray-400 uppercase tracking-wider">
-                      <th className="px-8 py-5">Platform</th>
-                      <th className="px-8 py-5">Demand Content & Intent</th>
-                      <th className="px-8 py-5">Location</th>
-                      <th className="px-8 py-5">Contact Status</th>
-                      <th className="px-8 py-5">Time</th>
-                      {isAdmin && <th className="px-8 py-5 text-right whitespace-nowrap">Source Profile</th>}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50 bg-white">
-                    {filteredResults.length > 0 && !isSearchingTransition ? (
-                      filteredResults.map((result, idx) => (
-                        <motion.tr 
-                          key={result.id} 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.02 }}
-                          className="hover:bg-orange-50/5 transition-colors group"
-                        >
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-2">
-                              <PlatformIcon platform={result.platform} />
-                              <div className="bg-gray-100 border border-gray-200 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg text-gray-400">
-                                {result.platform}
+              <div className={`space-y-6 ${!isAdmin ? 'blur-md pointer-events-none select-none filter' : ''}`}>
+                {/* Keyword Search Field */}
+                <form onSubmit={handleLocalSearch} className="relative w-full max-w-2xl mx-auto">
+                  <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-2xl p-2.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all shadow-sm">
+                    <Search className="w-5 h-5 text-gray-400 ml-3" />
+                    <Input 
+                      value={innerSearchValue}
+                      onChange={(e) => setInnerSearchValue(e.target.value)}
+                      placeholder="Enter custom keywords (e.g. 'n8n tools', 'need figma designer', 'fitness coach')..."
+                      className="border-none shadow-none focus-visible:ring-0 text-sm bg-transparent pl-3 pr-2 h-10 w-full font-bold placeholder:font-medium placeholder:text-gray-400"
+                    />
+                    <Button 
+                      type="submit" 
+                      disabled={isLoadingResults || isSearchingTransition} 
+                      className="h-10 px-6 rounded-xl bg-primary hover:bg-orange-600 text-white text-xs font-black uppercase tracking-wider gap-2 shadow-md shadow-orange-500/20"
+                    >
+                      {isLoadingResults || isSearchingTransition ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>Run Agents <Zap className="w-3.5 h-3.5 fill-white" /></>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-3">
+                    {activeQuery ? `Currently searching: "${activeQuery}"` : `Default matching workspace keyword: "${userKeywords[0] || 'leads'}"`}
+                  </p>
+                </form>
+
+                {/* Live Search Table View */}
+                <div className="border border-gray-100 rounded-[2rem] overflow-hidden bg-gray-50/20">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[1000px]">
+                      <thead>
+                        <tr className="border-b border-gray-100 bg-gray-100/30 text-[11px] font-black text-gray-400 uppercase tracking-wider">
+                          <th className="px-8 py-5">Platform</th>
+                          <th className="px-8 py-5">Demand Content & Intent</th>
+                          <th className="px-8 py-5">Location</th>
+                          <th className="px-8 py-5">Contact Status</th>
+                          <th className="px-8 py-5">Time</th>
+                          {isAdmin && <th className="px-8 py-5 text-right whitespace-nowrap">Source Profile</th>}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 bg-white">
+                        {filteredResults.length > 0 && !isSearchingTransition ? (
+                          filteredResults.map((result, idx) => (
+                            <motion.tr 
+                              key={result.id} 
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: idx * 0.02 }}
+                              className="hover:bg-orange-50/5 transition-colors group"
+                            >
+                              <td className="px-8 py-6">
+                                <div className="flex items-center gap-2">
+                                  <PlatformIcon platform={result.platform} />
+                                  <div className="bg-gray-100 border border-gray-200 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg text-gray-400">
+                                    {result.platform}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-8 py-6 max-w-md">
+                                <p className="text-sm font-bold text-[#111] mb-2 line-clamp-2 leading-relaxed">
+                                  {result.content}
+                                </p>
+                                <div className="flex items-center gap-4 text-[10px] font-bold text-gray-400">
+                                  <span className="flex items-center gap-1">
+                                    <Eye className="w-3 h-3" /> {result.views}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Heart className="w-3 h-3" /> {result.likes}
+                                  </span>
+                                  <div className="flex gap-1">
+                                    {result.hashtags && result.hashtags.map(tag => (
+                                      <span key={tag} className="text-primary font-bold">{tag}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-8 py-6">
+                                <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                                  <Globe className="w-3.5 h-3.5 text-gray-400" />
+                                  {result.location}
+                                </div>
+                              </td>
+                              <td className="px-8 py-6">
+                                <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50/50 px-3 py-1 rounded-full w-fit">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  {result.contactStatus}
+                                </div>
+                              </td>
+                              <td className="px-8 py-6">
+                                <span className="text-xs font-bold text-gray-400">
+                                  {result.time}
+                                </span>
+                              </td>
+                              {isAdmin && (
+                                <td className="px-8 py-6 text-right">
+                                  {/* Fully Unlocked external URLs for Premium Users */}
+                                  <a 
+                                    href={result.sourceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center rounded-xl border border-primary/25 bg-orange-50 text-primary hover:bg-primary hover:text-white transition-all gap-2 text-[10px] font-black uppercase px-4 py-2 transform hover:scale-[1.03]"
+                                  >
+                                    Open Source <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                </td>
+                              )}
+                            </motion.tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={isAdmin ? 6 : 5} className="px-8 py-24 text-center">
+                              <div className="flex flex-col items-center gap-4">
+                                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                                <p className="text-gray-400 text-xs font-black uppercase tracking-[0.1em]">AI Crawling Intent Databases...</p>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-8 py-6 max-w-md">
-                            <p className="text-sm font-bold text-[#111] mb-2 line-clamp-2 leading-relaxed">
-                              {result.content}
-                            </p>
-                            <div className="flex items-center gap-4 text-[10px] font-bold text-gray-400">
-                              <span className="flex items-center gap-1">
-                                <Eye className="w-3 h-3" /> {result.views}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Heart className="w-3 h-3" /> {result.likes}
-                              </span>
-                              <div className="flex gap-1">
-                                {result.hashtags && result.hashtags.map(tag => (
-                                  <span key={tag} className="text-primary font-bold">{tag}</span>
-                                ))}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                              <Globe className="w-3.5 h-3.5 text-gray-400" />
-                              {result.location}
-                            </div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50/50 px-3 py-1 rounded-full w-fit">
-                              <CheckCircle2 className="w-3 h-3" />
-                              {result.contactStatus}
-                            </div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <span className="text-xs font-bold text-gray-400">
-                              {result.time}
-                            </span>
-                          </td>
-                          {isAdmin && (
-                            <td className="px-8 py-6 text-right">
-                              {/* Fully Unlocked external URLs for Premium Users */}
-                              <a 
-                                href={result.sourceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center rounded-xl border border-primary/25 bg-orange-50 text-primary hover:bg-primary hover:text-white transition-all gap-2 text-[10px] font-black uppercase px-4 py-2 transform hover:scale-[1.03]"
-                              >
-                                Open Source <ExternalLink className="w-3 h-3" />
-                              </a>
                             </td>
-                          )}
-                        </motion.tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={isAdmin ? 6 : 5} className="px-8 py-24 text-center">
-                          <div className="flex flex-col items-center gap-4">
-                            <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                            <p className="text-gray-400 text-xs font-black uppercase tracking-[0.1em]">AI Crawling Intent Databases...</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
