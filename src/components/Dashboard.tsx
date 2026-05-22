@@ -829,9 +829,9 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
         </div>
       ) : (
         /* DISCOVERY HUB (SOCIAL SEARCH ENGINE & LEADS) */
-        <main className="p-8 max-w-7xl mx-auto w-full text-[#1A1A1A] space-y-12">
+        <main className="p-4 sm:p-8 max-w-7xl mx-auto w-full text-[#1A1A1A] space-y-6 sm:space-y-12">
           {/* Section 1: Dynamic Social Media Search Engine */}
-          <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden p-8 space-y-6">
+          <div className="bg-white rounded-2xl sm:rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden p-4 sm:p-8 space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-6">
               <div>
                 <h2 className="text-xl font-black text-[#111] tracking-tight flex items-center gap-2">
@@ -841,7 +841,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                 <p className="text-xs text-gray-500 font-medium">Scrape social channels (Instagram, TikTok, LinkedIn, Twitter, YouTube) for buyer signifiers</p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-black bg-orange-50 text-primary border border-primary/20 px-3 py-1.5 rounded-xl uppercase flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
                   Premium Full-Fidelity View
@@ -873,18 +873,20 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
               <div className={`space-y-6 ${!isAdmin ? 'blur-md pointer-events-none select-none filter' : ''}`}>
                 {/* Keyword Search Field */}
                 <form onSubmit={handleLocalSearch} className="relative w-full max-w-2xl mx-auto">
-                  <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-2xl p-2.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all shadow-sm">
-                    <Search className="w-5 h-5 text-gray-400 ml-3" />
-                    <Input 
-                      value={innerSearchValue}
-                      onChange={(e) => setInnerSearchValue(e.target.value)}
-                      placeholder="Enter custom keywords (e.g. 'n8n tools', 'need figma designer', 'fitness coach')..."
-                      className="border-none shadow-none focus-visible:ring-0 text-sm bg-transparent pl-3 pr-2 h-10 w-full font-bold placeholder:font-medium placeholder:text-gray-400"
-                    />
+                  <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-gray-50 border border-gray-200 rounded-2xl p-2 gap-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all shadow-sm">
+                    <div className="flex items-center flex-1">
+                      <Search className="w-5 h-5 text-gray-400 ml-3" />
+                      <Input 
+                        value={innerSearchValue}
+                        onChange={(e) => setInnerSearchValue(e.target.value)}
+                        placeholder="Enter custom keywords (e.g. 'n8n tools', 'need figma designer')..."
+                        className="border-none shadow-none focus-visible:ring-0 text-sm bg-transparent pl-2 pr-2 h-10 w-full font-bold placeholder:font-medium placeholder:text-gray-400"
+                      />
+                    </div>
                     <Button 
                       type="submit" 
                       disabled={isLoadingResults || isSearchingTransition} 
-                      className="h-10 px-6 rounded-xl bg-primary hover:bg-orange-600 text-white text-xs font-black uppercase tracking-wider gap-2 shadow-md shadow-orange-500/20"
+                      className="h-10 px-6 rounded-xl bg-primary hover:bg-orange-600 text-white text-xs font-black uppercase tracking-wider gap-2 shadow-md shadow-orange-500/20 shrink-0"
                     >
                       {isLoadingResults || isSearchingTransition ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -1447,23 +1449,26 @@ export default function Dashboard() {
     const maxEstEarn = Math.min(rawMax, 20000) || 4500;
 
     return (
-      <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-6 pb-20">
+      <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-4 sm:p-6 pb-20">
         <div className="max-w-2xl w-full">
           {/* Progress Header */}
-          <div className="mb-12 relative w-full">
+          <div className="mb-6 md:mb-10 w-full flex flex-col gap-4">
             <button 
-              onClick={() => setStartedSignup(false)}
-              className="absolute -top-12 left-0 flex items-center gap-2 text-gray-400 hover:text-primary transition-colors font-bold text-xs uppercase tracking-widest"
+              onClick={() => {
+                setStartedSignup(false);
+                setSearchParams({});
+              }}
+              className="self-start flex items-center gap-2 text-gray-500 hover:text-primary transition-colors font-black text-xs uppercase tracking-wider bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-3.5 h-3.5 text-primary" />
               Back to Discovery Hub
             </button>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
-                <Zap className="text-white w-6 h-6 fill-white" />
+            <div className="flex items-center gap-3 mt-2">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0">
+                <Zap className="text-white w-5 h-5 fill-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-[#111] tracking-tight">Customer Audit Process</h1>
+                <h1 className="text-xl md:text-2xl font-black text-[#111] tracking-tight">Customer Audit Process</h1>
                 <p className="text-gray-500 font-medium text-xs">Step {auditStep + 1} of 6 • Configure your 2026 intelligence engine</p>
               </div>
             </div>
@@ -1480,7 +1485,7 @@ export default function Dashboard() {
             key={auditStep}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-2xl shadow-orange-500/5 relative overflow-hidden"
+            className="bg-white border border-gray-100 rounded-2xl md:rounded-[2.5rem] p-5 md:p-10 shadow-2xl shadow-orange-500/5 relative overflow-hidden"
           >
             {authError && (
               <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl select-text">
@@ -1843,6 +1848,7 @@ export default function Dashboard() {
             )}
           </motion.div>
         </div>
+        <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
       </div>
     );
   }
@@ -1894,57 +1900,67 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-[#1A1A1A] font-sans">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-orange-100 px-8 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-8">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm group-hover:bg-orange-600 transition-colors">
-                <Zap className="text-white w-5 h-5 fill-white" />
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-orange-100 px-4 sm:px-8 py-3 sm:py-4 shadow-sm">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-8">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div className="flex items-center justify-between w-full sm:w-auto">
+              <Link to="/" className="flex items-center gap-2 group">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm group-hover:bg-orange-600 transition-colors">
+                  <Zap className="text-white w-5 h-5 fill-white" />
+                </div>
+                <span className="text-lg font-bold tracking-tight text-[#111]">Signalmerge</span>
+              </Link>
+              <div className="sm:hidden flex items-center gap-2">
+                {!session && (
+                  <Button 
+                    onClick={() => setIsAuthModalOpen(true)}
+                    variant="outline"
+                    className="rounded-xl border-gray-200 text-gray-600 font-bold px-3 py-1 text-xs uppercase"
+                  >
+                    Login
+                  </Button>
+                )}
               </div>
-              <span className="text-lg font-bold tracking-tight text-[#111] hidden md:block">Signalmerge</span>
-            </Link>
+            </div>
             
-            <div className="h-6 w-px bg-orange-100 hidden md:block" />
+            <div className="h-4 w-px bg-orange-100 hidden sm:block" />
             
-            <form onSubmit={handleSearch} className="relative w-full max-w-md">
-              <div className="relative flex items-center bg-orange-50/30 border border-orange-100 rounded-2xl px-4 py-2 focus-within:border-primary transition-all shadow-sm shadow-orange-500/5">
+            <form onSubmit={handleSearch} className="relative w-full max-w-[280px] sm:max-w-none sm:w-80 mx-auto sm:mx-0">
+              <div className="relative flex items-center bg-orange-50/30 border border-orange-100 rounded-2xl px-3 py-1 sm:px-4 sm:py-1.5 focus-within:border-primary transition-all shadow-sm shadow-orange-500/5">
                 <Input 
                    value={searchValue}
                    onChange={(e) => setSearchValue(e.target.value)}
                    placeholder="Find me customers..."
-                   className="border-none shadow-none focus-visible:ring-0 text-sm bg-transparent p-0 h-auto placeholder:text-gray-400"
+                   className="border-none shadow-none focus-visible:ring-0 text-xs bg-transparent p-0 h-auto placeholder:text-gray-400 font-bold w-full"
                 />
-                <Button type="submit" disabled={isLoading} className="ml-2 h-8 px-4 rounded-xl bg-orange-200 hover:bg-orange-300 text-orange-700 text-xs font-bold gap-2">
+                <Button type="submit" disabled={isLoading} className="ml-2 h-6 sm:h-7 px-2.5 sm:px-3 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[9px] sm:text-[10px] font-black uppercase gap-1 shrink-0">
                   {isLoading ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <Loader2 className="w-2.5 h-2.5 animate-spin" />
                   ) : (
-                    <>Agents <Zap className="w-3 h-3 fill-orange-700" /></>
+                    <>Agents <Zap className="w-2 h-2 sm:w-2.5 sm:h-2.5 fill-orange-700" /></>
                   )}
                 </Button>
               </div>
             </form>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
             {!session && (
               <Button 
                 onClick={() => setIsAuthModalOpen(true)}
                 variant="outline"
-                className="rounded-xl border-gray-200 text-gray-600 font-bold px-6 text-xs uppercase hover:bg-gray-50"
+                className="rounded-xl border-gray-200 text-gray-600 font-bold px-4 h-9 text-xs uppercase hover:bg-gray-50 hidden sm:inline-flex"
               >
                 Login into Workspace
               </Button>
             )}
             {!session && (
-              <div className="flex items-center gap-2">
-                <Button 
-                  onClick={() => setStartedSignup(true)}
-                  className="rounded-xl bg-[#111] hover:bg-black text-white font-bold px-6 shadow-lg shadow-black/10 text-xs uppercase"
-                >
-                  Start Discovery Audit
-                </Button>
-                <div className="h-6 w-px bg-gray-200" />
-              </div>
+              <Button 
+                onClick={() => setStartedSignup(true)}
+                className="rounded-xl bg-[#111] hover:bg-black text-white font-bold px-5 h-9 shadow-lg shadow-black/10 text-xs uppercase"
+              >
+                Start Discovery Audit
+              </Button>
             )}
             {session && (
               <div className="flex items-center gap-3">

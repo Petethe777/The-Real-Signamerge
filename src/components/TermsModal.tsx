@@ -480,24 +480,24 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ type: "spring", duration: 0.4 }}
-          className="relative bg-white w-full max-w-4xl h-[85vh] rounded-[2.5rem] shadow-2xl border border-gray-100 flex flex-col overflow-hidden"
+          className="relative bg-white w-full max-w-4xl h-[90vh] sm:h-[85vh] rounded-3xl sm:rounded-[2.5rem] shadow-2xl border border-gray-100 flex flex-col overflow-hidden"
         >
           {/* Header */}
-          <div className="p-6 md:p-8 bg-gray-50 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/10">
-                <FileText className="w-6 h-6 text-white" />
+          <div className="p-4 sm:p-6 md:p-8 bg-gray-50 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/10 shrink-0">
+                <FileText className="w-5 h-5 text-white" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-black text-gray-900 tracking-tight uppercase">Mergemega (Pty) Ltd</h3>
-                  <span className="text-[9px] font-black text-gray-400 border border-gray-200 px-1.5 py-0.5 rounded-md">REG: K2021779747</span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <h3 className="text-sm sm:text-base font-black text-gray-900 tracking-tight uppercase">Mergemega (Pty) Ltd</h3>
+                  <span className="text-[8px] sm:text-[9px] font-black text-gray-400 border border-gray-200 px-1.5 py-0.5 rounded-md">REG: K2021779747</span>
                 </div>
-                <h4 className="text-xs font-bold text-gray-500">SignalMerge Client Service Agreement & Policies</h4>
+                <h4 className="text-[10px] sm:text-xs font-bold text-gray-500">Client Service Agreement & Policies</h4>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-end sm:self-auto">
               <button 
                 onClick={() => window.print()}
                 className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
@@ -577,7 +577,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
           </div>
 
           {/* Footer - Lock and Exit buttons */}
-          <div className="p-6 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 rounded-b-[2.5rem]">
+          <div className="p-4 sm:p-6 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 rounded-b-3xl sm:rounded-b-[2.5rem]">
             <div className="flex items-center gap-2 text-xs font-medium text-gray-400">
               <ShieldCheck className="w-4 h-4 text-green-500" />
               <span>Full compliance standards for POPIA, CPA & GDPR.</span>
