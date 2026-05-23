@@ -195,6 +195,9 @@ function HomePage() {
       <footer className="max-w-7xl mx-auto px-12 py-8 mt-auto border-t border-[#E5E7EB] flex justify-between items-center text-[11px] font-medium text-[#9CA3AF] uppercase tracking-wider">
         <div>© 2026 Signalmerge</div>
         <div className="flex gap-6 items-center">
+          <Link to="/about" className="hover:text-primary transition-colors uppercase">
+            About
+          </Link>
           <button 
             type="button" 
             onClick={() => setIsTermsModalOpen(true)}

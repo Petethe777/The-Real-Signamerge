@@ -277,7 +277,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
     if (!innerSearchValue.trim()) return;
     
     // Save inner keyword search to Supabase
-    saveSearchQuery(innerSearchValue, session?.user?.email);
+    saveSearchQuery(innerSearchValue, profile?.email);
     
     setIsSearchingTransition(true);
     setTimeout(() => {
@@ -2209,7 +2209,10 @@ export default function Dashboard() {
           <Zap className="w-4 h-4 text-primary fill-primary" />
           <span>Signalmerge Intelligence Engine v4.0</span>
         </div>
-        <div className="flex gap-8">
+        <div className="flex gap-8 items-center">
+          <Link to="/about" className="hover:text-primary cursor-pointer transition-colors font-bold text-[10px] uppercase tracking-[0.2em]">
+            About
+          </Link>
           <span className="text-primary flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" /> System Online
           </span>
