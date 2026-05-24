@@ -141,13 +141,26 @@ async function startServer() {
     }
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        console.warn("[Server] GEMINI_API_KEY is not defined in the environment. Falling back to cached state.");
-        return res.json({ _rateLimited: true });
+      const apiKey = process.env.GEMINI_API_KEY?.trim() || "";
+      const isPlaceholder = !apiKey || 
+        ["todo", "placeholder", "undefined", "null", "none", "your_api_key", "your_gemini_api_key"].includes(apiKey.toLowerCase()) ||
+        apiKey.startsWith("YOUR_");
+      
+      const isFormatValid = apiKey.startsWith("AIzaSy");
+
+      if (isPlaceholder || !isFormatValid) {
+        console.log("[Server] GEMINI_API_KEY is not configured or format is invalid. Falling back gracefully to simulated 2026 leads engine.");
+        return res.json({ _rateLimited: true, reason: "invalid_key_format" });
       }
 
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ 
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
       
       const prompt = `Act as a real-time social media discovery agent in the 2026 ecosystem. Search Google for authentic, high-intent leads and social signals strictly from the year 2026 related to: "${searchTerm}".
       
@@ -164,7 +177,7 @@ async function startServer() {
       - NATURAL TEXT STYLES & TONALITY: Word each social post/content completely differently. Use varied sentence lengths, natural social media slang, varied capitalization (some casual lowercases, some structured bullet points), realistic user handles, and references to relevant software (e.g., Zapier, Instantly, Apollo, HubSpot, Slack, Discord). Make usernames, times, and metrics fully random yet realistic. The final feed must feel like a live, noisy, organic social hub of actual posts.`;
 
       const aiResponse = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.5-flash",
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],

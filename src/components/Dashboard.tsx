@@ -1336,6 +1336,76 @@ export default function Dashboard() {
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
+
+  const handleNextStep = (currentStep: number) => {
+    setAuditError(null);
+    setAuthError(null);
+    
+    if (currentStep === 0) {
+      if (!onboardingData.companyName.trim()) {
+        setAuditError("Company Name is required.");
+        return;
+      }
+      if (!onboardingData.location.trim()) {
+        setAuditError("Location / Headquarters is required.");
+        return;
+      }
+      setAuditStepIdx(1);
+    } else if (currentStep === 1) {
+      if (!onboardingData.socials.instagram.trim()) {
+        setAuditError("Instagram URL is required. Please provide a link as part of your Social Infrastructure.");
+        return;
+      }
+      if (!onboardingData.socials.linkedin.trim()) {
+        setAuditError("LinkedIn URL is required. Please provide a link as part of your Social Infrastructure.");
+        return;
+      }
+      if (!onboardingData.socials.facebook.trim()) {
+        setAuditError("Facebook URL is required. Please provide a link as part of your Social Infrastructure.");
+        return;
+      }
+      if (!onboardingData.socials.tiktok.trim()) {
+        setAuditError("TikTok URL is required. Please provide a link as part of your Social Infrastructure.");
+        return;
+      }
+      setAuditStepIdx(2);
+    } else if (currentStep === 2) {
+      if (!onboardingData.usp.trim()) {
+        setAuditError("Unique Selling Point (USP) is required.");
+        return;
+      }
+      const unfilledPhraseIndex = onboardingData.customerPhrases.findIndex(p => !p.trim());
+      if (unfilledPhraseIndex !== -1) {
+        setAuditError(`Please fill in all 5 phrases describing your target. Phrase ${unfilledPhraseIndex + 1} is empty.`);
+        return;
+      }
+      setAuditStepIdx(3);
+    } else if (currentStep === 3) {
+      const unfilledKeywordIndex = onboardingData.customerKeywords.findIndex(k => !k.trim());
+      if (unfilledKeywordIndex !== -1) {
+        setAuditError(`Please fill in all 5 core keywords. Keyword ${unfilledKeywordIndex + 1} is empty.`);
+        return;
+      }
+      if (!onboardingData.sellingRegion.pricing || onboardingData.sellingRegion.pricing <= 0) {
+        setAuditError("Offer Pricing is required and must be greater than zero.");
+        return;
+      }
+      setAuditStepIdx(4);
+    } else if (currentStep === 4) {
+      if (!onboardingData.sellingRegion.integrations || onboardingData.sellingRegion.integrations.length === 0) {
+        setAuditError("Please select at least one Core System Integration to continue.");
+        return;
+      }
+      setAuditStepIdx(5);
+    }
+  };
+
+  const handlePrevStep = (prevStep: number) => {
+    setAuditError(null);
+    setAuthError(null);
+    setAuditStepIdx(prevStep);
+  };
 
   useEffect(() => {
     const checkProfile = async () => {
@@ -1390,14 +1460,36 @@ export default function Dashboard() {
   }, [session]);
 
   const handleAuditSubmit = async () => {
-    if (!onboardingData.email || !onboardingData.password) {
-      setAuthError("Email and Password are required to secure your audit.");
-      setAuditStepIdx(5); // Go back to final step if missing
+    setAuditError(null);
+    setAuthError(null);
+
+    if (!onboardingData.email.trim()) {
+      setAuditError("Email Address is required.");
+      setAuditStepIdx(5);
+      return;
+    }
+    if (!onboardingData.password.trim()) {
+      setAuditError("Secure Password is required.");
+      setAuditStepIdx(5);
+      return;
+    }
+    if (onboardingData.password.trim().length < 6) {
+      setAuditError("Secure Password must be at least 6 characters.");
+      setAuditStepIdx(5);
+      return;
+    }
+    if (!onboardingData.sellingRegion.state.trim()) {
+      setAuditError("Sales State is required.");
+      setAuditStepIdx(5);
+      return;
+    }
+    if (!onboardingData.sellingRegion.county.trim()) {
+      setAuditError("Sales County / Area is required.");
+      setAuditStepIdx(5);
       return;
     }
     
     setIsSigningUp(true);
-    setAuthError(null);
     
     try {
       // 1. Create the Auth account
@@ -1530,6 +1622,13 @@ export default function Dashboard() {
               </div>
             )}
 
+            {auditError && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl select-text flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping inline-block shrink-0" />
+                <p className="text-xs text-red-600 font-bold">{auditError}</p>
+              </div>
+            )}
+
             {auditStep === 0 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -1560,7 +1659,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <Button onClick={() => setAuditStepIdx(1)} className="w-full h-14 bg-primary hover:bg-orange-600 rounded-2xl text-white font-black uppercase tracking-widest">
+                <Button onClick={() => handleNextStep(0)} className="w-full h-14 bg-primary hover:bg-orange-600 rounded-2xl text-white font-black uppercase tracking-widest">
                   Start Audit <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
 
@@ -1623,8 +1722,8 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <Button variant="outline" onClick={() => setAuditStepIdx(0)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
-                  <Button onClick={() => setAuditStepIdx(2)} className="flex-[2] h-14 bg-primary hover:bg-orange-600 rounded-2xl text-white font-black uppercase tracking-widest">Next Step</Button>
+                  <Button variant="outline" onClick={() => handlePrevStep(0)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
+                  <Button onClick={() => handleNextStep(1)} className="flex-[2] h-14 bg-primary hover:bg-orange-600 rounded-2xl text-white font-black uppercase tracking-widest">Next Step</Button>
                 </div>
               </div>
             )}
@@ -1666,8 +1765,8 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                  <Button variant="outline" onClick={() => setAuditStepIdx(1)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
-                  <Button onClick={() => setAuditStepIdx(3)} className="flex-[2] h-14 bg-primary hover:bg-orange-600 rounded-2xl text-white font-black uppercase tracking-widest">Next Step</Button>
+                  <Button variant="outline" onClick={() => handlePrevStep(1)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
+                  <Button onClick={() => handleNextStep(2)} className="flex-[2] h-14 bg-primary hover:bg-orange-600 rounded-2xl text-white font-black uppercase tracking-widest">Next Step</Button>
                 </div>
               </div>
             )}
@@ -1761,8 +1860,8 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                  <Button variant="outline" onClick={() => setAuditStepIdx(2)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
-                  <Button onClick={() => setAuditStepIdx(4)} className="flex-[2] h-14 bg-primary hover:bg-orange-600 rounded-2xl text-white font-black uppercase tracking-widest">Next Step</Button>
+                  <Button variant="outline" onClick={() => handlePrevStep(2)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
+                  <Button onClick={() => handleNextStep(3)} className="flex-[2] h-14 bg-primary hover:bg-orange-600 rounded-2xl text-white font-black uppercase tracking-widest">Next Step</Button>
                 </div>
               </div>
             )}
@@ -1808,8 +1907,8 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex gap-4 pt-6">
-                  <Button variant="outline" onClick={() => setAuditStepIdx(3)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
-                  <Button onClick={() => setAuditStepIdx(5)} className="flex-[2] h-14 bg-primary hover:bg-orange-600 rounded-2xl text-white font-black uppercase tracking-widest">Next Step</Button>
+                  <Button variant="outline" onClick={() => handlePrevStep(3)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
+                  <Button onClick={() => handleNextStep(4)} className="flex-[2] h-14 bg-primary hover:bg-orange-600 rounded-2xl text-white font-black uppercase tracking-widest">Next Step</Button>
                 </div>
               </div>
             )}
@@ -1868,7 +1967,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                  <Button variant="outline" onClick={() => setAuditStepIdx(4)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
+                  <Button variant="outline" onClick={() => handlePrevStep(4)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
                   <Button 
                     onClick={handleAuditSubmit} 
                     disabled={isSigningUp}
