@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Zap, 
   Star, 
@@ -198,6 +198,7 @@ const successTimeline = [
 ];
 
 export default function AboutPage() {
+  const navigate = useNavigate();
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [focusedTestimonial, setFocusedTestimonial] = useState<FloatingTestimonial | null>(null);
   const [activeTimelineIdx, setActiveTimelineIdx] = useState(0);
@@ -316,13 +317,13 @@ export default function AboutPage() {
             <span className="text-lg font-black tracking-tight text-[#111]">Signalmerge</span>
           </Link>
           
-          <Link 
-            to="/dashboard" 
-            className="flex items-center gap-1.5 text-xs font-black text-gray-500 hover:text-primary uppercase tracking-wider bg-white/80 border border-gray-100 hover:border-orange-200 px-4 py-2 rounded-xl transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+          <button 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1.5 text-xs font-black text-gray-500 hover:text-primary uppercase tracking-wider bg-white/80 border border-gray-100 hover:border-orange-200 px-4 py-2 rounded-xl transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Hub
-          </Link>
+            Back
+          </button>
         </div>
       </header>
 
