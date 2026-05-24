@@ -190,7 +190,7 @@ const successTimeline = [
   {
     day: "Day 30",
     title: "Sales Outperformance",
-    explanation: "A fully calibrated, automated intelligence pipeline driving client bookings around the clock, completely outperforming legacy Google/Meta spend.",
+    explanation: "A fully calibrated, automated intelligence pipeline now drives client bookings around the clock, completely outperforming legacy Google/Meta spend.",
     badge: "Performance Sovereign",
     previewCode: `Outbound CAC: -83%\nOverall Deal Flow: +400%\nUniversal Infrastructure: Absolute`,
     stat: "$4,500+ average added monthly cashflow"
@@ -466,7 +466,7 @@ export default function AboutPage() {
               
               <div className="text-center space-y-2 flex flex-col items-center">
                 <h4 className="bg-white px-4 py-2 rounded-xl border border-orange-100 shadow-[0_6px_15px_rgba(249,115,22,0.1)] text-lg font-black text-zinc-900 inline-block text-center">Peter</h4>
-                <p className="bg-white px-3 py-1.5 rounded-lg border border-orange-100 shadow-[0_4px_12px_rgba(249,115,22,0.08)] text-[10px] font-black text-primary uppercase tracking-widest mt-2 block w-fit">Co-Founder, Mergemega (Pty) Ltd</p>
+                <p className="bg-white px-3 py-1.5 rounded-lg border border-orange-100 shadow-[0_4px_12px_rgba(249,115,22,0.08)] text-[10px] font-black text-primary uppercase tracking-widest mt-2 block w-fit">Founder/Director, Mergemega (Pty) Ltd</p>
                 <div className="flex gap-1.5 items-center justify-center mt-2 text-zinc-400 font-bold text-xs">
                   <MapPin className="w-3.5 h-3.5 text-primary" />
                   <span>Durban, SA</span>
@@ -540,7 +540,9 @@ export default function AboutPage() {
                           {item.day}
                         </span>
                       </div>
-                      <p className="bg-white px-2.5 py-1 rounded-lg border border-orange-100 shadow-[0_4px_10px_rgba(249,115,22,0.06)] text-zinc-500 text-xs font-medium leading-normal mt-1 block truncate">
+                      <p className={`bg-white px-2.5 py-1 rounded-lg border border-orange-100 shadow-[0_4px_10px_rgba(249,115,22,0.06)] text-zinc-500 text-xs font-medium leading-normal mt-1 block transition-all duration-300 ${
+                        isActive ? "whitespace-normal break-words" : "truncate"
+                      }`}>
                         {item.explanation}
                       </p>
                     </div>
@@ -589,7 +591,7 @@ export default function AboutPage() {
 
               {/* Fake Terminal Footer */}
               <div className="border-t border-zinc-800 pt-3 mt-4 flex items-center justify-between text-zinc-600 text-[10px]">
-                <span>System Host: Durban_Infrastructure_01</span>
+                <span>System Host: Signalmerge_Engine_Infrastructure</span>
                 <span>Active Step: {activeTimelineIdx + 1}/4</span>
               </div>
             </div>
