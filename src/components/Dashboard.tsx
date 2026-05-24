@@ -126,6 +126,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   const [isLoadingResults, setIsLoadingResults] = useState(false);
   const [searchFeedback, setSearchFeedback] = useState<string | null>(null);
   const [isSearchingTransition, setIsSearchingTransition] = useState(false);
+  const [correctedQuery, setCorrectedQuery] = useState<string | null>(null);
 
   useEffect(() => {
     // If Admin accesses, fetch registered accounts to allow approvals and dashboard switching
@@ -188,13 +189,20 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
       const q = activeQuery || userKeywords[0] || 'leads';
       setIsLoadingResults(true);
       setSearchFeedback(null);
+      setCorrectedQuery(null);
       try {
         const res = await searchSocialMedia(q);
         if (res && (res as any)._rateLimited) {
-          setLiveResults([]);
+          setLiveResults(res || []);
           setSearchFeedback("AI Scanner is busy. Showing cached results.");
+          if ((res as any).correctedQuery) {
+            setCorrectedQuery((res as any).correctedQuery);
+          }
         } else {
           setLiveResults(res || []);
+          if ((res as any).correctedQuery) {
+            setCorrectedQuery((res as any).correctedQuery);
+          }
         }
       } catch (err) {
         setSearchFeedback("AI Scanner at capacity. Showing 2026 database fallback.");
@@ -259,7 +267,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   }, [liveResults]);
 
   const filteredResults = useMemo(() => {
-    const q = activeQuery || userKeywords[0] || "";
+    const q = correctedQuery || activeQuery || userKeywords[0] || "";
     if (!q) return allResults.slice(0, 10);
     const lowerQuery = q.toLowerCase();
     
@@ -270,7 +278,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
       item.platform.toLowerCase().includes(lowerQuery) ||
       lowerQuery.split(' ').some(word => word.length > 2 && item.content.toLowerCase().includes(word))
     );
-  }, [activeQuery, userKeywords, allResults]);
+  }, [correctedQuery, activeQuery, userKeywords, allResults]);
 
   const handleLocalSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -904,6 +912,18 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                   </p>
                 </form>
 
+                {correctedQuery && (
+                  <div className="mt-3 bg-orange-50/50 border border-orange-100 rounded-2xl p-4 text-xs font-bold text-orange-750 max-w-2xl mx-auto text-center flex flex-col sm:flex-row items-center justify-center gap-2 shadow-sm shadow-orange-500/5">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                      <span className="uppercase text-[9px] tracking-widest text-orange-850 font-black">Search Correction</span>
+                    </div>
+                    <span>
+                      We found similar demand for <span className="underline decoration-2 underline-offset-2 text-primary font-black uppercase tracking-wider">"{correctedQuery}"</span> instead of <code className="bg-orange-100/50 px-1.5 py-0.5 rounded font-mono">"{activeQuery}"</code>.
+                    </span>
+                  </div>
+                )}
+
                 {/* Live Search Table View */}
                 <div className="border border-gray-100 rounded-[2rem] overflow-hidden bg-gray-50/20">
                   <div className="overflow-x-auto">
@@ -1097,6 +1117,7 @@ export default function Dashboard() {
   const [liveResults, setLiveResults] = useState<DemandResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [correctedQuery, setCorrectedQuery] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -1183,6 +1204,7 @@ export default function Dashboard() {
       if (!query) {
         setLiveResults([]);
         setError(null);
+        setCorrectedQuery(null);
         return;
       }
       
@@ -1191,13 +1213,20 @@ export default function Dashboard() {
       
       setIsLoading(true);
       setError(null);
+      setCorrectedQuery(null);
       try {
         const results = await searchSocialMedia(query);
         if (results && (results as any)._rateLimited) {
-          setLiveResults([]);
+          setLiveResults(results || []);
           setError("AI Scanner is busy. Showing results from 2026 database.");
+          if ((results as any).correctedQuery) {
+            setCorrectedQuery((results as any).correctedQuery);
+          }
         } else {
           setLiveResults(results);
+          if ((results as any).correctedQuery) {
+            setCorrectedQuery((results as any).correctedQuery);
+          }
         }
       } catch (err: any) {
         console.error("Live search failed:", err);
@@ -1249,9 +1278,10 @@ export default function Dashboard() {
 
   const filteredResults = useMemo(() => {
     const source = allResults;
+    const effectiveQuery = correctedQuery || query;
 
-    if (!query) return source.slice(0, 10);
-    const lowerQuery = query.toLowerCase();
+    if (!effectiveQuery) return source.slice(0, 10);
+    const lowerQuery = effectiveQuery.toLowerCase();
     
     // Filter results that match the query
     const matches = source.filter(item => 
@@ -1263,7 +1293,7 @@ export default function Dashboard() {
     );
 
     return matches;
-  }, [query, allResults]);
+  }, [correctedQuery, query, allResults]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2027,6 +2057,18 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+
+            {correctedQuery && (
+              <div className="mb-6 bg-orange-50/50 border border-orange-100 rounded-3xl p-5 text-xs font-bold text-orange-750 max-w-4xl mx-auto text-center flex flex-col sm:flex-row items-center justify-center gap-3 shadow-md shadow-orange-500/5">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                  <span className="uppercase text-[9px] tracking-widest text-orange-850 font-black">Search Correction</span>
+                </div>
+                <span>
+                  Showing demand signals for <span className="underline decoration-2 underline-offset-2 text-primary font-black uppercase tracking-wider text-sm">"{correctedQuery}"</span> instead of <code className="bg-orange-100/50 px-2 py-0.5 rounded font-mono">"{query}"</code>.
+                </span>
+              </div>
+            )}
 
             {/* Results Table */}
             <div className="bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-orange-500/5 overflow-hidden relative">
