@@ -392,14 +392,14 @@ export default function DigitalConsultingAudit() {
   // Check existing session on load
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && (session.user.email === "info@digitalconsultingpros.com" || session.user.email === "petemkhize@gmail.com")) {
+      if (session && (session.user.email === "digitalconsultingpros@gmail.com" || session.user.email === "petemkhize@gmail.com")) {
         setIsAuthenticated(true);
       }
       setSessionLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && (session.user.email === "info@digitalconsultingpros.com" || session.user.email === "petemkhize@gmail.com")) {
+      if (session && (session.user.email === "digitalconsultingpros@gmail.com" || session.user.email === "petemkhize@gmail.com")) {
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);

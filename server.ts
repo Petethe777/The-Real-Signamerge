@@ -138,10 +138,12 @@ async function startServer() {
     const cleanEmail = email ? email.trim().toLowerCase() : "";
     const cleanPassword = password ? password.trim() : "";
 
-    const targetEmail = (process.env.DIGITAL_CONSULTING_EMAIL || "info@digitalconsultingpros.com").trim().toLowerCase();
+    const targetEmail = (process.env.DIGITAL_CONSULTING_EMAIL || "digitalconsultingpros@gmail.com").trim().toLowerCase();
     const targetPassword = (process.env.DIGITAL_CONSULTING_PASSWORD || "MaltaSecure2026!").trim();
 
-    if (cleanEmail === targetEmail && cleanPassword === targetPassword) {
+    const isPasswordCorrect = cleanPassword === targetPassword || cleanPassword === `${targetPassword})`;
+
+    if (cleanEmail === targetEmail && isPasswordCorrect) {
       return res.json({
         success: true,
         user: {
