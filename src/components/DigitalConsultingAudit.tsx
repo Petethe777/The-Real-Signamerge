@@ -703,9 +703,6 @@ export default function DigitalConsultingAudit() {
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
               Customer Audit: <span className="text-orange-600">Digital Consulting Pros</span>
             </h1>
-            <p className="text-sm text-slate-600 mt-2 max-w-2xl leading-relaxed">
-              Social engagement diagnostics and real-time high-conviction buying cues compiled for the year 2026. Preview available global signals below.
-            </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
@@ -807,7 +804,6 @@ export default function DigitalConsultingAudit() {
           <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-slate-900 tracking-tight">Signalmerge Live Query Dashboard</h3>
                 <span className="bg-orange-100 text-orange-850 border border-orange-200/60 text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase font-mono">
                   Preview Data
                 </span>
