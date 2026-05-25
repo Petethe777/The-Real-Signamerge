@@ -42,11 +42,22 @@ function getClosestIndustryKeyword(word: string): string {
     "shopify", "nextjs", "react", "instagram", "tiktok", "youtube", "linkedin",
     "reddit", "appointments", "agency", "email", "b2b", "content", "traffic",
     "funnels", "conversion", "saas", "hiring", "startup", "developer", "designer",
-    "video", "crm", "hubspot", "zapier", "instantly", "apollo", "pipeline", "strategy"
+    "video", "crm", "hubspot", "zapier", "instantly", "apollo", "pipeline", "strategy",
+    // logistics & supply chain keywords
+    "supplier", "suppliers", "manufacturer", "manufacturers", "logistics", "supply", "chain",
+    "shipping", "freight", "factory", "factories", "manufacturing", "sourcing", "source", "import", "export", 
+    "distributor", "distributors", "warehousing", "procurement",
+    // regions & countries
+    "china", "chinese", "philippines", "thailand", "vietnam", "hong", "kong", "singapore", "sweden", "switzerland", "italy",
+    "usa", "uk"
   ];
 
-  if (popularKeywords.includes(w)) {
-    return w;
+  const exemptWords = [
+    "in", "for", "to", "at", "by", "with", "of", "and", "or", "the", "a", "an", "is", "are", "be", "from", "looking", "need", "hire", "with", "global", "brand", "brands"
+  ];
+
+  if (popularKeywords.includes(w) || exemptWords.includes(w)) {
+    return word;
   }
 
   const vowels = (w.match(/[aeiouy]/ig) || []).length;
@@ -92,7 +103,7 @@ function getClosestIndustryKeyword(word: string): string {
     return bestKeyword;
   }
 
-  return w;
+  return word;
 }
 
 function correctQuerySearch(query: string): { corrected: string; original: string; isDifferent: boolean } {
@@ -162,19 +173,20 @@ async function startServer() {
         }
       });
       
-      const prompt = `Act as a real-time social media discovery agent in the 2026 ecosystem. Search Google for authentic, high-intent leads and social signals strictly from the year 2026 related to: "${searchTerm}".
+      const prompt = `Act as a real-time social media discovery agent in the 2026 global trade and supply chain ecosystem. Search Google for authentic, high-intent leads and social signals strictly from the year 2026 related to: "${searchTerm}".
       
-      CRITICAL: 
-      - Find ACTUAL posts (TikTok, Instagram, Reddit, X/Twitter, LinkedIn) where users are explicitly requesting services, products, or help related to ${searchTerm}.
+      CRITICAL COUNTRY FILTERING & GEOGRAPHY:
+      - If the search query explicitly names or implies a country/region (such as China/Chinese, Sweden, Switzerland, Italy, Philippines, Thailand, Vietnam, Hong Kong, Singapore, UK, or USA), you MUST strictly and exclusively return leads, factory postings, logistics requests, or digital work orders originating from or targeting THAT specific country. Never mix irrelevant countries if one is explicitly requested.
+      - If no country is specified, return a highly diverse, non-predictable global mix of leads spanning Sweden, Switzerland, Italy, China, Philippines, Thailand, Vietnam, Hong Kong, Singapore, US, and UK.
+      - Never use the same location for multiple entries. Cover a clean distribution of cities (e.g., if Sweden: Stockholm, Gothenburg, Malmö, Uppsala; if Switzerland: Zürich, Geneva, Basel, Lugano; if Italy: Milan, Prato, Bologna, Florence).
+
+      CONTENT INTEGRITY & AUTHENTICITY:
+      - Find ACTUAL, organic posts (TikTok, Instagram, Reddit, X/Twitter, LinkedIn, YouTube) where users are actively requesting supply chain help, manufacturers, bulk production, freelancers, SEO growth, or B2B sales development.
       - Look for phrases like "Can anyone recommend...", "I need help with...", "Searching for...", "Is there a service that...".
-      - Avoid providing generic or 'I'm struggling to find' filler content unless it is a verbatim social post from a user.
-      - Return a JSON array of 12-15 highly accurate results. Each result must represent a unique social signal with realistic metrics for 2026.
-      - GEOGRAPHY & VARIATION: The results must be highly diverse and unpredictable. Do NOT use the same location for multiple entries.
-      - Ensure locations cover different countries across the United States, Europe, Asia, and Africa.
-      - Crucially, the MAJORITY (60% or more) of your search results must be in various cities within the United States (e.g., SF, NYC, Austin, Seattle, Boston).
-      - The remaining results must be spread across Europe (e.g. London, Berlin, Amsterdam, Dublin), Asia (e.g. Singapore, Tokyo, Mumbai, Seoul), and Africa (e.g. Durban, Lagos, Nairobi, Cape Town).
-      - DYNAMIC SYNONYM REFRAMING: Do NOT repeat the exact query string verbatim in every social post content. Instead, naturally rewrite, paraphrase, and split the query into realistic user intent fragments. For example, if searching "SEO", write about "Shopify rankings decline", "organic traffic growth", "blog index audit", "WordPress SEO consultant", or "getting onto Google page 1".
-      - NATURAL TEXT STYLES & TONALITY: Word each social post/content completely differently. Use varied sentence lengths, natural social media slang, varied capitalization (some casual lowercases, some structured bullet points), realistic user handles, and references to relevant software (e.g., Zapier, Instantly, Apollo, HubSpot, Slack, Discord). Make usernames, times, and metrics fully random yet realistic. The final feed must feel like a live, noisy, organic social hub of actual posts.`;
+      - Avoid generic boilerplate or repetitive text. Words must feel organic, noisy, and like a real live feed.
+      - DYNAMIC REFRAMING: Do NOT repeat the search term or query string verbatim in every social post. Naturally rewrite, paraphrase, and split the query into realistic user intent fragments (e.g., if searching "China factory", discuss "sourcing custom packaging in Shenzhen", "negotiating direct with Yiwu manufacturer", "vetted logistics broker in Guangzhou", etc.).
+      
+      Return a JSON array of 16-20 highly accurate, non-repeating results. Each result must represent a unique social signal with fully random, authentic usernames, timestamps, likes, views, and hashtags.`;
 
       const aiResponse = await ai.models.generateContent({
         model: "gemini-3.5-flash",

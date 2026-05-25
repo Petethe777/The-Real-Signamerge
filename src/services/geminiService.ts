@@ -1,131 +1,300 @@
 import { DemandResult } from "../types";
 
+export const detectQueryCountry = (query: string): string | null => {
+  const q = query.toLowerCase();
+  if (q.includes("china") || q.includes("chinese")) return "china";
+  if (q.includes("philippines") || q.includes("philipines") || q.includes("manila")) return "philippines";
+  if (q.includes("thailand") || q.includes("bangkok")) return "thailand";
+  if (q.includes("vietnam") || q.includes("viet nam") || q.includes("hanoi") || q.includes("hcmc")) return "vietnam";
+  if (q.includes("hong kong") || q.includes("hongkong")) return "hong kong";
+  if (q.includes("singapore") || q.includes("sg")) return "singapore";
+  if (q.includes("sweden") || q.includes("swedish") || q.includes("stockholm")) return "sweden";
+  if (q.includes("switzerland") || q.includes("swiss") || q.includes("zurich") || q.includes("geneva")) return "switzerland";
+  if (q.includes("italy") || q.includes("italian") || q.includes("milan")) return "italy";
+  if (q.includes("usa") || q.includes("united states") || q.includes("america")) return "usa";
+  if (q.includes("uk") || q.includes("united kingdom") || q.includes("london")) return "uk";
+  return null;
+};
+
 const getDynamicFallbackResults = (query: string): DemandResult[] => {
   const cleanQuery = query.trim();
   if (!cleanQuery) return [];
 
+  const targetCountry = detectQueryCountry(cleanQuery);
+  const qLower = cleanQuery.toLowerCase();
+  const isSupplyChain = qLower.includes("supplier") || qLower.includes("manufacturer") || 
+                        qLower.includes("logistics") || qLower.includes("supply chain") || 
+                        qLower.includes("freight") || qLower.includes("import") || 
+                        qLower.includes("export") || qLower.includes("factory") || 
+                        qLower.includes("factories") || qLower.includes("sourcing") || 
+                        qLower.includes("procurement") || qLower.includes("distributor");
+
   // Geographic distributions:
-  const usaLocations = [
-    "New York, NY", "Austin, TX", "San Francisco, CA", "Miami, FL", "Chicago, IL",
-    "Los Angeles, CA", "Seattle, WA", "Boston, MA", "Denver, CO", "Atlanta, GA", 
-    "Dallas, TX", "Portland, OR", "Phoenix, AZ", "Nashville, TN", "Salt Lake City, UT",
-    "Houston, TX", "Philadelphia, PA", "San Jose, CA", "Charlotte, NC", "San Diego, CA",
-    "Las Vegas, NV", "Minneapolis, MN", "Tampa, FL", "Pittsburgh, PA", "Detroit, MI"
+  const chinaLocs = [
+    "Shenzhen, China", "Guangzhou, China", "Shanghai, China", "Yiwu, China", 
+    "Ningbo, China", "Dongguan, China", "Zhejiang, China", "Fujian, China"
   ];
+  const philippinesLocs = ["Manila, Philippines", "Cebu City, Philippines", "Davao City, Philippines", "Pasig, Philippines"];
+  const thailandLocs = ["Bangkok, Thailand", "Chonburi, Thailand", "Samut Prakan, Thailand", "Chiang Mai, Thailand"];
+  const vietnamLocs = ["Ho Chi Minh City, Vietnam", "Hanoi, Vietnam", "Binh Duong, Vietnam", "Hai Phong, Vietnam"];
+  const hkLocs = ["Kowloon, Hong Kong", "Wan Chai, Hong Kong", "Central, Hong Kong", "New Territories, Hong Kong"];
+  const singaporeLocs = ["Singapore", "Changi, Singapore", "Jurong, Singapore", "Singapore Tech District"];
+  const swedenLocs = ["Stockholm, Sweden", "Gothenburg, Sweden", "Malmö, Sweden", "Uppsala, Sweden"];
+  const switzerlandLocs = ["Zürich, Switzerland", "Geneva, Switzerland", "Basel, Switzerland", "Lugano, Switzerland"];
+  const italyLocs = ["Milan, Italy", "Prato, Italy", "Bologna, Italy", "Florence, Italy"];
+  const usaLocs = ["Los Angeles, CA", "Seattle, WA", "New York, NY", "Miami, FL", "Chicago, IL", "Austin, TX", "San Francisco, CA"];
+  const ukLocs = ["London, UK", "Manchester, UK", "Birmingham, UK", "Southampton, UK"];
 
-  const europeLocations = [
-    "London, UK", "Berlin, Germany", "Paris, France", "Amsterdam, Netherlands",
-    "Dublin, Ireland", "Zurich, Switzerland", "Stockholm, Sweden", "Copenhagen, Denmark",
-    "Madrid, Spain", "Vienna, Austria", "Munich, Germany", "Geneva, Switzerland"
-  ];
-
-  const asiaLocations = [
-    "Singapore", "Tokyo, Japan", "Seoul, South Korea", "Mumbai, India", 
-    "Hong Kong", "Dubai, UAE", "Bangalore, India", "Tel Aviv, Israel", "Singapore Hub"
-  ];
-
-  const africaLocations = [
-    "Durban, South Africa", "Lagos, Nigeria", "Nairobi, Kenya", 
-    "Cape Town, South Africa", "Accra, Ghana", "Cairo, Egypt", "Johannesburg, SA"
-  ];
-
-  const getRandomLocation = (): string => {
-    const rand = Math.random();
-    if (rand < 0.65) { // 65% USA (most search results from USA as requested)
-      return usaLocations[Math.floor(Math.random() * usaLocations.length)];
-    } else if (rand < 0.80) { // 15% Europe
-      return europeLocations[Math.floor(Math.random() * europeLocations.length)];
-    } else if (rand < 0.90) { // 10% Asia
-      return asiaLocations[Math.floor(Math.random() * asiaLocations.length)];
-    } else { // 10% Africa
-      return africaLocations[Math.floor(Math.random() * africaLocations.length)];
+  const getAllLocationsForMix = (): string[] => {
+    let locs: string[] = [];
+    if (targetCountry) {
+      if (targetCountry === "china") return chinaLocs;
+      if (targetCountry === "philippines") return philippinesLocs;
+      if (targetCountry === "thailand") return thailandLocs;
+      if (targetCountry === "vietnam") return vietnamLocs;
+      if (targetCountry === "hong kong") return hkLocs;
+      if (targetCountry === "singapore") return singaporeLocs;
+      if (targetCountry === "sweden") return swedenLocs;
+      if (targetCountry === "switzerland") return switzerlandLocs;
+      if (targetCountry === "italy") return italyLocs;
+      if (targetCountry === "usa") return usaLocs;
+      if (targetCountry === "uk") return ukLocs;
     }
+
+    if (isSupplyChain) {
+      // Prioritize Supply Chain heavy regions if no specific country is given
+      locs = [...chinaLocs, ...vietnamLocs, ...italyLocs, ...hkLocs, ...singaporeLocs, ...thailandLocs, ...swedenLocs, ...switzerlandLocs];
+    } else {
+      locs = [...swedenLocs, ...switzerlandLocs, ...italyLocs, ...singaporeLocs, ...hkLocs, ...usaLocs, ...ukLocs, ...philippinesLocs, ...thailandLocs, ...vietnamLocs, ...chinaLocs];
+    }
+    return locs;
   };
 
   const getQueryVariants = (q: string): string[] => {
     const term = q.toLowerCase().trim();
+    if (isSupplyChain) {
+      return [
+        "vetted manufacture factory", "reliable supplier", "direct-to-factory partner",
+        "custom supply chain consultant", "logistics coordinator", "packaging manufacturer",
+        "B2B sourcing specialist", "freight forwarding coordinator", "product sourcing agent",
+        "quality control inspector", "production factory partner", "custom carton manufacturer",
+        "ocean freight specialist", "ISO certified production hub"
+      ];
+    }
     if (term.includes("seo") || term.includes("google") || term.includes("ranking") || term.includes("search")) {
       return [
         "SEO consultant", "google ranking expert", "search engine optimization",
         "organic traffic growth", "local SEO help", "Shopify SEO specialist",
-        "WordPress rank booster", "technical SEO audit", "search visibility specialist",
-        "SEO content strategist", "Google Search Console setup"
+        "WordPress rank booster", "technical SEO audit", "search visibility consultant",
+        "search indexing analyst"
       ];
     }
-    if (term.includes("sales") || term.includes("lead") || term.includes("outreach") || term.includes("acquisition") || term.includes("appointment")) {
+    if (term.includes("sales") || term.includes("lead") || term.includes("outreach") || term.includes("acquisition")) {
       return [
-        "lead generation help", "cold email outreach specialist", "LinkedIn lead flow setup",
-        "B2B appointment setter", "Apollo / Instantly list builder", "client acquisition pipeline",
-        "sales pipeline builder", "validated B2B lead list", "outbound sales coordinator",
-        "B2B sales automation", "outreach campaign manager"
+        "lead generation helper", "cold email outreach specialist", "LinkedIn lead flow setup",
+        "B2B appointment setter", "client acquisition developer", "sales pipeline builder",
+        "outbound operations manager"
       ];
     }
-    if (term.includes("market") || term.includes("ad") || term.includes("growth") || term.includes("ppc") || term.includes("facebook")) {
+    if (term.includes("market") || term.includes("ad") || term.includes("growth") || term.includes("ppc")) {
       return [
-        "growth marketer", "Facebook/Meta ads manager", "PPC optimization freelancer",
-        "B2B digital marketing consultant", "content marketing strategist", "TikTok ads scaling expert",
-        "ad creative builder", "landing page optimization contractor", "SaaS marketing agency",
-        "retargeting setup pro"
+        "growth marketing partner", "PPC specialist", "social ads architect",
+        "conversion optimization expert", "funnel marketing manager"
       ];
     }
-    if (term.includes("dev") || term.includes("software") || term.includes("code") || term.includes("app") || term.includes("build") || term.includes("engineer")) {
-      return [
-        "fullstack developer", "React/NextJS builder", "SaaS MVP programmer",
-        "custom software developer", "database design freelancer", "mobile app developer",
-        "API integration specialist", "backend engineer", "Vite/Tailwind frontend developer",
-        "custom automation builder"
-      ];
-    }
-    // Generic fallback based on query
     return [
       q,
       `${q} consultant`,
-      `${q} freelancer`,
+      `${q} helper`,
       `hire for ${q}`,
       `outsource ${q} tasks`,
-      `${q} workflows automation`,
       `custom ${q} setup`,
-      `${q} agency standard`
+      `${q} operational lead`
     ];
   };
 
-  const twitterTemplates = [
-    (v: string) => `any good recommendations for a freelance ${v}? budget is super open. need someone who doesn't just sell general theory but has shipped real case studies. dm me!`,
-    (v: string) => `need to optimize our ${v} setup by next monday. entirely custom flow. cash is ready, remote. drop your portfolio link or dm!`,
-    (v: string) => `who is the absolute absolute GOAT of ${v} right now? our current agency is burning $5k/mo on pure junk and missing massive market signals. help!`,
-    (v: string) => `seeking a remote ${v} consult to audit our workspace logs. dm with your pricing rates/turnaround time. retweets appreciated!`,
-    (v: string) => `unpopular opinion: 95% of ${v} providers are just running expensive copy-paste templates. looking for a real practitioner to consult us part-time.`,
-    (v: string) => `actively scouting a proven professional in ${v} for high-intent b2b campaigns in 2026. please reply with a short walk-through of your best metrics.`
+  // Shuffle function to ensure absolute entropy in our patterns and sequence starters
+  const shuffle = <T>(arr: T[]): T[] => {
+    const res = [...arr];
+    for (let j = res.length - 1; j > 0; j--) {
+      const k = Math.floor(Math.random() * (j + 1));
+      [res[j], res[k]] = [res[k], res[j]];
+    }
+    return res;
+  };
+
+  // Word pools to build highly authentic, randomized messages with GUARANTEED non-repeating starting phrases
+  const supplyChainOpeners = shuffle([
+    "Anyone have a reliable, direct contact for a",
+    "Seeking personal recommendations for a vetted",
+    "Need to hire an experienced contract",
+    "Urgently looking for a certified",
+    "Unpopular opinion: finding a raw",
+    "Can anyone in our network suggest a tier-1",
+    "Does anyone have feet on the ground to find a",
+    "We are scouting a long-term partnership with a",
+    "Looking to migrate our current runs to a new",
+    "Has anyone successfully worked with a trustworthy",
+    "Direct-to-factory updates: just landed in",
+    "Trying to establish our 2026 pipelines for a",
+    "ISO-certified standards are tough. Need a great",
+    "Quick question: who manages procurement as a",
+    "Our manufacturing lead times are too high. Seeking a",
+    "We are restructuring our import setup with a",
+    "Any tips on auditing a local regional",
+    "Who are you guys using for a freelance",
+    "Looking to audit an overseas vetted",
+    "Is it possible to find a reliable B2B",
+    "Currently reviewing ocean/air freight with our new",
+    "Sourcing challenge of the week: finding a quality",
+    "Vetting candidates today for our new production",
+    "Can anyone introduce me to a high-capacity",
+    "Highly critical contract position open for a",
+    "Expanding our production line. We definitely need a",
+    "Scouting partners: Who knows a reputable B2B",
+    "We are ready to sign a contract with a",
+    "Searching for on-the-ground support from a",
+    "Does anyone have a warm intro to a vetted"
+  ]);
+
+  const supplyChainDetails = [
+    "to handle high-fidelity eco-friendly packaging lines",
+    "to scale up custom luxury apparel production safely",
+    "for high-precision mold modeling and injection tooling",
+    "to manage custom container freight and minimize transit delays",
+    "for electronics components prototyping under NDA",
+    "to run direct BSCI/ISO certified factory audits on-site",
+    "for small-batch custom cosmetics and glass containers",
+    "to streamline our global trade logistics and custom clearance issues",
+    "with active 2026 scheduling and transparent minimum order bounds",
+    "to replace our expensive, non-transparent broker middleman markup"
   ];
 
-  const redditTemplates = [
-    (v: string) => `Title: Vetted recommendations for hiring a remote ${v}?\n\nBody: Hey founders, we're a series-A SaaS startup needing a highly specialized ${v} for a 2-month contract. We tried running it ourselves but it's a massive time drain. Budget is around $3k-$5k/mo. Hit me up if you've worked with someone awesome. No spammy cold pitches please.`,
-    (v: string) => `Title: Is anyone actually seeing real ROI with ${v} agencies in 2026?\n\nBody: Every agency we interview speaks in generic buzzwords. Does a real, performance-based ${v} specialist actually exist? We have a warm dataset ready for custom integrations. Let me know your experiences or recommend trusted experts!`,
-    (v: string) => `Title: Looking to hire an experienced contract freelancer for automated ${v}\n\nBody: Hey r/entrepreneur, we are looking to hire someone part-time to overhaul our ${v} workflows. Must understand Slack/Discord alerts, CRM mappings, and clean data routing. DM me your hourly rates, timezone, and recent projects.`,
-    (v: string) => `Title: Best place to find a high-fidelity ${v} consultant?\n\nBody: We are scaling our e-commerce business operations and need to hire an independent auditor for our ${v}. Any specific platforms or agencies you guys trust? Thanks so much!`
+  const supplyChainRequirements = [
+    "Must have proven experience with high-volume brand compliance.",
+    "Looking for a partner with flawless direct communication.",
+    "We require comprehensive quality inspection audits at every stage.",
+    "Must be physically based in the region for weekly site visits.",
+    "Budget has premium room, but need absolute operational reliability.",
+    "Must support modern customs documentation for US/Europe freight.",
+    "Aiming for standard ISO-9001 and BSCI compliance standard.",
+    "We have our specifications ready and want to begin trial runs this month."
   ];
 
-  const linkedinTemplates = [
-    (v: string) => `🚀 We are officially expanding our outreach and marketing pipelines!\n\nWe are looking to contract a senior ${v} consultant to help audit, reorganize, and scale our inbound client tracking system. This is a 100% remote 3-month contract role.\n\nQualifications:\n- Vetted, referenceable historical metrics\n- Deep knowledge of CRM automation tools\n- Immediate availability\n\nIf interested, drop a link to your case studies below or DM me directly. Let's build!`,
-    (v: string) => `I am looking for personal recommendations for an expert in ${v}.\n\nOur current workflows are severely lacking and we are missing potential high-intent customer signals. We need a modern, data-driven specialist to clean up our active pipelines.\n\nWho are the absolute top-tier providers in your network? Tag them below! 👇`,
-    (v: string) => `Can anyone recommend a high-performing ${v} agency or solo freelancer?\n\nWe are shifting our budget away from broad Meta/Google ad bidding toward highly targeted, authenticated direct signal channels. Seeking someone who understands this shift & can implement it this month.\n\nDM me or drop your company details in the comments.`
+  const supplyChainCTAs = {
+    Twitter: [
+      "Drop portfolio or DM with standard rates!", "PM me with contact info.", "Retweets highly appreciated! DM open.", "Slide in with direct details.", "DM me with specifications."
+    ],
+    Reddit: [
+      "PM me with your timezone, past projects, and basic pricing.", "Hit me up with your experience or drop sub recommendations below.", "Let's track down a real partner together. DM open!", "No generic broker pitches please. Real advice only."
+    ],
+    LinkedIn: [
+      "Please tag trusted partners or share direct referrals in the comments.", "Reach out via DM or send your deck to our procurement team.", "Looking forward to expanding our network. PM for details.", "Connection request sent, let's build #supplychain #globaltrade"
+    ],
+    Instagram: [
+      "Comment 'SOURCING' and I'll DM our audited contact directory! 📦 #sourcing #brands", "Check the link in bio for our direct walkthrough! 🎥 #factory #importexport", "DM us directly for custom procurement introductions! ⛓️ #businesscoach", "Tag a founder who needs direct access! 👇 #manufacturing"
+    ],
+    TikTok: [
+      "Comment 'SOURCING' and I'll DM our audited contact directory! 📦 #sourcing #brands", "Check the link in bio for our direct walkthrough! 🎥 #factory #importexport", "DM us directly for custom procurement introductions! ⛓️ #businesscoach", "Tag a founder who needs direct access! 👇 #manufacturing"
+    ],
+    YouTube: [
+      "Check the pin comment below to download our free B2B manufacturer evaluation spreadsheet.", "Subscribe for weekly on-screen supply chain and port status updates.", "Let me know your direct sourcing challenges in the comments below!"
+    ]
+  };
+
+  const marketingAndDevOpeners = shuffle([
+    "Who is the absolute GOAT for a freelance",
+    "Looking to contract a dedicated",
+    "Urgently scouting an expert in",
+    "Our team needs custom systems integration with a",
+    "Seeking a remote, hands-on specialist in",
+    "We need to audit and overhaul our standard",
+    "Has anyone hired a top-performing independent",
+    "Our current agency is burning budget, looking to hire a solo",
+    "Unpopular opinion: most teams doing",
+    "Need someone to quickly fix and scale our",
+    "Is anyone actually seeing real ROI with a",
+    "Highly recommending this custom setup for a",
+    "Drop your portfolios! We are hiring a remote",
+    "Can anyone connect me to a technical",
+    "Reviewing resumes this afternoon for a contract",
+    "Who is handling cold operations as a freelance",
+    "Quick shoutout to anyone working as a",
+    "Seeking a performance-driven remote",
+    "Our startup is searching for an independent",
+    "Before you hire a luxury agency for",
+    "Anyone available for a 3-month contract as a",
+    "We want to completely streamline our tracking. Need a",
+    "DM open: Looking to hire an absolute expert in",
+    "Does anyone have a vetted referral for a",
+    "Frustrated with generic pitches. Seeking a real",
+    "Who do you recommend for advanced help with a",
+    "Looking to optimize our workspace with an active",
+    "We are ready to bring on an active",
+    "Searching for case studies of a top-tier",
+    "Who is the most reliable contractor for a"
+  ]);
+
+  const marketingAndDevDetails = [
+    "integrated with tools like HubSpot, Zapier, Instantly, and Slack",
+    "running on a modern server architecture and CRM setup",
+    "for a high-volume direct-to-consumer wellness brand",
+    "to migrate all legacy automation pipelines smoothly",
+    "for a high-growth Series-A SaaS subscription network",
+    "to reduce customer acquisition cost and optimize conversion",
+    "with automated real-time status alerts routed to Discord",
+    "using custom Tailwind frameworks and high-contrast responsive layouts"
   ];
 
-  const instagramTikTokTemplates = [
-    (v: string) => `We are completely overhauling our ${v} setup this week and need a tech-savvy pro to take over. Drop a link to your work or case studies in our DM! 📩 #startup #growth`,
-    (v: string) => `Looking for ${v} freelancers who actually deliver real-world metrics, not just high-level slides. DM us for a quick discovery call! 🚀 #business #contractor`,
-    (v: string) => `Quick question for all the service business founders: who manages your active ${v}? We're scaling up and looking to outsource this immediately. Let us know in the comments or send a DM! ✨`
+  const marketingAndDevRequirements = [
+    "Must show real metrics and validated performance data.",
+    "We have a warm dataset ready to start onboarding immediately.",
+    "Remote contract role, highly flexible hours and open budget.",
+    "Must be an individual practitioner, not an agency rep.",
+    "Require solid documentation and a clean handoff plan.",
+    "Must understand clean API data routing and custom sync structures."
   ];
 
-  const youtubeTemplates = [
-    (v: string) => `Requesting video reviews or direct pitches for custom ${v} implementation. Our company is ready to deploy on a new platform and needs a step-by-step roadmap.`,
-    (v: string) => `Looking to consult with a high-caliber video strategist / technical ${v} developer who has documented frameworks. Hit our contact page link directly.`
-  ];
+  const marketingAndDevCTAs = {
+    Twitter: [
+      "DM with your case studies and pricing details!", "PM me your portfolio right now.", "Drop your links or DM me directly. Thanks!", "Retweets appreciated, slide in DMs."
+    ],
+    Reddit: [
+      "Send a detailed PM with past projects and your standard hourly rate.", "Let me know your experiences or drop recommendations down below.", "Would love to discuss. No generic cold pitch forms please.", "PM open, let's talk stacks!"
+    ],
+    LinkedIn: [
+      "Please drop your references or PM me directly with your portfolio deck.", "Looking forward to connecting with top talent in this niche.", "Tag the best freelancer you know in the comments below! #growth #hiring", "If this matches your background, let's connect and sync up."
+    ],
+    Instagram: [
+      "Slide into our DMs with the word 'FLOW' to apply! 🚀 #hiring #startup", "Hit the link in bio to schedule a quick consultation call! 📈 #marketing", "DM us directly for a free operational audit template! 🧠 #remotework", "Tag an awesome developer/marketer who is looking for contracts! 👇"
+    ],
+    TikTok: [
+      "Slide into our DMs with the word 'FLOW' to apply! 🚀 #hiring #startup", "Hit the link in bio to schedule a quick consultation call! 📈 #marketing", "DM us directly for a free operational audit template! 🧠 #remotework", "Tag an awesome developer/marketer who is looking for contracts! 👇"
+    ],
+    YouTube: [
+      "Let me know your favorite tools in the comments below!", "Link in description to sign up for our live workspace audits.", "Subscribe to get our weekly optimization breakdowns."
+    ]
+  };
 
-  const generateRandomHandle = (): string => {
-    const prefixes = ["tech_", "growth_", "lead_", "digital_", "nexus_", "clutch_", "apex_", "elevate_", "vertex_", "optima_", "global_", "", "", "", "", ""];
-    const roots = ["sarah", "pete", "marcus", "clara", "alex", "john", "emily", "david", "sophia", "ryan", "lucas", "emma", "samantha", "olivia", "founder", "ventures", "bureau", "labs", "hq", "pipeline", "alpha", "delta", "synergy", "flow"];
-    const suffixes = ["_26", "_tech", "_ceo", "sales", "ops", "growth", "_dev", "_dev26", "_mktg", "pro", "marketing", "", "", "", "", ""];
+  const generateRandomHandle = (loc: string): string => {
+    const prefixes = ["tech_", "growth_", "lead_", "digital_", "nexus_", "clutch_", "apex_", "elevate_", "vertex_", "optima_", "global_", "asia_", "euro_", "sourcing_", "direct_", "hub_", "", "", ""];
+    
+    // Country specific handle influences to feel deeply realistic:
+    const locLower = loc.toLowerCase();
+    let roots = ["sarah", "pete", "marcus", "clara", "alex", "john", "emily", "david", "sophia", "ryan", "lucas", "emma", "samantha", "olivia", "founder", "ventures", "bureau", "labs", "hq", "pipeline", "alpha", "delta", "synergy", "flow"];
+    if (locLower.includes("china") || locLower.includes("hong kong")) {
+      roots = ["lin", "wong", "tan", "chen", "zhao", "li", "sourcing_pro", "factory_direct", "yiwu_trade", "shenzhen_ops"];
+    } else if (locLower.includes("sweden")) {
+      roots = ["nordic", "stockholm_growth", "lisa_nord", "andersson", "svea_ventures", "svenson", "karlsson", "gustafsson"];
+    } else if (locLower.includes("switzerland")) {
+      roots = ["swiss_ops", "geneva_tech", "schmidt", "zurich_build", "muller", "alps_procure", "clara_swiss"];
+    } else if (locLower.includes("italy")) {
+      roots = ["rossi", "milan_style", "prato_fabrics", "bianchi", "ferrari", "romano", "bella_moda", "italian_sourcing"];
+    } else if (locLower.includes("singapore")) {
+      roots = ["sg_merchant", "changi_logistics", "lee", "tan_ventures", "sing_global"];
+    }
+
+    const suffixes = ["_26", "_tech", "_ceo", "sales", "ops", "growth", "_dev", "_dev26", "_mktg", "pro", "marketing", "sourcing", "logistics", "factory", "", "", ""];
     
     const pre = prefixes[Math.floor(Math.random() * prefixes.length)];
     const root = roots[Math.floor(Math.random() * roots.length)];
@@ -135,13 +304,10 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
     if (!handle) {
       handle = `biz_node_${Math.floor(Math.random() * 899) + 100}`;
     }
-    
     handle = handle.replace(/__+/g, "_").replace(/^_+|_+$/g, "");
-    
     if (Math.random() < 0.4) {
       handle = `${handle}${Math.floor(Math.random() * 89) + 10}`;
     }
-    
     return handle;
   };
 
@@ -150,35 +316,105 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
   ];
 
   const results: DemandResult[] = [];
-  const numberOfResults = Math.floor(Math.random() * 4) + 12; // 12 to 15 results
+  const numberOfResults = Math.floor(Math.random() * 4) + 16; // 16 to 19 dynamic results
+  const locationsPool = getAllLocationsForMix();
   
+  // To avoid duplication, we will track used elements to guarantee unique compositions!
+  const usedLocationIndices = new Set<number>();
+
   for (let i = 0; i < numberOfResults; i++) {
     const platform = basePlatforms[Math.floor(Math.random() * basePlatforms.length)];
+    
+    // Choose location from pool without repeating until pool is exhausted
+    let locIndex = Math.floor(Math.random() * locationsPool.length);
+    let attempts = 0;
+    while (usedLocationIndices.has(locIndex) && attempts < 50) {
+      locIndex = Math.floor(Math.random() * locationsPool.length);
+      attempts++;
+    }
+    usedLocationIndices.add(locIndex);
+    if (usedLocationIndices.size >= locationsPool.length) {
+      usedLocationIndices.clear(); // Reset if we manage to run through all
+    }
+    const loc = locationsPool[locIndex];
     
     const queryVariants = getQueryVariants(cleanQuery);
     const variant = queryVariants[Math.floor(Math.random() * queryVariants.length)];
     
     let content = "";
-    if (platform === 'Twitter') {
-      const template = twitterTemplates[Math.floor(Math.random() * twitterTemplates.length)];
-      content = template(variant);
-    } else if (platform === 'Reddit') {
-      const template = redditTemplates[Math.floor(Math.random() * redditTemplates.length)];
-      content = template(variant);
-    } else if (platform === 'LinkedIn') {
-      const template = linkedinTemplates[Math.floor(Math.random() * linkedinTemplates.length)];
-      content = template(variant);
-    } else if (platform === 'Instagram' || platform === 'TikTok') {
-      const template = instagramTikTokTemplates[Math.floor(Math.random() * instagramTikTokTemplates.length)];
-      content = template(variant);
-    } else { 
-      const template = youtubeTemplates[Math.floor(Math.random() * youtubeTemplates.length)];
-      content = template(variant);
+    
+    // Pop a unique prefix/opener from the pre-shuffled lists. This guarantees 100% unique sentence starters.
+    const opener = isSupplyChain 
+      ? (supplyChainOpeners.pop() || "Sourcing an verified") 
+      : (marketingAndDevOpeners.pop() || "Hiring an freelance");
+    
+    if (isSupplyChain) {
+      const detail = supplyChainDetails[Math.floor(Math.random() * supplyChainDetails.length)];
+      const req = supplyChainRequirements[Math.floor(Math.random() * supplyChainRequirements.length)];
+      
+      const ctaList = supplyChainCTAs[platform] || supplyChainCTAs.Twitter;
+      const cta = ctaList[Math.floor(Math.random() * ctaList.length)];
+
+      if (platform === 'Twitter') {
+        content = `${opener} ${variant} in ${loc} ${detail}? ${req} ${cta}`;
+      } else if (platform === 'Reddit') {
+        content = `Title: ${opener} ${variant} in ${loc}?\n\nBody: Hey everyone, we're currently launching custom lines and need to locate a reliable ${variant} based in ${loc} ${detail}. ${req} ${cta}`;
+      } else if (platform === 'LinkedIn') {
+        content = `🌎 ${opener} ${variant} who understands regional distribution in ${loc}?\n\nOur trade workflow is seeking direct partnerships ${detail}.\n\nRequirements:\n- ${req}\n\n${cta}`;
+      } else if (platform === 'Instagram' || platform === 'TikTok') {
+        const visualEmojis = ["📦", "⚓", "⚡", "🧵", "✈️", "🗺️", "🛠️", "🎯"];
+        const emoji = visualEmojis[Math.floor(Math.random() * visualEmojis.length)];
+        content = `${emoji} ${opener} ${variant} in ${loc}! We are evaluating partners ${detail}. ${req} ${cta}`;
+      } else { // YouTube
+        content = `${opener} ${variant} in ${loc}! Complete Evaluation Tutorial: how we establish lines ${detail}. ${cta}`;
+      }
+    } else {
+      const detail = marketingAndDevDetails[Math.floor(Math.random() * marketingAndDevDetails.length)];
+      const req = marketingAndDevRequirements[Math.floor(Math.random() * marketingAndDevRequirements.length)];
+      
+      const ctaList = marketingAndDevCTAs[platform] || marketingAndDevCTAs.Twitter;
+      const cta = ctaList[Math.floor(Math.random() * ctaList.length)];
+
+      if (platform === 'Twitter') {
+        content = `${opener} ${variant} who can help with support in ${loc}? Needed to set up a pipeline ${detail}. ${req} ${cta}`;
+      } else if (platform === 'Reddit') {
+        content = `Title: ${opener} ${variant} near ${loc}?\n\nBody: Hi all, trying to find a solid ${variant} ${detail}. We have everything budgeted, but need someone who is directly available. ${req} ${cta}`;
+      } else if (platform === 'LinkedIn') {
+        content = `📈 ${opener} ${variant} in ${loc}?\n\nWe have an open contract role for a verified ${variant} ${detail}.\n\nDetails:\n- ${req}\n\n${cta}`;
+      } else if (platform === 'Instagram' || platform === 'TikTok') {
+        const digitalEmojis = ["🔥", "🚀", "📊", "💡", "🧠", "🎯", "⚙️", "📈"];
+        const emoji = digitalEmojis[Math.floor(Math.random() * digitalEmojis.length)];
+        content = `${emoji} ${opener} ${variant} right out of ${loc}! If you have proven track records ${detail}. ${req} ${cta}`;
+      } else { // YouTube
+        content = `${opener} ${variant} in ${loc} - Masterclass: how we set up pipelines ${detail}. ${cta}`;
+      }
     }
     
-    const handle = generateRandomHandle();
+    // Inject custom country branding references to make regional leads feel 100% authentic
+    if (cleanQuery.toLowerCase().includes("china") || loc.toLowerCase().includes("china")) {
+      if (!content.toLowerCase().includes("china") && !content.toLowerCase().includes("chinese")) {
+        content += " Verified partner factory located in Shenzhen region.";
+      }
+    }
+    if (cleanQuery.toLowerCase().includes("sweden") || loc.toLowerCase().includes("sweden")) {
+      if (!content.toLowerCase().includes("sweden") && !content.toLowerCase().includes("swedish")) {
+        content += " Import clearance designated for Stockholm port distribution.";
+      }
+    }
+    if (cleanQuery.toLowerCase().includes("switzerland") || loc.toLowerCase().includes("switzerland")) {
+      if (!content.toLowerCase().includes("switzer") && !content.toLowerCase().includes("swiss")) {
+        content += " Direct compliance compliance aligned with Swiss import regulations.";
+      }
+    }
+    if (cleanQuery.toLowerCase().includes("italy") || loc.toLowerCase().includes("italy")) {
+      if (!content.toLowerCase().includes("ital")) {
+        content += " Sourcing direct premium materials from Prato fashion industrial zone.";
+      }
+    }
     
-    let sourceUrl = `https://www.google.com/search?q=${encodeURIComponent(variant + ' lead')}`;
+    const handle = generateRandomHandle(loc);
+    
+    let sourceUrl = `https://www.google.com/search?q=${encodeURIComponent(variant + ' lead ' + loc)}`;
     if (platform === 'Twitter') {
       sourceUrl = `https://x.com/${handle}`;
     } else if (platform === 'LinkedIn') {
@@ -190,22 +426,23 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
     } else if (platform === 'TikTok') {
       sourceUrl = `https://www.tiktok.com/@${handle}`;
     } else if (platform === 'YouTube') {
-      sourceUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(variant)}`;
+      sourceUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(variant + ' ' + loc)}`;
     }
     
     const variantTag = variant.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
     const platformTag = platform.toLowerCase();
-    const otherTags = ["b2b", "leads2026", "hiring", "growth", "operations", "startup", "talent", "outsource"];
+    const otherTags = ["b2b", "leads2026", "supplychain", "manufacturer", "logistics", "import", "globaltrade", "sourcing", "automation", "freight", "scale"];
     const randomTag = otherTags[Math.floor(Math.random() * otherTags.length)];
     const hashtags = [`#${variantTag}`, `#${platformTag}`, `#${randomTag}`];
 
-    const randomLikes = Math.floor(Math.random() * 280) + 4;
-    const randomViews = Math.floor(Math.random() * 4500) + 120;
+    // High entropy metrics
+    const randomLikes = Math.floor(Math.random() * 630) + 14;
+    const randomViews = Math.floor(Math.random() * 14200) + 280;
     
     let timeString = "";
     const randTimeType = Math.random();
-    if (randTimeType < 0.35) {
-      const mins = Math.floor(Math.random() * 50) + 4;
+    if (randTimeType < 0.45) {
+      const mins = Math.floor(Math.random() * 50) + 3;
       timeString = `${mins}m ago`;
     } else {
       const hrs = Math.floor(Math.random() * 22) + 1;
@@ -219,7 +456,7 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
       views: `${randomViews} views`,
       likes: `${randomLikes} likes`,
       hashtags,
-      location: getRandomLocation(),
+      location: loc,
       contactStatus: Math.random() > 0.45 ? "Verified Lead" : "Hot Prospect",
       time: timeString,
       sourceUrl
@@ -261,12 +498,22 @@ export const getClosestIndustryKeyword = (word: string): string => {
     "shopify", "nextjs", "react", "instagram", "tiktok", "youtube", "linkedin",
     "reddit", "appointments", "agency", "email", "b2b", "content", "traffic",
     "funnels", "conversion", "saas", "hiring", "startup", "developer", "designer",
-    "video", "crm", "hubspot", "zapier", "instantly", "apollo", "pipeline", "strategy"
+    "video", "crm", "hubspot", "zapier", "instantly", "apollo", "pipeline", "strategy",
+    // logistics & supply chain keywords
+    "supplier", "suppliers", "manufacturer", "manufacturers", "logistics", "supply", "chain",
+    "shipping", "freight", "factory", "factories", "manufacturing", "sourcing", "source", "import", "export", 
+    "distributor", "distributors", "warehousing", "procurement",
+    // regions & countries
+    "china", "chinese", "philippines", "thailand", "vietnam", "hong", "kong", "singapore", "sweden", "switzerland", "italy",
+    "usa", "uk"
   ];
 
-  // If word is already a known keyword (or part of one), keep it
-  if (popularKeywords.includes(w)) {
-    return w;
+  const exemptWords = [
+    "in", "for", "to", "at", "by", "with", "of", "and", "or", "the", "a", "an", "is", "are", "be", "from", "looking", "need", "hire", "with", "global", "brand", "brands"
+  ];
+
+  if (popularKeywords.includes(w) || exemptWords.includes(w)) {
+    return word;
   }
 
   // Check if it's potentially non-existent or gibberish.
@@ -309,12 +556,11 @@ export const getClosestIndustryKeyword = (word: string): string => {
     }
   }
 
-  // Correct if spelling score is high or if word is detected as gibberish/non-existent
   if (isGibberish || bestScore > -2.0) {
     return bestKeyword;
   }
 
-  return w;
+  return word;
 };
 
 export const correctQuerySearch = (query: string): { corrected: string; original: string; isDifferent: boolean } => {

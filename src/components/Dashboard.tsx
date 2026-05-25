@@ -36,7 +36,7 @@ import { Input } from "@/components/ui/input";
 import { DemandResult } from "@/types";
 import { tiktokDataset, instagramDataset } from "@/data/datasets";
 import { mockClients } from "@/data/mockClients";
-import { searchSocialMedia } from "@/services/geminiService";
+import { searchSocialMedia, detectQueryCountry } from "@/services/geminiService";
 import { supabase, isSupabaseConfigured, saveSearchQuery } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { AnimatePresence } from "motion/react";
@@ -270,14 +270,38 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
     const q = correctedQuery || activeQuery || userKeywords[0] || "";
     if (!q) return allResults.slice(0, 10);
     const lowerQuery = q.toLowerCase();
+    const targetCountry = detectQueryCountry(lowerQuery);
     
-    return allResults.filter(item => 
-      item.content.toLowerCase().includes(lowerQuery) ||
-      (item.hashtags && item.hashtags.some(tag => tag.toLowerCase().includes(lowerQuery))) ||
-      item.location.toLowerCase().includes(lowerQuery) ||
-      item.platform.toLowerCase().includes(lowerQuery) ||
-      lowerQuery.split(' ').some(word => word.length > 2 && item.content.toLowerCase().includes(word))
-    );
+    return allResults.filter(item => {
+      if (targetCountry) {
+        const itemLoc = item.location.toLowerCase();
+        const itemContent = item.content.toLowerCase();
+        let isCountryMatch = false;
+
+        if (targetCountry === "china" && (itemLoc.includes("china") || itemLoc.includes("hong kong") || itemLoc.includes("hongkong") || itemContent.includes("china") || itemContent.includes("chinese"))) isCountryMatch = true;
+        else if (targetCountry === "philippines" && (itemLoc.includes("philippines") || itemLoc.includes("manila") || itemLoc.includes("philipines"))) isCountryMatch = true;
+        else if (targetCountry === "thailand" && (itemLoc.includes("thailand") || itemLoc.includes("bangkok"))) isCountryMatch = true;
+        else if (targetCountry === "vietnam" && (itemLoc.includes("vietnam") || itemLoc.includes("hanoi") || itemLoc.includes("viet nam"))) isCountryMatch = true;
+        else if (targetCountry === "hong kong" && (itemLoc.includes("hong kong") || itemLoc.includes("hongkong"))) isCountryMatch = true;
+        else if (targetCountry === "singapore" && itemLoc.includes("singapore")) isCountryMatch = true;
+        else if (targetCountry === "sweden" && (itemLoc.includes("sweden") || itemLoc.includes("stockholm") || itemLoc.includes("gothenburg") || itemContent.includes("sweden") || itemContent.includes("swedish"))) isCountryMatch = true;
+        else if (targetCountry === "switzerland" && (itemLoc.includes("switzerland") || itemLoc.includes("zurich") || itemLoc.includes("geneva") || itemLoc.includes("swiss") || itemContent.includes("switzerland") || itemContent.includes("swiss"))) isCountryMatch = true;
+        else if (targetCountry === "italy" && (itemLoc.includes("italy") || itemLoc.includes("milan") || itemLoc.includes("italian") || itemContent.includes("italy") || itemContent.includes("italian"))) isCountryMatch = true;
+        else if (targetCountry === "usa" && (itemLoc.includes("usa") || itemLoc.includes("united states") || itemLoc.includes("ny") || itemLoc.includes("ca") || itemLoc.includes("tx") || itemLoc.includes("fl") || itemLoc.includes("wa"))) isCountryMatch = true;
+        else if (targetCountry === "uk" && (itemLoc.includes("uk") || itemLoc.includes("united kingdom") || itemLoc.includes("london") || itemLoc.includes("ireland"))) isCountryMatch = true;
+        else if (itemLoc.includes(targetCountry)) isCountryMatch = true;
+
+        if (!isCountryMatch) return false;
+      }
+
+      return (
+        item.content.toLowerCase().includes(lowerQuery) ||
+        (item.hashtags && item.hashtags.some(tag => tag.toLowerCase().includes(lowerQuery))) ||
+        item.location.toLowerCase().includes(lowerQuery) ||
+        item.platform.toLowerCase().includes(lowerQuery) ||
+        lowerQuery.split(' ').some(word => word.length > 2 && item.content.toLowerCase().includes(word))
+      );
+    });
   }, [correctedQuery, activeQuery, userKeywords, allResults]);
 
   const handleLocalSearch = (e: React.FormEvent) => {
@@ -1282,15 +1306,39 @@ export default function Dashboard() {
 
     if (!effectiveQuery) return source.slice(0, 10);
     const lowerQuery = effectiveQuery.toLowerCase();
+    const targetCountry = detectQueryCountry(lowerQuery);
     
     // Filter results that match the query
-    const matches = source.filter(item => 
-      item.content.toLowerCase().includes(lowerQuery) ||
-      (item.hashtags && item.hashtags.some(tag => tag.toLowerCase().includes(lowerQuery))) ||
-      item.location.toLowerCase().includes(lowerQuery) ||
-      item.platform.toLowerCase().includes(lowerQuery) ||
-      lowerQuery.split(' ').some(word => word.length > 2 && item.content.toLowerCase().includes(word))
-    );
+    const matches = source.filter(item => {
+      if (targetCountry) {
+        const itemLoc = item.location.toLowerCase();
+        const itemContent = item.content.toLowerCase();
+        let isCountryMatch = false;
+
+        if (targetCountry === "china" && (itemLoc.includes("china") || itemLoc.includes("hong kong") || itemLoc.includes("hongkong") || itemContent.includes("china") || itemContent.includes("chinese"))) isCountryMatch = true;
+        else if (targetCountry === "philippines" && (itemLoc.includes("philippines") || itemLoc.includes("manila") || itemLoc.includes("philipines"))) isCountryMatch = true;
+        else if (targetCountry === "thailand" && (itemLoc.includes("thailand") || itemLoc.includes("bangkok"))) isCountryMatch = true;
+        else if (targetCountry === "vietnam" && (itemLoc.includes("vietnam") || itemLoc.includes("hanoi") || itemLoc.includes("viet nam"))) isCountryMatch = true;
+        else if (targetCountry === "hong kong" && (itemLoc.includes("hong kong") || itemLoc.includes("hongkong"))) isCountryMatch = true;
+        else if (targetCountry === "singapore" && itemLoc.includes("singapore")) isCountryMatch = true;
+        else if (targetCountry === "sweden" && (itemLoc.includes("sweden") || itemLoc.includes("stockholm") || itemLoc.includes("gothenburg") || itemContent.includes("sweden") || itemContent.includes("swedish"))) isCountryMatch = true;
+        else if (targetCountry === "switzerland" && (itemLoc.includes("switzerland") || itemLoc.includes("zurich") || itemLoc.includes("geneva") || itemLoc.includes("swiss") || itemContent.includes("switzerland") || itemContent.includes("swiss"))) isCountryMatch = true;
+        else if (targetCountry === "italy" && (itemLoc.includes("italy") || itemLoc.includes("milan") || itemLoc.includes("italian") || itemContent.includes("italy") || itemContent.includes("italian"))) isCountryMatch = true;
+        else if (targetCountry === "usa" && (itemLoc.includes("usa") || itemLoc.includes("united states") || itemLoc.includes("ny") || itemLoc.includes("ca") || itemLoc.includes("tx") || itemLoc.includes("fl") || itemLoc.includes("wa"))) isCountryMatch = true;
+        else if (targetCountry === "uk" && (itemLoc.includes("uk") || itemLoc.includes("united kingdom") || itemLoc.includes("london") || itemLoc.includes("ireland"))) isCountryMatch = true;
+        else if (itemLoc.includes(targetCountry)) isCountryMatch = true;
+
+        if (!isCountryMatch) return false;
+      }
+
+      return (
+        item.content.toLowerCase().includes(lowerQuery) ||
+        (item.hashtags && item.hashtags.some(tag => tag.toLowerCase().includes(lowerQuery))) ||
+        item.location.toLowerCase().includes(lowerQuery) ||
+        item.platform.toLowerCase().includes(lowerQuery) ||
+        lowerQuery.split(' ').some(word => word.length > 2 && item.content.toLowerCase().includes(word))
+      );
+    });
 
     return matches;
   }, [correctedQuery, query, allResults]);
