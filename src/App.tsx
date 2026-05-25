@@ -9,6 +9,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react
 import AboutPage from "@/app/about/page";
 import Dashboard from "@/components/Dashboard";
 import { TermsModal } from "@/components/TermsModal";
+import DigitalConsultingAudit from "@/components/DigitalConsultingAudit";
 
 const testimonials = [
   { name: "Chris B.", role: "Freelancer", text: "Went from struggling to find clients to having a waitlist. Unreal results.", initials: "CB" },
@@ -221,6 +222,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/digital-consulting-pros" element={<DigitalConsultingAudit />} />
       </Routes>
     </Router>
   );

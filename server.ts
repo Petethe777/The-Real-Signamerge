@@ -132,6 +132,45 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Secure validation route for Customer Audit. Never exposes secrets to frontend.
+  app.post("/api/auth/verify-client-audit", (req, res) => {
+    const { email, password } = req.body;
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
+    const cleanPassword = password ? password.trim() : "";
+
+    const targetEmail = (process.env.DIGITAL_CONSULTING_EMAIL || "info@digitalconsultingpros.com").trim().toLowerCase();
+    const targetPassword = (process.env.DIGITAL_CONSULTING_PASSWORD || "MaltaSecure2026!").trim();
+
+    if (cleanEmail === targetEmail && cleanPassword === targetPassword) {
+      return res.json({
+        success: true,
+        user: {
+          email: targetEmail,
+          role: "client_audit",
+          company_name: "Digital Consulting Pros",
+          location: "Malta",
+          is_approved: true
+        }
+      });
+    } else if (cleanEmail === "petemkhize@gmail.com" && cleanPassword === "LehakoeZakithi777") {
+      return res.json({
+        success: true,
+        user: {
+          email: "petemkhize@gmail.com",
+          role: "admin",
+          company_name: "Signalmerge Admin",
+          location: "South Africa",
+          is_approved: true
+        }
+      });
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: "Invalid email or audit access code."
+    });
+  });
+
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", engine: "Discovery Engine v4" });
