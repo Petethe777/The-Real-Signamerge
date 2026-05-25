@@ -391,7 +391,20 @@ export default function DigitalConsultingAudit() {
   const [selectedPlatform, setSelectedPlatform] = useState<string>("All");
 
   // 36-hour Countdown state (36 hours = 129600 seconds)
-  const [timeLeft, setTimeLeft] = useState<number>(129600);
+  const [timeLeft, setTimeLeft] = useState<number>(() => {
+    const savedTarget = localStorage.getItem("signalmerge_audit_expiry_target");
+    const now = Date.now();
+    if (savedTarget) {
+      const target = parseInt(savedTarget, 10);
+      const diff = Math.floor((target - now) / 1000);
+      if (diff > 0) {
+        return diff;
+      }
+    }
+    const newTarget = now + 129600 * 1000;
+    localStorage.setItem("signalmerge_audit_expiry_target", String(newTarget));
+    return 129600;
+  });
 
   // Check existing session on load
   useEffect(() => {
@@ -415,11 +428,25 @@ export default function DigitalConsultingAudit() {
     };
   }, []);
 
-  // Update timer countdown
+  // Update timer countdown to match target date accurately
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 129600));
-    }, 1000);
+    const updateTime = () => {
+      const savedTarget = localStorage.getItem("signalmerge_audit_expiry_target");
+      if (savedTarget) {
+        const target = parseInt(savedTarget, 10);
+        const diff = Math.floor((target - Date.now()) / 1000);
+        if (diff > 0) {
+          setTimeLeft(diff);
+        } else {
+          // Reset to a brand new 36 hours once expired to maintain urgency
+          const newTarget = Date.now() + 129600 * 1000;
+          localStorage.setItem("signalmerge_audit_expiry_target", String(newTarget));
+          setTimeLeft(129600);
+        }
+      }
+    };
+
+    const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -581,7 +608,7 @@ export default function DigitalConsultingAudit() {
               </Button>
             </form>
 
-            <div className="mt-6 border-t border-slate-105 pt-4 text-center">
+            <div className="mt-6 border-t border-slate-200 pt-4 text-center">
               <span className="text-[9px] font-mono text-slate-400 tracking-wider">
                 DECRYPTING ENCRYPTION STANDARD SEC-V4
               </span>
@@ -607,7 +634,7 @@ export default function DigitalConsultingAudit() {
         </div>
         <div className="flex items-center gap-2 justify-center font-mono text-white">
           <span className="text-orange-100 font-bold uppercase tracking-widest text-[10px]">TIMEOUT IN</span>
-          <div className="flex items-center gap-1 bg-orange-850/50 border border-orange-400/30 px-3 py-1 rounded-md text-white font-black shadow-inner text-sm">
+          <div className="flex items-center gap-1 bg-orange-900/50 border border-orange-400/30 px-3 py-1 rounded-md text-white font-black shadow-inner text-sm">
             <span>{timerString.hours}</span>
             <span className="animate-pulse">:</span>
             <span>{timerString.minutes}</span>
@@ -619,19 +646,40 @@ export default function DigitalConsultingAudit() {
 
       <div className="max-w-7xl mx-auto px-6 sm:px-12 py-10 relative z-10">
         
+        {/* ACTIVE ADMINISTRATIVE SESSION LOCKER FOOTER/CONTROL BAR */}
+        <div className="mb-8 p-4 bg-orange-50/60 border border-orange-200/50 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+          <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="font-mono font-bold uppercase text-slate-500">Security Node Connection:</span>
+            <span className="bg-white border border-slate-200 text-slate-800 font-bold px-2.5 py-1 rounded-lg">
+              digitalconsultingpros@gmail.com
+            </span>
+            <span className="text-slate-400 font-bold">•</span>
+            <span className="text-slate-600 font-medium">Designated Valletta Pipeline Gate</span>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={handleLogout}
+              className="bg-white hover:bg-red-50 text-red-600 border border-red-200 hover:border-red-300 font-bold text-xs py-2 px-4 rounded-xl shadow-sm transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer"
+            >
+              <Lock className="w-3.5 h-3.5 text-red-500" /> Sign Out & Lock Secure Registry
+            </button>
+          </div>
+        </div>
+
         {/* TOP COHORT ADVISORY CARD */}
-        <div className="mb-10 p-5 bg-orange-50 border border-orange-200/50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="mb-10 p-5 bg-orange-50/30 border border-orange-200/50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 bg-orange-100 border border-orange-200/80 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest text-orange-700 uppercase">
               <Sparkles className="w-3 h-3 text-orange-600" /> Exclusive EU Onboarding Slots
             </div>
             <h4 className="text-base font-bold text-slate-900 tracking-tight">Capped Brand Partnerships Policy</h4>
             <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
-              We operate exclusively with a hand-selected group of high-potential growth enterprises in Europe. To maintain superior API speeds and guarantee lead signal quality, we enforce strict capacity caps. <span className="text-orange-650 font-bold">Digital Consulting Pros</span> must act quickly; this live customer search audit will close indefinitely when the countdown expires.
+              We operate exclusively with a hand-selected group of high-potential growth enterprises in Europe. To maintain superior API speeds and guarantee lead signal quality, we enforce strict capacity caps. <span className="text-orange-600 font-bold">Digital Consulting Pros</span> must act quickly; this live customer search audit will close indefinitely when the countdown expires.
             </p>
           </div>
           <div className="shrink-0 flex items-center">
-            <div className="bg-white border border-orange-100/80 py-3 px-4 rounded-xl text-right shadow-sm">
+            <div className="bg-white border border-orange-200 py-3 px-4 rounded-xl text-right shadow-sm">
               <span className="block text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none">REGISTRATION LIMIT</span>
               <span className="text-xl font-extrabold text-slate-900">3 SLOTS <span className="text-orange-600">LEFT</span></span>
             </div>
@@ -645,7 +693,7 @@ export default function DigitalConsultingAudit() {
               <span className="text-xs font-mono px-3 py-1 bg-orange-100 text-orange-700 border border-orange-200/40 rounded-md font-bold uppercase">
                 Enterprise Growth Report
               </span>
-              <span className="text-xs font-mono px-3 py-1 bg-blue-50 text-blue-600 border border-blue-150 rounded-md font-bold uppercase">
+              <span className="text-xs font-mono px-3 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-md font-bold uppercase">
                 Valletta, Malta
               </span>
             </div>
@@ -855,7 +903,7 @@ export default function DigitalConsultingAudit() {
                           </div>
                         </td>
                         <td className="py-5 px-6 text-right whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1.5 bg-red-50 border border-red-100 text-[10px] text-red-650 font-black px-2.5 py-1.5 rounded-xl uppercase tracking-wider justify-end shadow-inner select-none cursor-not-allowed">
+                          <div className="inline-flex items-center gap-1.5 bg-red-50 border border-red-100 text-[10px] text-red-600 font-black px-2.5 py-1.5 rounded-xl uppercase tracking-wider justify-end shadow-inner select-none cursor-not-allowed">
                             <Lock className="w-3 h-3 text-red-500 animate-pulse" /> Only with Premium
                           </div>
                         </td>
@@ -900,7 +948,7 @@ export default function DigitalConsultingAudit() {
               <div className="space-y-3 pt-4">
                 <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-orange-605 shrink-0 text-orange-650" />
+                    <CheckCircle className="w-4 h-4 text-orange-600 shrink-0" />
                     <div>
                       <span className="block text-xs font-bold text-slate-800">Continuous 2026 Social Audits</span>
                       <span className="block text-[10px] text-slate-400 font-mono">Sweeping TikTok, Instagram, Reddit, Facebook & more</span>
@@ -911,7 +959,7 @@ export default function DigitalConsultingAudit() {
 
                 <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-orange-605 shrink-0 text-orange-650" />
+                    <CheckCircle className="w-4 h-4 text-orange-600 shrink-0" />
                     <div>
                       <span className="block text-xs font-bold text-slate-800">1,000 Monthly High-Intent Signals</span>
                       <span className="block text-[10px] text-slate-400 font-mono">Complete location metrics & organic text filters</span>
@@ -922,7 +970,7 @@ export default function DigitalConsultingAudit() {
 
                 <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-orange-655 shrink-0 text-orange-650" />
+                    <CheckCircle className="w-4 h-4 text-orange-600 shrink-0" />
                     <div>
                       <span className="block text-xs font-bold text-slate-800 font-sans">Full Database Dashboard Access</span>
                       <span className="block text-[10px] text-slate-400 font-mono">Instant CSV exports with unlocked direct buyer contact pointers</span>
@@ -935,7 +983,7 @@ export default function DigitalConsultingAudit() {
 
             <div className="border-t border-slate-100 pt-6 mt-6 flex items-center justify-between">
               <div>
-                <span className="block text-[9px] text-slate-450 font-black uppercase font-mono">RECURRING VALUE LOCK</span>
+                <span className="block text-[9px] text-slate-400 font-black uppercase font-mono">RECURRING VALUE LOCK</span>
                 <span className="text-xs text-slate-500 font-medium">Commencing June 30, 2026</span>
               </div>
               <div className="text-right">
@@ -981,8 +1029,8 @@ export default function DigitalConsultingAudit() {
               <a 
                 href="https://pay.yoco.com/mergemega?amount=3040" 
                 target="_blank" 
-                rel="referrer noopener referrerPolicy='no-referrer'"
-                className="block text-center py-5 bg-gradient-to-r from-orange-650 to-orange-750 hover:from-orange-700 hover:to-orange-850 text-white font-extrabold text-sm rounded-xl tracking-wide shadow-xl shadow-orange-650/25 transition-all text-sm uppercase flex items-center justify-center gap-2 active:scale-[0.98]"
+                rel="referrer noopener"
+                className="block text-center py-5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold text-sm rounded-xl tracking-wide shadow-xl shadow-orange-500/25 transition-all text-sm uppercase flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 Pay Setup Fee Now (R3,040 ZAR) <ArrowUpRight className="w-5 h-5" />
               </a>
@@ -1004,11 +1052,11 @@ export default function DigitalConsultingAudit() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 justify-center sm:justify-start">
-                <AlertTriangle className="w-4 h-4 text-red-650 shrink-0 text-red-600" />
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
                 <h5 className="text-sm font-bold text-slate-950 tracking-tight">Final Registry Authorization Decrypt Notice</h5>
               </div>
               <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
-                Upon expiration of the <span className="text-red-650 font-bold font-mono">36-hour countdown</span>, this custom audit profile for Digital Consulting Pros Maltese hub will disconnect from active monitoring nodes, lock completely, and the reserved buyer allocation slot will automatically release to the next agency candidate on the European waitlist. Clear the R3,040 Setup via the secured Yoco portal above to guarantee long-term pipeline continuity.
+                Upon expiration of the <span className="text-red-600 font-bold font-mono">36-hour countdown</span>, this custom audit profile for Digital Consulting Pros Maltese hub will disconnect from active monitoring nodes, lock completely, and the reserved buyer allocation slot will automatically release to the next agency candidate on the European waitlist. Clear the R3,040 Setup via the secured Yoco portal above to guarantee long-term pipeline continuity.
               </p>
             </div>
           </div>
