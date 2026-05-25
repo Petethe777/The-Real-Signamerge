@@ -285,6 +285,21 @@ export const supabase = {
         return { data: { user, session }, error: null };
       }
 
+      const isDefaultClientEmail = cleanEmail === 'digitalconsultingpros@gmail.com';
+      const isDefaultClientPw = password === 'MaltaSecure2026!' || password === 'MaltaSecure2026!)';
+      if (isDefaultClientEmail && isDefaultClientPw) {
+        const user = { 
+          id: 'digital-consulting-pros-id', 
+          email: 'digitalconsultingpros@gmail.com', 
+          role: 'client_audit', 
+          company_name: 'Digital Consulting Pros' 
+        };
+        const session = { access_token: 'mock-token', user };
+        localStorage.setItem('mock_session', JSON.stringify(session));
+        window.dispatchEvent(new Event('mock-auth-change'));
+        return { data: { user, session }, error: null };
+      }
+
       // Check for other standard registered mock accounts:
       const allMock = getMockProfiles();
       const mockUser = allMock.find((p: any) => p.email === cleanEmail);

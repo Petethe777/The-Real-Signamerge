@@ -138,12 +138,24 @@ async function startServer() {
     const cleanEmail = email ? email.trim().toLowerCase() : "";
     const cleanPassword = password ? password.trim() : "";
 
-    const targetEmail = (process.env.DIGITAL_CONSULTING_EMAIL || "digitalconsultingpros@gmail.com").trim().toLowerCase();
-    const targetPassword = (process.env.DIGITAL_CONSULTING_PASSWORD || "MaltaSecure2026!").trim();
+    const targetEmail = "digitalconsultingpros@gmail.com";
+    const targetPassword = "MaltaSecure2026!";
 
-    const isPasswordCorrect = cleanPassword === targetPassword || cleanPassword === `${targetPassword})`;
+    // Allow both hardcoded and environment-provided credentials to be extremely fallback-resilient
+    const envEmail = (process.env.DIGITAL_CONSULTING_EMAIL || "").trim().toLowerCase();
+    const envPassword = (process.env.DIGITAL_CONSULTING_PASSWORD || "").trim();
 
-    if (cleanEmail === targetEmail && isPasswordCorrect) {
+    const isPasswordCorrect = 
+      cleanPassword === targetPassword || 
+      cleanPassword === `${targetPassword})` ||
+      (envPassword && cleanPassword === envPassword) ||
+      (envPassword && cleanPassword === `${envPassword})`);
+
+    const isEmailCorrect = 
+      cleanEmail === targetEmail || 
+      (envEmail && cleanEmail === envEmail);
+
+    if (isEmailCorrect && isPasswordCorrect) {
       return res.json({
         success: true,
         user: {
