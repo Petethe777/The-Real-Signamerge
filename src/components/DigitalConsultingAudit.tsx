@@ -582,10 +582,7 @@ export default function DigitalConsultingAudit() {
                 DECRYPTING ENCRYPTION STANDARD SEC-V4
               </span>
             </div>
-            
-            <div className="mt-2 p-2 bg-[#090b0e] border border-white/5 rounded-xl text-[10px] text-gray-500 leading-normal">
-              <span className="font-bold text-gray-400">Sandbox Preview:</span> You can sign in using the secure credentials for Digital Consulting Pros (<span className="text-primary font-mono select-all">info@digitalconsultingpros.com</span> / <span className="text-primary font-mono select-all">MaltaSecure2026!</span>) or the Admin profile.
-            </div>
+
           </Card>
         </div>
       </div>
