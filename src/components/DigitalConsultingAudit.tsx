@@ -28,7 +28,7 @@ const rawLeadsData: Lead[] = [
     id: "lead-1",
     platform: "LinkedIn",
     intent: "Urgent: In dire need of a validated professional Digital Marketing agency. We have a budget of $3,500/mo and need help setting up our channels. Drop your recommendations or DM me.",
-    location: "Malta & remote EU",
+    location: "Global",
     time: "1h ago"
   },
   {
@@ -62,8 +62,8 @@ const rawLeadsData: Lead[] = [
   {
     id: "lead-6",
     platform: "LinkedIn",
-    intent: "Hiring a digital marketing expert to optimize our local lead-gen pipelines. Malta-based client. Ready to start immediately with €2,500 retainer.",
-    location: "Malta",
+    intent: "Hiring a digital marketing expert to optimize our local lead-gen pipelines. Global client. Ready to start immediately with €2,500 retainer.",
+    location: "Global",
     time: "11h ago"
   },
   {
@@ -118,8 +118,8 @@ const rawLeadsData: Lead[] = [
   {
     id: "lead-14",
     platform: "Facebook",
-    intent: "Any agencies specializing in real estate lead generation? We're starting a development group in Malta and need continuous investor inquiries.",
-    location: "Malta / Sliema",
+    intent: "Any agencies specializing in real estate lead generation? We're starting a development group and need continuous investor inquiries.",
+    location: "Global",
     time: "1d ago"
   },
   {
@@ -189,7 +189,7 @@ const rawLeadsData: Lead[] = [
     id: "lead-24",
     platform: "Facebook",
     intent: "Looking for an expert in local SEO and Google Business Profile optimization. We run dental clinics and need to dominate top 3 maps positions.",
-    location: "Malta / Valletta",
+    location: "Global",
     time: "2d ago"
   },
   {
@@ -252,7 +252,7 @@ const rawLeadsData: Lead[] = [
     id: "lead-33",
     platform: "Reddit",
     intent: "Our luxury boutique hotel is looking to boost bookings directly rather than relying on Booking.com fees. Sourcing a localized digital campaign strategist.",
-    location: "Malta / Gozo",
+    location: "Global",
     time: "2d ago"
   },
   {
@@ -272,8 +272,8 @@ const rawLeadsData: Lead[] = [
   {
     id: "lead-36",
     platform: "LinkedIn",
-    intent: "Our luxury yacht charter business in Malta needs a complete digital overhaul. We need expert SEO, premium Meta ads, and localized Google Maps listing authority.",
-    location: "Malta",
+    intent: "Our luxury yacht charter business needs a complete digital overhaul. We need expert SEO, premium Meta ads, and Google Maps listing authority.",
+    location: "Global",
     time: "3d ago"
   },
   {
@@ -328,8 +328,8 @@ const rawLeadsData: Lead[] = [
   {
     id: "lead-44",
     platform: "Facebook",
-    intent: "Sourcing a professional localized PPC manager for law firm clientele. Malta offices require a steady stream of corporate law inquiries.",
-    location: "Malta / Valletta",
+    intent: "Sourcing a professional localized PPC manager for law firm clientele. Offices require a steady stream of corporate law inquiries.",
+    location: "Global",
     time: "3d ago"
   },
   {
@@ -504,8 +504,11 @@ export default function DigitalConsultingAudit() {
     setIsAuthenticated(false);
   };
 
+  // Transform all lead locations to Global
+  const globalLeads = rawLeadsData.map(lead => ({ ...lead, location: "Global" }));
+
   // Filter leads based on platform and search query
-  const filteredLeads = rawLeadsData.filter((lead) => {
+  const filteredLeads = globalLeads.filter((lead) => {
     const matchesPlatform = selectedPlatform === "All" || lead.platform === selectedPlatform;
     const matchesQuery = 
       lead.intent.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -629,7 +632,7 @@ export default function DigitalConsultingAudit() {
         <div className="flex items-center gap-2 justify-center sm:justify-start">
           <AlertTriangle className="w-4 h-4 text-white animate-pulse shrink-0" />
           <span className="text-white font-bold uppercase tracking-wider">
-            Urgent: Limited Malta Partner Cohort Slot — Slot is currently Reserved for Digital Consulting Pros
+            Urgent: Limited Global Partner Cohort Slot — Slot is currently Reserved for Digital Consulting Pros
           </span>
         </div>
         <div className="flex items-center gap-2 justify-center font-mono text-white">
@@ -655,14 +658,14 @@ export default function DigitalConsultingAudit() {
               digitalconsultingpros@gmail.com
             </span>
             <span className="text-slate-400 font-bold">•</span>
-            <span className="text-slate-600 font-medium">Designated Valletta Pipeline Gate</span>
+            <span className="text-slate-600 font-medium">Designated Global Pipeline Gate</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={handleLogout}
-              className="bg-white hover:bg-red-50 text-red-600 border border-red-200 hover:border-red-300 font-bold text-xs py-2 px-4 rounded-xl shadow-sm transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer"
+              className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 px-4.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer"
             >
-              <Lock className="w-3.5 h-3.5 text-red-500" /> Sign Out & Lock Secure Registry
+              <Lock className="w-3.5 h-3.5" /> Sign Out & Lock Secure Registry
             </button>
           </div>
         </div>
@@ -671,11 +674,11 @@ export default function DigitalConsultingAudit() {
         <div className="mb-10 p-5 bg-orange-50/30 border border-orange-200/50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 bg-orange-100 border border-orange-200/80 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest text-orange-700 uppercase">
-              <Sparkles className="w-3 h-3 text-orange-600" /> Exclusive EU Onboarding Slots
+              <Sparkles className="w-3 h-3 text-orange-600" /> Exclusive Global Onboarding Slots
             </div>
             <h4 className="text-base font-bold text-slate-900 tracking-tight">Capped Brand Partnerships Policy</h4>
             <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
-              We operate exclusively with a hand-selected group of high-potential growth enterprises in Europe. To maintain superior API speeds and guarantee lead signal quality, we enforce strict capacity caps. <span className="text-orange-600 font-bold">Digital Consulting Pros</span> must act quickly; this live customer search audit will close indefinitely when the countdown expires.
+              We operate exclusively with a hand-selected group of high-potential growth enterprises globally. To maintain superior API speeds and guarantee lead signal quality, we enforce strict capacity caps. <span className="text-orange-600 font-bold">Digital Consulting Pros</span> must act quickly; this live customer search audit will close indefinitely when the countdown expires.
             </p>
           </div>
           <div className="shrink-0 flex items-center">
@@ -694,20 +697,24 @@ export default function DigitalConsultingAudit() {
                 Enterprise Growth Report
               </span>
               <span className="text-xs font-mono px-3 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-md font-bold uppercase">
-                Valletta, Malta
+                Global
               </span>
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
               Customer Audit: <span className="text-orange-600">Digital Consulting Pros</span>
             </h1>
             <p className="text-sm text-slate-600 mt-2 max-w-2xl leading-relaxed">
-              Social engagement diagnostics and real-time high-conviction buying cues compiled for the year 2026. Review localized European traffic matrices and preview available signals below.
+              Social engagement diagnostics and real-time high-conviction buying cues compiled for the year 2026. Preview available global signals below.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <Button onClick={handleLogout} className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs px-4 py-2.5 rounded-xl font-medium shadow-sm transition-all">
-              Lock Registry Gate
+            <Button 
+              onClick={handleLogout} 
+              variant="outline"
+              className="border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs px-4 py-2.5 rounded-xl font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Lock className="w-3.5 h-3.5" /> Sign Out & Lock Registry
             </Button>
             <a href="#payment-section" className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs py-3 px-5 rounded-xl shadow-lg shadow-orange-600/15 gap-1 inline-flex items-center">
               Claim Pipeline <ArrowRight className="w-3.5 h-3.5" />
@@ -737,7 +744,7 @@ export default function DigitalConsultingAudit() {
                 </div>
               </div>
               <div className="border-t border-slate-100 mt-4 pt-4 text-[10px] text-slate-500 leading-normal flex items-center gap-1.5">
-                <Info className="w-3.5 h-3.5 text-[#00b2fe]" /> Active search query matching 'Digital Promotion Malta'
+                <Info className="w-3.5 h-3.5 text-[#00b2fe]" /> Active search query matching 'Digital Promotion Global'
               </div>
             </CardContent>
           </Card>
@@ -786,7 +793,7 @@ export default function DigitalConsultingAudit() {
                 </div>
               </div>
               <div className="border-t border-slate-100 mt-4 pt-4 text-[10px] text-slate-500 leading-normal flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-orange-600" /> Full metadata unlock of premium localized EU buyers
+                <ShieldCheck className="w-3.5 h-3.5 text-orange-600" /> Full metadata unlock of premium localized Global buyers
               </div>
             </CardContent>
           </Card>
@@ -805,9 +812,6 @@ export default function DigitalConsultingAudit() {
                   Preview Data
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Showing real social requests for digital marketing, advertising setup, and scaling specialists in Europe. Classified as live Preview Data.
-              </p>
             </div>
             
             <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -832,8 +836,8 @@ export default function DigitalConsultingAudit() {
             </span>
             {platforms.map((p) => {
               const count = p === "All" 
-                ? rawLeadsData.length 
-                : rawLeadsData.filter(l => l.platform === p).length;
+                ? globalLeads.length 
+                : globalLeads.filter(l => l.platform === p).length;
               const isActive = selectedPlatform === p;
               return (
                 <button
@@ -923,7 +927,7 @@ export default function DigitalConsultingAudit() {
 
           {/* Database Footer Summary */}
           <div className="p-4 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-500 leading-normal font-mono font-bold uppercase tracking-wider">
-            PREVIEW DATA • TOTAL DISCOVERED RECOVERY: 1,000+ EU SIGNALS EXPECTED THIS MONTH
+            PREVIEW DATA • TOTAL DISCOVERED RECOVERY: 1,000+ GLOBAL SIGNALS EXPECTED THIS MONTH
           </div>
         </div>
 
@@ -942,7 +946,7 @@ export default function DigitalConsultingAudit() {
                 Digital Consulting Pros Plan
               </h2>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Unlock instant access to the Signalmerge real-time customer search engine. Filter premium leads, reveal source contact metrics, export with one click, and receive continuous push notifications of hot prospects in Malta and Europe.
+                Unlock instant access to the Signalmerge real-time customer search engine. Filter premium leads, reveal source contact metrics, export with one click, and receive continuous push notifications of hot prospects globally.
               </p>
 
               <div className="space-y-3 pt-4">
@@ -1008,13 +1012,13 @@ export default function DigitalConsultingAudit() {
               
               <h3 className="text-xl font-bold text-slate-900 tracking-tight">Authorize One-Time Setup Fee</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Secure the European Signalmerge data pipeline allocation earmarked for Malta. Authorize the setup parameter fee immediately using the secure Yoco link below. Any delay in setup authorization risks automatic re-allocation to alternative digital firms.
+                Secure the global Signalmerge data pipeline allocation. Authorize the setup parameter fee immediately using the secure Yoco link below. Any delay in setup authorization risks automatic re-allocation to alternative digital firms.
               </p>
 
               {/* Huge Fee Breakdown */}
               <div className="bg-orange-50/40 border border-orange-100/60 p-4 rounded-xl flex items-center justify-between my-4">
                 <div>
-                  <span className="block text-[9.5px] font-black font-mono tracking-widest text-orange-700 leading-none mb-1">SETUP FEE (EUROS & ZAR)</span>
+                  <span className="block text-[9.5px] font-black font-mono tracking-widest text-orange-700 leading-none mb-1">SETUP FEE (EUROS)</span>
                   <span className="text-3xl font-extrabold text-slate-900">€160</span>
                   <span className="text-xs text-slate-500 ml-2">Equivalent to R3,040 ZAR</span>
                 </div>
@@ -1030,10 +1034,24 @@ export default function DigitalConsultingAudit() {
                 href="https://pay.yoco.com/mergemega?amount=3040" 
                 target="_blank" 
                 rel="referrer noopener"
-                className="block text-center py-5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold text-sm rounded-xl tracking-wide shadow-xl shadow-orange-500/25 transition-all text-sm uppercase flex items-center justify-center gap-2 active:scale-[0.98]"
+                className="block text-center py-5 bg-orange-600 hover:bg-orange-750 text-white font-extrabold text-sm rounded-xl tracking-wide shadow-xl shadow-orange-600/25 transition-all uppercase flex items-center justify-center gap-2 active:scale-[0.98]"
               >
-                Pay Setup Fee Now (R3,040 ZAR) <ArrowUpRight className="w-5 h-5" />
+                Pay Setup Fee Now (€160) <ArrowUpRight className="w-5 h-5" />
               </a>
+
+              <div className="text-center space-y-2.5">
+                <span className="block text-xs font-mono font-bold text-slate-600 uppercase">
+                  (Equivalent to R3,040 ZAR)
+                </span>
+                <div className="p-3 bg-emerald-50 border border-emerald-100/50 rounded-xl text-left shadow-sm">
+                  <p className="text-[11px] text-emerald-800 font-bold leading-relaxed flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-650 shrink-0 mt-0.5" />
+                    <span>
+                      <strong className="uppercase">Important Notice:</strong> Your custom pipeline and dashboard setup will be fully completed and delivered in <strong className="underline">7 business days</strong> once payment has been approved.
+                    </span>
+                  </p>
+                </div>
+              </div>
 
               <div className="flex items-center justify-center gap-4 text-[10px] text-slate-400 font-mono select-none">
                 <span className="flex items-center gap-1">🛡️ SSL Secure</span>
@@ -1056,7 +1074,7 @@ export default function DigitalConsultingAudit() {
                 <h5 className="text-sm font-bold text-slate-950 tracking-tight">Final Registry Authorization Decrypt Notice</h5>
               </div>
               <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
-                Upon expiration of the <span className="text-red-600 font-bold font-mono">36-hour countdown</span>, this custom audit profile for Digital Consulting Pros Maltese hub will disconnect from active monitoring nodes, lock completely, and the reserved buyer allocation slot will automatically release to the next agency candidate on the European waitlist. Clear the R3,040 Setup via the secured Yoco portal above to guarantee long-term pipeline continuity.
+                Upon expiration of the <span className="text-red-600 font-bold font-mono">36-hour countdown</span>, this custom audit profile for Digital Consulting Pros global hub will disconnect from active monitoring nodes, lock completely, and the reserved buyer allocation slot will automatically release to the next agency candidate on the global waitlist. Clear the R3,040 Setup via the secured Yoco portal above to guarantee long-term pipeline continuity.
               </p>
             </div>
           </div>
