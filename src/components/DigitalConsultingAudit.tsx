@@ -3,13 +3,15 @@ import {
   Zap, Clock, ShieldCheck, MapPin, ExternalLink, Lock, 
   AlertTriangle, ArrowRight, Search, CheckCircle, RefreshCw,
   TrendingUp, Users, ArrowUpRight, BarChart2, MessageSquare, 
-  Laptop, Compass, Sparkles, Filter, Globe, Info, Heart
+  Laptop, Compass, Sparkles, Filter, Globe, Info, Heart, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "motion/react";
+import { Link, useNavigate } from "react-router-dom";
+import { TermsModal } from "@/components/TermsModal";
 
 // Types for Leads Database
 interface Lead {
@@ -375,6 +377,8 @@ const rawLeadsData: Lead[] = [
 ];
 
 export default function DigitalConsultingAudit() {
+  const navigate = useNavigate();
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [sessionLoading, setSessionLoading] = useState<boolean>(true);
   const [loginEmail, setLoginEmail] = useState<string>("");
@@ -488,10 +492,10 @@ export default function DigitalConsultingAudit() {
   // Loading Screen
   if (sessionLoading) {
     return (
-      <div className="min-h-screen bg-[#0d0f12] flex items-center justify-center text-gray-200">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-800">
         <div className="flex flex-col items-center gap-4">
-          <RefreshCw className="w-8 h-8 text-primary animate-spin" />
-          <p className="text-sm font-mono text-gray-400">CONNECTING TO COGNITIVE DISCOVERY CLUSTER...</p>
+          <RefreshCw className="w-8 h-8 text-orange-600 animate-spin" />
+          <p className="text-xs font-mono text-slate-500 uppercase tracking-widest">CONNECTING TO COGNITIVE DISCOVERY CLUSTER...</p>
         </div>
       </div>
     );
@@ -500,33 +504,33 @@ export default function DigitalConsultingAudit() {
   // --- 1. RENDER SECURE GATE IF NOT AUTHENTICATED ---
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0a0c0f] text-gray-200 flex items-center justify-center px-6 font-sans relative overflow-hidden selection:bg-orange-600/30">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center px-6 font-sans relative overflow-hidden selection:bg-orange-500/30">
         {/* Background Decorative Rings */}
-        <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-orange-600/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] rounded-full bg-orange-600/5 blur-[120px] pointer-events-none" />
+        <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-orange-500/10 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] rounded-full bg-orange-500/10 blur-[100px] pointer-events-none" />
 
         <div className="w-full max-w-md z-10">
           <div className="flex items-center gap-2 justify-center mb-8">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-orange-600/20">
+            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-600/20">
               <Zap className="text-white w-5 h-5 fill-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-white font-sans">Signalmerge</span>
+            <span className="text-xl font-bold tracking-tight text-slate-900 font-sans">Signalmerge</span>
           </div>
 
-          <Card className="border border-white/5 bg-[#12161f]/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden p-8">
+          <Card className="border border-orange-100 bg-white/90 backdrop-blur-xl shadow-xl rounded-2xl overflow-hidden p-8">
             <div className="text-center mb-6">
-              <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-full px-3 py-1 text-[10px] font-bold text-primary uppercase tracking-wider mb-3">
-                <Lock className="w-3 h-3" /> Secure Client Registry Gate
+              <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 border border-orange-200/60 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-3">
+                <Lock className="w-3 h-3 text-orange-600" /> Secure Client Registry Gate
               </div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Customer Audit Lock</h1>
-              <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-                Enter your designated administrative email and passcode provided during onboarding for <span className="text-primary font-bold">Digital Consulting Pros</span>.
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Customer Audit Lock</h1>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                Enter your designated administrative email and passcode provided during onboarding for <span className="text-orange-600 font-bold">Digital Consulting Pros</span>.
               </p>
             </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 font-mono">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5 font-mono">
                   Client Email Address
                 </label>
                 <Input 
@@ -535,12 +539,12 @@ export default function DigitalConsultingAudit() {
                   required
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
-                  className="bg-[#0b0d10] border-white/5 text-gray-200 placeholder:text-gray-600 rounded-xl py-6 px-4 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
+                  className="bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-xl py-6 px-4 font-mono text-sm focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 font-mono">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5 font-mono">
                   Secure Access Key
                 </label>
                 <Input 
@@ -549,13 +553,13 @@ export default function DigitalConsultingAudit() {
                   required
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="bg-[#0b0d10] border-white/5 text-gray-200 placeholder:text-gray-600 rounded-xl py-6 px-4 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
+                  className="bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-xl py-6 px-4 font-mono text-sm focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500"
                 />
               </div>
 
               {loginError && (
-                <div className="p-3 bg-red-950/40 border border-red-500/20 rounded-xl text-xs text-red-400 flex items-start gap-2 animate-shake">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2 animate-shake">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
                   <p className="leading-normal">{loginError}</p>
                 </div>
               )}
@@ -563,7 +567,7 @@ export default function DigitalConsultingAudit() {
               <Button 
                 type="submit" 
                 disabled={loginSubmitting}
-                className="w-full py-6 mt-2 rounded-xl bg-primary hover:bg-orange-700 text-white text-sm font-bold tracking-wide transition-all shadow-lg shadow-orange-600/15 gap-2"
+                className="w-full py-6 mt-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold tracking-wide transition-all shadow-lg shadow-orange-600/15 gap-2"
               >
                 {loginSubmitting ? (
                   <>
@@ -577,8 +581,8 @@ export default function DigitalConsultingAudit() {
               </Button>
             </form>
 
-            <div className="mt-6 border-t border-white/5 pt-4 text-center">
-              <span className="text-[9px] font-mono text-gray-500 tracking-wider">
+            <div className="mt-6 border-t border-slate-105 pt-4 text-center">
+              <span className="text-[9px] font-mono text-slate-400 tracking-wider">
                 DECRYPTING ENCRYPTION STANDARD SEC-V4
               </span>
             </div>
@@ -591,19 +595,19 @@ export default function DigitalConsultingAudit() {
 
   // --- 2. MAIN LOGGED IN AUDIT PAGE RENDER ---
   return (
-    <div className="min-h-screen bg-[#07090c] text-gray-200 font-sans selection:bg-orange-600/30 relative">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-orange-500/30 relative">
       
       {/* 36-HOUR COUNTDOWN RIGID HEAD-BAR */}
-      <div className="sticky top-0 z-50 bg-red-950/90 border-b border-red-800/40 backdrop-blur-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-center text-xs">
+      <div className="sticky top-0 z-50 bg-orange-600 border-b border-orange-700 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-center text-xs">
         <div className="flex items-center gap-2 justify-center sm:justify-start">
-          <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse shrink-0" />
-          <span className="text-red-300 font-bold uppercase tracking-wider">
+          <AlertTriangle className="w-4 h-4 text-white animate-pulse shrink-0" />
+          <span className="text-white font-bold uppercase tracking-wider">
             Urgent: Limited Malta Partner Cohort Slot — Slot is currently Reserved for Digital Consulting Pros
           </span>
         </div>
         <div className="flex items-center gap-2 justify-center font-mono text-white">
-          <span className="text-red-400 font-bold uppercase tracking-widest text-[10px]">TIMEOUT IN</span>
-          <div className="flex items-center gap-1 bg-red-950/80 border border-red-500/30 px-3 py-1 rounded-md text-red-400 font-black shadow-inner shadow-red-950 text-sm">
+          <span className="text-orange-100 font-bold uppercase tracking-widest text-[10px]">TIMEOUT IN</span>
+          <div className="flex items-center gap-1 bg-orange-850/50 border border-orange-400/30 px-3 py-1 rounded-md text-white font-black shadow-inner text-sm">
             <span>{timerString.hours}</span>
             <span className="animate-pulse">:</span>
             <span>{timerString.minutes}</span>
@@ -616,48 +620,48 @@ export default function DigitalConsultingAudit() {
       <div className="max-w-7xl mx-auto px-6 sm:px-12 py-10 relative z-10">
         
         {/* TOP COHORT ADVISORY CARD */}
-        <div className="mb-10 p-5 bg-gradient-to-r from-orange-950/20 to-transparent border border-orange-500/10 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="mb-10 p-5 bg-orange-50 border border-orange-200/50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest text-primary uppercase">
-              <Sparkles className="w-3 h-3" /> Exclusive EU Onboarding Slots
+            <div className="inline-flex items-center gap-1.5 bg-orange-100 border border-orange-200/80 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest text-orange-700 uppercase">
+              <Sparkles className="w-3 h-3 text-orange-600" /> Exclusive EU Onboarding Slots
             </div>
-            <h4 className="text-base font-bold text-white tracking-tight">Capped Brand Partnerships Policy</h4>
-            <p className="text-xs text-gray-400 max-w-3xl leading-relaxed">
-              We operate exclusively with a hand-selected group of high-potential growth enterprises in Europe. To maintain superior API speeds and guarantee lead signal quality, we enforce strict capacity caps. <span className="text-primary font-bold">Digital Consulting Pros</span> must act quickly; this live customer search audit will close indefinitely when the countdown expires.
+            <h4 className="text-base font-bold text-slate-900 tracking-tight">Capped Brand Partnerships Policy</h4>
+            <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
+              We operate exclusively with a hand-selected group of high-potential growth enterprises in Europe. To maintain superior API speeds and guarantee lead signal quality, we enforce strict capacity caps. <span className="text-orange-650 font-bold">Digital Consulting Pros</span> must act quickly; this live customer search audit will close indefinitely when the countdown expires.
             </p>
           </div>
           <div className="shrink-0 flex items-center">
-            <div className="bg-[#12161f] border border-white/5 py-3 px-4 rounded-xl text-right">
-              <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">REGISTRATION LIMIT</span>
-              <span className="text-xl font-extrabold text-white">3 SLOTS <span className="text-primary">LEFT</span></span>
+            <div className="bg-white border border-orange-100/80 py-3 px-4 rounded-xl text-right shadow-sm">
+              <span className="block text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none">REGISTRATION LIMIT</span>
+              <span className="text-xl font-extrabold text-slate-900">3 SLOTS <span className="text-orange-600">LEFT</span></span>
             </div>
           </div>
         </div>
 
         {/* HERO HEADER AREA */}
-        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-white/5">
+        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-mono px-3 py-1 bg-orange-600/10 text-primary border border-orange-600/20 rounded-md font-bold uppercase">
+              <span className="text-xs font-mono px-3 py-1 bg-orange-100 text-orange-700 border border-orange-200/40 rounded-md font-bold uppercase">
                 Enterprise Growth Report
               </span>
-              <span className="text-xs font-mono px-3 py-1 bg-blue-600/10 text-blue-400 border border-blue-600/20 rounded-md font-bold uppercase">
+              <span className="text-xs font-mono px-3 py-1 bg-blue-50 text-blue-600 border border-blue-150 rounded-md font-bold uppercase">
                 Valletta, Malta
               </span>
             </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">
-              Customer Audit: <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-primary">Digital Consulting Pros</span>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              Customer Audit: <span className="text-orange-600">Digital Consulting Pros</span>
             </h1>
-            <p className="text-sm text-gray-400 mt-2 max-w-2xl leading-relaxed">
+            <p className="text-sm text-slate-600 mt-2 max-w-2xl leading-relaxed">
               Social engagement diagnostics and real-time high-conviction buying cues compiled for the year 2026. Review localized European traffic matrices and preview available signals below.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <Button onClick={handleLogout} className="border border-white/5 bg-[#12161f]/50 hover:bg-[#12161f] text-gray-300 text-xs px-4 py-2.5 rounded-xl font-medium">
+            <Button onClick={handleLogout} className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs px-4 py-2.5 rounded-xl font-medium shadow-sm transition-all">
               Lock Registry Gate
             </Button>
-            <a href="#payment-section" className="bg-primary hover:bg-orange-700 text-white font-bold text-xs py-3 px-5 rounded-xl shadow-lg shadow-orange-600/15 gap-1 inline-flex items-center">
+            <a href="#payment-section" className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs py-3 px-5 rounded-xl shadow-lg shadow-orange-600/15 gap-1 inline-flex items-center">
               Claim Pipeline <ArrowRight className="w-3.5 h-3.5" />
             </a>
           </div>
@@ -666,75 +670,75 @@ export default function DigitalConsultingAudit() {
         {/* HIGHER PERFORMANCE MATRICES (DAILY STATS) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           
-          <Card className="bg-[#0f1118]/80 border border-white/5 shadow-xl rounded-2xl relative overflow-hidden group hover:border-[#F97316]/20 transition-all duration-300">
-            <div className="absolute top-0 left-0 h-1 bg-[#00f2fe] w-full" />
+          <Card className="bg-white border border-slate-100 shadow-md rounded-2xl relative overflow-hidden group hover:border-orange-200 transition-all duration-300">
+            <div className="absolute top-0 left-0 h-1 bg-[#00b2fe] w-full" />
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-black font-mono tracking-widest text-[#00f2fe] uppercase">
+                <span className="text-[10px] font-black font-mono tracking-widest text-[#00b2fe] uppercase">
                   TikTok Lead Generation
                 </span>
-                <div className="w-8 h-8 rounded-lg bg-cyan-950/50 flex items-center justify-center border border-cyan-800/30">
-                  <TrendingUp className="w-4 h-4 text-[#00f2fe]" />
+                <div className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center border border-cyan-100">
+                  <TrendingUp className="w-4 h-4 text-[#00b2fe]" />
                 </div>
               </div>
               <div className="space-y-1">
-                <span className="block text-[11px] text-gray-400 font-medium">Daily Direct Website Enquiries</span>
+                <span className="block text-[11px] text-slate-500 font-medium">Daily Direct Website Enquiries</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-extrabold text-white">101</span>
-                  <span className="text-emerald-400 text-xs font-bold font-mono">⚡ Verified Live</span>
+                  <span className="text-3xl font-extrabold text-slate-900">101</span>
+                  <span className="text-emerald-600 text-xs font-bold font-mono">⚡ Verified Live</span>
                 </div>
               </div>
-              <div className="border-t border-white/5 mt-4 pt-4 text-[10px] text-gray-500 leading-normal flex items-center gap-1.5">
-                <Info className="w-3.5 h-3.5 text-[#00f2fe]" /> Active search query matching 'Digital Promotion Malta'
+              <div className="border-t border-slate-100 mt-4 pt-4 text-[10px] text-slate-500 leading-normal flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-[#00b2fe]" /> Active search query matching 'Digital Promotion Malta'
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#0f1118]/80 border border-white/5 shadow-xl rounded-2xl relative overflow-hidden group hover:border-[#F97316]/20 transition-all duration-300">
+          <Card className="bg-white border border-slate-100 shadow-md rounded-2xl relative overflow-hidden group hover:border-orange-200 transition-all duration-300">
             <div className="absolute top-0 left-0 h-1 bg-pink-500 w-full" />
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[10px] font-black font-mono tracking-widest text-pink-500 uppercase">
                   Instagram Social Pipeline
                 </span>
-                <div className="w-8 h-8 rounded-lg bg-pink-950/50 flex items-center justify-center border border-pink-800/30">
-                  <Users className="w-4 h-4 text-pink-500" />
+                <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center border border-pink-100">
+                  <span className="text-pink-500 font-bold block">★</span>
                 </div>
               </div>
               <div className="space-y-1">
-                <span className="block text-[11px] text-gray-400 font-medium">Daily High-Intent Outbound Sweeps</span>
+                <span className="block text-[11px] text-slate-500 font-medium">Daily High-Intent Outbound Sweeps</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-extrabold text-white">123</span>
-                  <span className="text-pink-400 text-xs font-bold font-mono">🔥 High Intent</span>
+                  <span className="text-3xl font-extrabold text-slate-900">123</span>
+                  <span className="text-pink-500 text-xs font-bold font-mono">🔥 High Intent</span>
                 </div>
               </div>
-              <div className="border-t border-white/5 mt-4 pt-4 text-[10px] text-gray-500 leading-normal flex items-center gap-1.5">
+              <div className="border-t border-slate-100 mt-4 pt-4 text-[10px] text-slate-500 leading-normal flex items-center gap-1.5">
                 <Info className="w-3.5 h-3.5 text-pink-500" /> Matches agency buyers & digital consulting filters
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#11131c] border border-[#F97316]/20 shadow-xl rounded-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 h-1 bg-primary w-full shadow-[0_0_20px_#F97316]" />
-            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none" />
+          <Card className="bg-white border border-orange-200/60 shadow-md rounded-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 h-1 bg-orange-600 w-full shadow-[0_0_10px_rgba(249,115,22,0.3)]" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/5 rounded-full blur-xl pointer-events-none" />
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-black font-mono tracking-widest text-primary uppercase">
+                <span className="text-[10px] font-black font-mono tracking-widest text-orange-600 uppercase">
                   Signalmerge Core Capability
                 </span>
-                <div className="w-8 h-8 rounded-lg bg-orange-950/80 flex items-center justify-center border border-orange-500/30">
-                  <Zap className="w-4 h-4 text-primary fill-primary" />
+                <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center border border-orange-100">
+                  <Zap className="w-4 h-4 text-orange-600 fill-orange-600" />
                 </div>
               </div>
               <div className="space-y-1">
-                <span className="block text-[11px] text-gray-400 font-medium">Guaranteed Lead Volume Target</span>
+                <span className="block text-[11px] text-slate-500 font-medium">Guaranteed Lead Volume Target</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-400">1,000</span>
-                  <span className="text-gray-400 text-xs font-bold">Leads / Month</span>
+                  <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600">1,000</span>
+                  <span className="text-slate-500 text-xs font-bold">Leads / Month</span>
                 </div>
               </div>
-              <div className="border-t border-white/5 mt-4 pt-4 text-[10px] text-gray-400 leading-normal flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-primary" /> Full metadata unlock of premium localized EU buyers
+              <div className="border-t border-slate-100 mt-4 pt-4 text-[10px] text-slate-500 leading-normal flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-orange-600" /> Full metadata unlock of premium localized EU buyers
               </div>
             </CardContent>
           </Card>
@@ -742,40 +746,40 @@ export default function DigitalConsultingAudit() {
         </div>
 
         {/* LEAD PREVIEW GRAPHICS INTERACTIVE LAYOUT */}
-        <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl mb-12">
+        <div className="bg-white border border-slate-200 shadow-md rounded-2xl overflow-hidden mb-12">
           
           {/* Table Header Controls */}
-          <div className="p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-white tracking-tight">Signalmerge Live Query Dashboard</h3>
-                <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase font-mono">
-                  PREVIEW LOCK: 50 RECORDS
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">Signalmerge Live Query Dashboard</h3>
+                <span className="bg-orange-100 text-orange-850 border border-orange-200/60 text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase font-mono">
+                  Preview Data
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-1">
-                Showing real social requests for digital marketing, advertising setup, and scaling specialists in Europe.
+              <p className="text-xs text-slate-500 mt-1">
+                Showing real social requests for digital marketing, advertising setup, and scaling specialists in Europe. Classified as live Preview Data.
               </p>
             </div>
             
             <div className="flex flex-col sm:flex-row items-center gap-3">
               {/* Search Bar */}
               <div className="relative w-full sm:w-64">
-                <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <Input 
                   type="text" 
                   placeholder="Filter key queries / regions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-[#080a0e] border-white/5 text-gray-300 text-xs pl-10 pr-4 py-4 rounded-xl placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
+                  className="bg-slate-50 border-slate-200 text-slate-800 text-xs pl-10 pr-4 py-4 rounded-xl placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500"
                 />
               </div>
             </div>
           </div>
 
           {/* Platform category selectors */}
-          <div className="border-b border-white/5 bg-[#0a0c11] px-6 py-3 flex flex-wrap gap-2 items-center">
-            <span className="text-[10px] font-mono font-bold uppercase text-gray-500 mr-2 flex items-center gap-1">
+          <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-3 flex flex-wrap gap-2 items-center">
+            <span className="text-[10px] font-mono font-bold uppercase text-slate-500 mr-2 flex items-center gap-1">
               <Filter className="w-3.5 h-3.5" /> Source Channels:
             </span>
             {platforms.map((p) => {
@@ -789,12 +793,12 @@ export default function DigitalConsultingAudit() {
                   onClick={() => setSelectedPlatform(p)}
                   className={`text-xs rounded-lg px-3 py-1.5 font-bold transition-all flex items-center gap-1.5 focus:outline-none ${
                     isActive 
-                      ? "bg-primary text-white shadow-md shadow-orange-600/10" 
-                      : "bg-[#11141c] text-gray-400 hover:text-white border border-white/5"
+                      ? "bg-orange-600 text-white shadow-md shadow-orange-600/10" 
+                      : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50"
                   }`}
                 >
                   <span>{p}</span>
-                  <span className={`text-[9px] font-mono px-1.5 py-0.1 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-white/5 text-gray-500"}`}>
+                  <span className={`text-[9px] font-mono px-1.5 py-0.1 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-550"}`}>
                     {count}
                   </span>
                 </button>
@@ -806,53 +810,53 @@ export default function DigitalConsultingAudit() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-white/5 bg-[#08090e] text-[10px] text-gray-400 tracking-wider font-mono font-bold uppercase">
-                  <th className="py-4 px-6">Source Node</th>
-                  <th className="py-4 px-6 min-w-[320px]">Intent Signal (Compelling Social Media Posts)</th>
-                  <th className="py-4 px-6">Target Geography</th>
-                  <th className="py-4 px-6">Signal Age</th>
-                  <th className="py-4 px-6 text-right">Outreach Node</th>
+                <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] text-slate-500 tracking-wider font-mono font-bold uppercase">
+                  <th className="py-4 px-6 font-bold">Source Node</th>
+                  <th className="py-4 px-6 min-w-[320px] font-bold">Intent Signal (Compelling Social Media Posts)</th>
+                  <th className="py-4 px-6 font-bold">Target Geography</th>
+                  <th className="py-4 px-6 font-bold">Signal Age</th>
+                  <th className="py-4 px-6 text-right font-bold">Outreach Node</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-sm font-sans">
+              <tbody className="divide-y divide-slate-100 text-sm font-sans">
                 {filteredLeads.length > 0 ? (
                   filteredLeads.map((lead) => {
                     // Determine platform color badge
                     const colorMap = {
-                      LinkedIn: "bg-blue-600/10 text-blue-400 border-blue-500/20",
-                      Instagram: "bg-pink-600/10 text-pink-400 border-pink-500/20",
-                      Facebook: "bg-indigo-600/10 text-indigo-400 border-indigo-500/20",
-                      Reddit: "bg-orange-600/10 text-orange-400 border-orange-500/20",
-                      TikTok: "bg-cyan-600/10 text-cyan-400 border-cyan-500/20"
+                      LinkedIn: "bg-blue-50 text-blue-600 border-blue-200/50",
+                      Instagram: "bg-pink-50 text-pink-600 border-pink-200/50",
+                      Facebook: "bg-indigo-50 text-indigo-600 border-indigo-200/50",
+                      Reddit: "bg-orange-50 text-orange-600 border-orange-200/50",
+                      TikTok: "bg-cyan-50 text-cyan-600 border-cyan-200/50"
                     };
-                    const badgeStyle = colorMap[lead.platform] || "bg-gray-600/10 text-gray-400";
+                    const badgeStyle = colorMap[lead.platform] || "bg-slate-50 text-slate-600";
 
                     return (
                       <tr 
                         key={lead.id}
-                        className="hover:bg-white/[0.02] transition-colors group"
+                        className="hover:bg-slate-50/50 transition-colors group"
                       >
                         <td className="py-5 px-6 font-mono text-xs">
                           <span className={`border px-2 py-1 rounded-md font-bold ${badgeStyle}`}>
                             {lead.platform}
                           </span>
                         </td>
-                        <td className="py-5 px-6 max-w-sm sm:max-w-md lg:max-w-xl leading-relaxed text-gray-300 font-medium">
+                        <td className="py-5 px-6 max-w-sm sm:max-w-md lg:max-w-xl leading-relaxed text-slate-700 font-medium">
                           <p className="line-clamp-3 select-all">"{lead.intent}"</p>
                         </td>
-                        <td className="py-5 px-6 font-mono text-xs text-gray-400 whitespace-nowrap">
+                        <td className="py-5 px-6 font-mono text-xs text-slate-600 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-primary" /> {lead.location}
+                            <MapPin className="w-3.5 h-3.5 text-orange-600" /> {lead.location}
                           </div>
                         </td>
-                        <td className="py-5 px-6 font-mono text-xs text-gray-500 whitespace-nowrap">
+                        <td className="py-5 px-6 font-mono text-xs text-slate-500 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-gray-500" /> {lead.time}
+                            <Clock className="w-3.5 h-3.5 text-slate-400" /> {lead.time}
                           </div>
                         </td>
                         <td className="py-5 px-6 text-right whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1.5 bg-red-950/40 border border-red-500/20 text-[10px] text-red-400 font-black px-2.5 py-1.5 rounded-xl uppercase tracking-wider justify-end shadow-inner select-none cursor-not-allowed">
-                            <Lock className="w-3 h-3 text-red-500" /> Only with Premium
+                          <div className="inline-flex items-center gap-1.5 bg-red-50 border border-red-100 text-[10px] text-red-650 font-black px-2.5 py-1.5 rounded-xl uppercase tracking-wider justify-end shadow-inner select-none cursor-not-allowed">
+                            <Lock className="w-3 h-3 text-red-500 animate-pulse" /> Only with Premium
                           </div>
                         </td>
                       </tr>
@@ -860,7 +864,7 @@ export default function DigitalConsultingAudit() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-gray-500">
+                    <td colSpan={5} className="py-12 text-center text-slate-500 bg-white">
                       No matching records found within the 50 live preview database leads.
                     </td>
                   </tr>
@@ -870,8 +874,8 @@ export default function DigitalConsultingAudit() {
           </div>
 
           {/* Database Footer Summary */}
-          <div className="p-4 bg-[#0a0c11] border-t border-white/5 text-center text-[10px] text-gray-500 leading-normal font-mono">
-            SECURE QUERY COMPLETED • TOTAL DISCOVERED RECOVERY: 1,000+ EU SIGNALS EXPECTED THIS MONTH
+          <div className="p-4 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-500 leading-normal font-mono font-bold uppercase tracking-wider">
+            PREVIEW DATA • TOTAL DISCOVERED RECOVERY: 1,000+ EU SIGNALS EXPECTED THIS MONTH
           </div>
         </div>
 
@@ -879,96 +883,96 @@ export default function DigitalConsultingAudit() {
         <div id="payment-section" className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12 items-stretch">
           
           {/* Card left: pricing breakdown */}
-          <Card className="bg-[#0f1118]/90 border border-white/5 rounded-2xl flex flex-col justify-between p-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/5 rounded-full blur-2xl pointer-events-none" />
+          <Card className="bg-white border border-slate-200 rounded-2xl flex flex-col justify-between p-8 relative overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl pointer-events-none" />
             
             <div className="space-y-4">
-              <span className="text-[10px] font-black font-mono tracking-widest text-primary uppercase">
+              <span className="text-[10px] font-black font-mono tracking-widest text-orange-600 uppercase">
                 Contract Pricing Breakdown
               </span>
-              <h2 className="text-2xl font-extrabold text-white tracking-tight">
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
                 Digital Consulting Pros Plan
               </h2>
-              <p className="text-xs text-gray-400 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Unlock instant access to the Signalmerge real-time customer search engine. Filter premium leads, reveal source contact metrics, export with one click, and receive continuous push notifications of hot prospects in Malta and Europe.
               </p>
 
               <div className="space-y-3 pt-4">
-                <div className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-605 shrink-0 text-orange-650" />
                     <div>
-                      <span className="block text-xs font-bold text-gray-200">Continuous 2026 Social Audits</span>
-                      <span className="block text-[10px] text-gray-500 font-mono">Sweeping TikTok, Instagram, Reddit, Facebook & more</span>
+                      <span className="block text-xs font-bold text-slate-800">Continuous 2026 Social Audits</span>
+                      <span className="block text-[10px] text-slate-400 font-mono">Sweeping TikTok, Instagram, Reddit, Facebook & more</span>
                     </div>
                   </div>
-                  <span className="text-xs font-mono font-bold text-emerald-400">Included</span>
+                  <span className="text-xs font-mono font-bold text-emerald-600">Included</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-605 shrink-0 text-orange-650" />
                     <div>
-                      <span className="block text-xs font-bold text-gray-200">1,000 Monthly High-Intent Signals</span>
-                      <span className="block text-[10px] text-gray-500 font-mono">Complete location metrics & organic text filters</span>
+                      <span className="block text-xs font-bold text-slate-800">1,000 Monthly High-Intent Signals</span>
+                      <span className="block text-[10px] text-slate-400 font-mono">Complete location metrics & organic text filters</span>
                     </div>
                   </div>
-                  <span className="text-xs font-mono font-bold text-emerald-400">Included</span>
+                  <span className="text-xs font-mono font-bold text-emerald-600">Included</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-655 shrink-0 text-orange-650" />
                     <div>
-                      <span className="block text-xs font-bold text-gray-200 font-sans">Full Database Dashboard Access</span>
-                      <span className="block text-[10px] text-gray-500 font-mono">Instant CSV exports with unlocked direct buyer contact pointers</span>
+                      <span className="block text-xs font-bold text-slate-800 font-sans">Full Database Dashboard Access</span>
+                      <span className="block text-[10px] text-slate-400 font-mono">Instant CSV exports with unlocked direct buyer contact pointers</span>
                     </div>
                   </div>
-                  <span className="text-xs font-mono font-bold text-emerald-400">Included</span>
+                  <span className="text-xs font-mono font-bold text-emerald-600">Included</span>
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-white/5 pt-6 mt-6 flex items-center justify-between">
+            <div className="border-t border-slate-100 pt-6 mt-6 flex items-center justify-between">
               <div>
-                <span className="block text-[9px] text-gray-400 font-black uppercase font-mono">RECURRING VALUE LOCK</span>
-                <span className="text-xs text-gray-500">Commencing June 30, 2026</span>
+                <span className="block text-[9px] text-slate-450 font-black uppercase font-mono">RECURRING VALUE LOCK</span>
+                <span className="text-xs text-slate-500 font-medium">Commencing June 30, 2026</span>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-extrabold text-white">€80 <span className="text-xs font-mono text-gray-400">/ month</span></span>
+                <span className="text-2xl font-extrabold text-slate-900">€80 <span className="text-xs font-mono text-slate-500 font-normal">/ month</span></span>
               </div>
             </div>
           </Card>
 
           {/* Card right: setup pay checkout link standard standard */}
-          <Card className="bg-[#11141c] border border-primary/20 rounded-2xl p-8 relative flex flex-col justify-between overflow-hidden shadow-2xl shadow-primary/5">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[80px] pointer-events-none" />
+          <Card className="bg-white border border-orange-200 rounded-2xl p-8 relative flex flex-col justify-between overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-[80px] pointer-events-none" />
             
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black font-mono tracking-widest text-[#f0fdfa] bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md uppercase">
+                <span className="text-[10px] font-black font-mono tracking-widest text-emerald-800 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-md uppercase">
                   Action Required Now
                 </span>
-                <span className="text-xs text-red-500 font-mono font-black animate-pulse leading-none">
+                <span className="text-xs text-orange-600 font-mono font-black animate-pulse leading-none">
                   ⏳ 36h Limit
                 </span>
               </div>
               
-              <h3 className="text-xl font-bold text-white tracking-tight">Authorize One-Time Setup Fee</h3>
-              <p className="text-xs text-gray-400 leading-relaxed">
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">Authorize One-Time Setup Fee</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Secure the European Signalmerge data pipeline allocation earmarked for Malta. Authorize the setup parameter fee immediately using the secure Yoco link below. Any delay in setup authorization risks automatic re-allocation to alternative digital firms.
               </p>
 
               {/* Huge Fee Breakdown */}
-              <div className="bg-[#0b0c11] border border-white/5 p-4 rounded-xl flex items-center justify-between my-4">
+              <div className="bg-orange-50/40 border border-orange-100/60 p-4 rounded-xl flex items-center justify-between my-4">
                 <div>
-                  <span className="block text-[9.5px] font-black font-mono tracking-widest text-gray-500 leading-none mb-1">SETUP FEE (EUROS & ZAR)</span>
-                  <span className="text-3xl font-extrabold text-white">€160</span>
-                  <span className="text-xs text-gray-400 ml-2">Equivalent to R3,040 ZAR</span>
+                  <span className="block text-[9.5px] font-black font-mono tracking-widest text-orange-700 leading-none mb-1">SETUP FEE (EUROS & ZAR)</span>
+                  <span className="text-3xl font-extrabold text-slate-900">€160</span>
+                  <span className="text-xs text-slate-500 ml-2">Equivalent to R3,040 ZAR</span>
                 </div>
                 <div className="text-right">
-                  <span className="block text-[8px] font-black font-mono text-primary leading-none uppercase">Yoco Portal Gate</span>
-                  <span className="text-sm text-gray-400 font-mono font-medium">Secured Standard</span>
+                   <span className="block text-[8px] font-black font-mono text-orange-600 leading-none uppercase">Yoco Portal Gate</span>
+                   <span className="text-sm text-slate-500 font-mono font-medium">Secured Standard</span>
                 </div>
               </div>
             </div>
@@ -978,12 +982,12 @@ export default function DigitalConsultingAudit() {
                 href="https://pay.yoco.com/mergemega?amount=3040" 
                 target="_blank" 
                 rel="referrer noopener referrerPolicy='no-referrer'"
-                className="block text-center py-5 bg-gradient-to-r from-primary to-orange-700 hover:from-orange-700 hover:to-orange-850 text-white font-extrabold text-sm rounded-xl tracking-wide shadow-xl shadow-orange-600/25 transition-all text-sm uppercase flex items-center justify-center gap-2 active:scale-[0.98]"
+                className="block text-center py-5 bg-gradient-to-r from-orange-650 to-orange-750 hover:from-orange-700 hover:to-orange-850 text-white font-extrabold text-sm rounded-xl tracking-wide shadow-xl shadow-orange-650/25 transition-all text-sm uppercase flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 Pay Setup Fee Now (R3,040 ZAR) <ArrowUpRight className="w-5 h-5" />
               </a>
 
-              <div className="flex items-center justify-center gap-4 text-[10px] text-gray-500 font-mono select-none">
+              <div className="flex items-center justify-center gap-4 text-[10px] text-slate-400 font-mono select-none">
                 <span className="flex items-center gap-1">🛡️ SSL Secure</span>
                 <span>•</span>
                 <span className="flex items-center gap-1">💳 Visa & Mastercard</span>
@@ -996,29 +1000,48 @@ export default function DigitalConsultingAudit() {
         </div>
 
         {/* BOTTOM TIMED EXPIRY WARNING FOOTER */}
-        <div className="mb-8 p-6 bg-red-950/20 border border-red-500/20 rounded-2xl">
+        <div className="mb-8 p-6 bg-red-50 border border-red-100 rounded-2xl">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 justify-center sm:justify-start">
-                <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
-                <h5 className="text-sm font-bold text-white tracking-tight">Final Registry Authorization Decrypt Notice</h5>
+                <AlertTriangle className="w-4 h-4 text-red-650 shrink-0 text-red-600" />
+                <h5 className="text-sm font-bold text-slate-950 tracking-tight">Final Registry Authorization Decrypt Notice</h5>
               </div>
-              <p className="text-xs text-gray-400 max-w-2xl leading-relaxed">
-                Upon expiration of the <span className="text-red-400 font-bold font-mono">36-hour countdown</span>, this custom audit profile for Digital Consulting Pros Maltese hub will disconnect from active monitoring nodes, lock completely, and the reserved buyer allocation slot will automatically release to the next agency candidate on the European waitlist. Clear the R3,040 Setup via the secured Yoco portal above to guarantee long-term pipeline continuity.
+              <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                Upon expiration of the <span className="text-red-650 font-bold font-mono">36-hour countdown</span>, this custom audit profile for Digital Consulting Pros Maltese hub will disconnect from active monitoring nodes, lock completely, and the reserved buyer allocation slot will automatically release to the next agency candidate on the European waitlist. Clear the R3,040 Setup via the secured Yoco portal above to guarantee long-term pipeline continuity.
               </p>
             </div>
           </div>
         </div>
 
         {/* FOOTER */}
-        <div className="mt-16 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-gray-500 font-mono">
-          <span>© 129600 SEC-RECOVERY COGNITIVE ENGINE V4. SIGNALMERGE CORE DEPLOYMENT</span>
-          <div className="flex gap-4 mt-4 sm:mt-0">
-            <span>METRIC COMPLIANCE STANDARDS v2026.0</span>
-            <span>•</span>
-            <span>MALTA VALLETTA EXPORT NETWORK</span>
+        <div className="mt-16 pt-8 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between text-xs text-slate-500 font-mono">
+          <div className="flex items-center gap-2">
+            <span>© 2026 Signalmerge</span>
+          </div>
+          <div className="flex flex-wrap gap-6 items-center mt-3 md:mt-0">
+            <Link to="/about" className="hover:text-orange-600 transition-colors uppercase text-xs font-bold">
+              About
+            </Link>
+            <button 
+              type="button" 
+              onClick={() => setIsTermsModalOpen(true)}
+              className="hover:text-orange-600 cursor-pointer transition-colors focus:outline-none uppercase text-xs font-bold"
+            >
+              Terms
+            </button>
+            <button 
+              type="button" 
+              onClick={() => navigate(-1)} 
+              className="hover:text-orange-600 cursor-pointer transition-colors focus:outline-none uppercase text-xs flex items-center gap-1 font-bold text-orange-600"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Previous Page
+            </button>
           </div>
         </div>
+
+        {/* Terms Modal */}
+        <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
 
       </div>
     </div>
