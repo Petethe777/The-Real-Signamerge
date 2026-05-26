@@ -653,12 +653,7 @@ export default function DigitalConsultingAudit() {
         <div className="mb-8 p-4 bg-orange-50/60 border border-orange-200/50 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
           <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span className="font-mono font-bold uppercase text-slate-500">Security Node Connection:</span>
-            <span className="bg-white border border-slate-200 text-slate-800 font-bold px-2.5 py-1 rounded-lg">
-              digitalconsultingpros@gmail.com
-            </span>
-            <span className="text-slate-400 font-bold">•</span>
-            <span className="text-slate-600 font-medium">Designated Global Pipeline Gate</span>
+            <span className="text-slate-600 font-medium">Active Partner Session</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <button
