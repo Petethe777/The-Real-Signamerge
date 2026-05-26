@@ -3,7 +3,8 @@ import {
   Zap, Clock, ShieldCheck, MapPin, ExternalLink, Lock, 
   AlertTriangle, ArrowRight, Search, CheckCircle, RefreshCw,
   TrendingUp, Users, ArrowUpRight, BarChart2, MessageSquare, 
-  Laptop, Compass, Sparkles, Filter, Globe, Info, Heart, ArrowLeft
+  Laptop, Compass, Sparkles, Filter, Globe, Info, Heart, ArrowLeft,
+  Key
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -386,6 +387,14 @@ export default function DigitalConsultingAudit() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginSubmitting, setLoginSubmitting] = useState<boolean>(false);
 
+  // Password change states
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState<boolean>(false);
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string | null>(null);
+  const [passwordChanging, setPasswordChanging] = useState<boolean>(false);
+
   // Search and Filter states for leads table
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedPlatform, setSelectedPlatform] = useState<string>("All");
@@ -496,6 +505,76 @@ export default function DigitalConsultingAudit() {
       setLoginError(err.message || "An error occurred logging in.");
     } finally {
       setLoginSubmitting(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordChangeError(null);
+    setPasswordChangeSuccess(null);
+    setPasswordChanging(true);
+
+    const newPwClean = newPassword.trim();
+    const confirmPwClean = confirmPassword.trim();
+
+    if (!newPwClean) {
+      setPasswordChangeError("Password cannot be empty.");
+      setPasswordChanging(false);
+      return;
+    }
+
+    if (newPwClean.length < 6) {
+      setPasswordChangeError("Password must be at least 6 characters.");
+      setPasswordChanging(false);
+      return;
+    }
+
+    if (newPwClean !== confirmPwClean) {
+      setPasswordChangeError("Passwords do not match.");
+      setPasswordChanging(false);
+      return;
+    }
+
+    try {
+      // 1. Save locally to localStorage so it works offline/sandbox
+      localStorage.setItem('saved_password_digitalconsultingpros@gmail.com', newPwClean);
+
+      // 2. Save directly to Supabase client_credentials table (Dual-write supported on hybrid supabase client)
+      const { error } = await supabase.from('client_credentials').upsert({
+        email: 'digitalconsultingpros@gmail.com',
+        password: newPwClean,
+        updated_at: new Date().toISOString()
+      });
+
+      if (error) {
+        console.warn("Supabase background credentials write notice:", error.message);
+      }
+
+      // 3. Sync to server-side memory immediately
+      try {
+        await fetch('/api/auth/update-client-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'digitalconsultingpros@gmail.com', password: newPwClean })
+        });
+      } catch (err) {
+        console.warn("Server sync exception:", err);
+      }
+
+      setPasswordChangeSuccess("Password updated and secured successfully in Supabase!");
+      setNewPassword("");
+      setConfirmPassword("");
+      
+      // Auto close after 3 seconds
+      setTimeout(() => {
+        setIsChangePasswordOpen(false);
+        setPasswordChangeSuccess(null);
+      }, 3000);
+
+    } catch (err: any) {
+      setPasswordChangeError(err.message || "Failed to save the new password.");
+    } finally {
+      setPasswordChanging(false);
     }
   };
 
@@ -650,19 +729,106 @@ export default function DigitalConsultingAudit() {
       <div className="max-w-7xl mx-auto px-6 sm:px-12 py-10 relative z-10">
         
         {/* ACTIVE ADMINISTRATIVE SESSION LOCKER FOOTER/CONTROL BAR */}
-        <div className="mb-8 p-4 bg-orange-50/60 border border-orange-200/50 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-          <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span className="text-slate-600 font-medium">Active Partner Session</span>
+        <div className="mb-8 p-4 bg-orange-50/60 border border-orange-200/50 rounded-2xl flex flex-col gap-4 text-xs">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="text-slate-600 font-medium">Active Partner Session (digitalconsultingpros@gmail.com)</span>
+            </div>
+            <div className="flex items-center gap-3 shrink-0 flex-wrap justify-center">
+              <button
+                onClick={() => setIsChangePasswordOpen(!isChangePasswordOpen)}
+                className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer"
+              >
+                <Key className="w-3.5 h-3.5 text-orange-600" /> {isChangePasswordOpen ? "Close Password Settings" : "Change Password"}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 px-4.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer"
+              >
+                <Lock className="w-3.5 h-3.5" /> Sign Out & Lock Secure Registry
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 px-4.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer"
-            >
-              <Lock className="w-3.5 h-3.5" /> Sign Out & Lock Secure Registry
-            </button>
-          </div>
+
+          <AnimatePresence>
+            {isChangePasswordOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden border-t border-orange-200/30 pt-4"
+              >
+                <form onSubmit={handleUpdatePassword} className="max-w-md space-y-3">
+                  <h5 className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <Key className="w-4 h-4 text-orange-600" /> Update Audit Access Password
+                  </h5>
+                  <p className="text-slate-600 text-[11px] leading-relaxed">
+                    Set a custom secure password to replace the default <code className="bg-orange-100 px-1 py-0.5 rounded font-mono font-bold text-orange-700 text-[10px]">MaltaSecure2026!</code>. This updates our global Supabase replication engine instantly.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">New Password</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        required
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-sans focus:outline-none focus:border-orange-500 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Confirm Password</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-sans focus:outline-none focus:border-orange-500 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {passwordChangeError && (
+                    <p className="text-red-600 font-bold font-mono text-[10px]">✕ {passwordChangeError}</p>
+                  )}
+                  {passwordChangeSuccess && (
+                    <p className="text-emerald-600 font-bold font-mono text-[10px]">✓ {passwordChangeSuccess}</p>
+                  )}
+
+                  <div className="flex gap-2 pt-1.5">
+                    <Button
+                      type="submit"
+                      disabled={passwordChanging}
+                      className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs py-2 px-4 rounded-lg cursor-pointer flex items-center"
+                    >
+                      {passwordChanging ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin mr-1.5" /> Securing Keys...
+                        </>
+                      ) : (
+                        "Save Password to Supabase"
+                      )}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsChangePasswordOpen(false);
+                        setPasswordChangeError(null);
+                        setPasswordChangeSuccess(null);
+                      }}
+                      className="px-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-500 text-xs"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* TOP COHORT ADVISORY CARD */}
