@@ -276,8 +276,10 @@ export const supabase = {
         console.warn('Backend verification check failed, attempting local fallback...', err);
       }
 
+      const cleanPw = password ? password.trim() : '';
+
       // Master Sandbox Bypass checks:
-      if (cleanEmail === 'petemkhize@gmail.com' && password === 'LehakoeZakithi777') {
+      if (cleanEmail === 'petemkhize@gmail.com' && cleanPw === 'LehakoeZakithi777') {
         const user = { id: 'admin-id', email: 'petemkhize@gmail.com', role: 'admin' };
         const session = { access_token: 'mock-token', user };
         localStorage.setItem('mock_session', JSON.stringify(session));
@@ -286,7 +288,7 @@ export const supabase = {
       }
 
       const isDefaultClientEmail = cleanEmail === 'digitalconsultingpros@gmail.com';
-      const isDefaultClientPw = password === 'MaltaSecure2026!' || password === 'MaltaSecure2026!)';
+      const isDefaultClientPw = cleanPw === 'MaltaSecure2026!' || cleanPw === 'MaltaSecure2026!)';
       if (isDefaultClientEmail && isDefaultClientPw) {
         const user = { 
           id: 'digital-consulting-pros-id', 
