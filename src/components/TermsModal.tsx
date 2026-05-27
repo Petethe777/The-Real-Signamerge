@@ -390,6 +390,18 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             </p>
           </div>
 
+          <div className="p-4 bg-orange-50/50 border border-orange-100/50 rounded-2xl">
+            <h4 className="text-xs font-black text-orange-950 uppercase tracking-wider mb-2">30. Digital Accessibility & ADA Compliance</h4>
+            <p className="text-xs text-orange-900 leading-relaxed">
+              Mergemega is firmly committed to digital inclusion, software equity, and ensuring that our website, SignalMerge platform, and all digital assets are fully accessible to individuals with disabilities. We actively design, develop, and maintain our systems in accordance with the Americans with Disabilities Act (ADA), Section 508 of the Rehabilitation Act, and the Web Content Accessibility Guidelines (WCAG) 2.1 Level AA, guaranteeing a dignified and seamless experience for handicapped or disabled individuals.
+            </p>
+            <div className="mt-2 space-y-1.5 text-[11px] text-orange-800/80">
+              <p>30.1 <strong>Accessibility Standards & Assistance:</strong> We incorporate assistive technologies, screen-reader compatibility, responsive layouts, keyboard navigation support, high-contrast visual focus elements, and semantic markup to facilitate an equitable, unobstructed interactive environment for all operators. We are dedicated to maintaining compliance for handicapped individuals and ensuring the highest tier of universal usability.</p>
+              <p>30.2 <strong>Third-Party Components Disclaimer:</strong> While our proprietary software is designed to satisfy comprehensive federal and global ADA compliance parameters, certain third-party extensions, social media feeds, or external widgets integrated into the Platform may be subject to limitations outside our direct administrative control. We disclaimer liability for external features and will work actively to report and resolve accessibility blocks discovered therein.</p>
+              <p>30.3 <strong>Remediation & Support Contacts:</strong> If you or any representative experience an interactive obstacle, layout barrier, or accessibility issue on our services, please submit details to our Dedicated Accessibility Officer at <span className="underline font-bold">peter@mergemega.com</span>. We will rapidly prioritize software corrections, render alternate file formats, and ensure complete accommodation.</p>
+            </div>
+          </div>
+
           <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-3">
             <h4 className="text-xs font-black text-gray-900 uppercase tracking-wider">31. Official Contact & Notices</h4>
             <div className="space-y-2 text-xs">
