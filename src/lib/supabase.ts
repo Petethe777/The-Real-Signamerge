@@ -485,21 +485,37 @@ export const saveSearchQuery = async (queryText: string, userEmail?: string) => 
   const cleanQuery = queryText ? queryText.trim() : "";
   if (!cleanQuery) return;
   
+  // Write to mock LocalStorage sandbox for frontend resilience / offline sandbox mode
   try {
-    const { error } = await supabase
-      .from('search_queries')
-      .insert({
+    const listData = localStorage.getItem('mock_search_queries') || '[]';
+    let items: any[] = [];
+    try { items = JSON.parse(listData); } catch (e) {}
+    items.push({
+      id: `mock-${Math.random().toString(36).substring(2, 11)}`,
+      query: cleanQuery,
+      user_email: userEmail || 'anonymous',
+      created_at: new Date().toISOString()
+    });
+    localStorage.setItem('mock_search_queries', JSON.stringify(items));
+  } catch (err) {}
+
+  // Securely proxy to backend API database logger (never open to direct browser extraction)
+  try {
+    const response = await fetch('/api/search/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         query: cleanQuery,
-        user_email: userEmail || 'anonymous',
-        created_at: new Date().toISOString()
-      });
-      
-    if (error) {
-      console.warn(`Could not save search query "${cleanQuery}" to Supabase:`, error);
+        email: userEmail || 'anonymous'
+      })
+    });
+    
+    if (!response.ok) {
+      console.warn(`Could not save search query "${cleanQuery}" on backend:`, response.statusText);
     } else {
-      console.log(`Successfully saved search query: "${cleanQuery}"`);
+      console.log(`Successfully logged search query: "${cleanQuery}"`);
     }
   } catch (err) {
-    console.warn("Exception in saveSearchQuery:", err);
+    console.warn("Network error in saveSearchQuery server sync:", err);
   }
 };

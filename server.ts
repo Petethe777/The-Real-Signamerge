@@ -4,8 +4,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
+import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://sscuyhvkyfemrsmfxhkt.supabase.co";
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3V5aHZreWZlbXJzbWZ4aGt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzQ5MzAsImV4cCI6MjA5NDMxMDkzMH0.qoURHMmKre8uGLem4b6GBrqtt4yHaUlE9LI9PYxW-c4";
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseAnonKey);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -149,6 +155,36 @@ async function startServer() {
     return res.status(400).json({ success: false, message: "Invalid email or empty password." });
   });
 
+  // Secure Search Query Database Logger (never available / readable publicly by client scripts)
+  app.post("/api/search/log", async (req, res) => {
+    const { query, email } = req.body;
+    const cleanQuery = query ? query.trim() : "";
+    if (!cleanQuery) {
+      return res.status(400).json({ success: false, message: "Query text is required." });
+    }
+
+    try {
+      const { error } = await supabaseAdmin
+        .from('search_queries')
+        .insert({
+          query: cleanQuery,
+          user_email: email || 'anonymous',
+          created_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.warn(`[Server DB Search Logger] Failed to insert query "${cleanQuery}" to Supabase:`, error.message);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+
+      console.log(`[Server DB Search Logger] Successfully saved search query: "${cleanQuery}" for user: ${email || 'anonymous'}`);
+      return res.json({ success: true });
+    } catch (err: any) {
+      console.warn(`[Server DB Search Logger] Exception writing search query:`, err.message || err);
+      return res.status(500).json({ success: false, error: err.message || err });
+    }
+  });
+
   // Secure validation route for Customer Audit. Never exposes secrets to frontend.
   app.post("/api/auth/verify-client-audit", (req, res) => {
     const { email, password } = req.body;
@@ -214,6 +250,26 @@ async function startServer() {
     const query = req.query.q as string;
     if (!query) {
       return res.json([]);
+    }
+
+    // Capture and log every search query to the Supabase database in the background instantly
+    try {
+      supabaseAdmin
+        .from('search_queries')
+        .insert({
+          query: query.trim(),
+          user_email: 'anonymous_api',
+          created_at: new Date().toISOString()
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.warn("[Server DB Search Auto-Logger] Background insert failed:", error.message);
+          } else {
+            console.log(`[Server DB Search Auto-Logger] Automatically saved API query: "${query.trim()}"`);
+          }
+        });
+    } catch (e: any) {
+      console.warn("[Server DB Search Auto-Logger] Exception:', e.message || e");
     }
 
     const correction = correctQuerySearch(query);
