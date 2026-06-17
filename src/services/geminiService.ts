@@ -1,27 +1,109 @@
 import { DemandResult } from "../types";
+import { searchDataset } from "../data/customerSearchDataset";
 
 export const detectQueryCountry = (query: string): string | null => {
-  const q = query.toLowerCase();
-  if (q.includes("china") || q.includes("chinese")) return "china";
-  if (q.includes("philippines") || q.includes("philipines") || q.includes("manila")) return "philippines";
-  if (q.includes("thailand") || q.includes("bangkok")) return "thailand";
-  if (q.includes("vietnam") || q.includes("viet nam") || q.includes("hanoi") || q.includes("hcmc")) return "vietnam";
-  if (q.includes("hong kong") || q.includes("hongkong")) return "hong kong";
-  if (q.includes("singapore") || q.includes("sg")) return "singapore";
-  if (q.includes("sweden") || q.includes("swedish") || q.includes("stockholm")) return "sweden";
-  if (q.includes("switzerland") || q.includes("swiss") || q.includes("zurich") || q.includes("geneva")) return "switzerland";
-  if (q.includes("italy") || q.includes("italian") || q.includes("milan")) return "italy";
-  if (q.includes("usa") || q.includes("united states") || q.includes("america")) return "usa";
-  if (q.includes("uk") || q.includes("united kingdom") || q.includes("london")) return "uk";
+  const q = query.toLowerCase().trim();
+  
+  // First check direct country names in query
+  for (const c of searchDataset.countries) {
+    const countryName = c.country.toLowerCase();
+    if (q.includes(countryName)) {
+      return c.country.toLowerCase();
+    }
+    // Check if ISO2 code is matched as a discrete word
+    const iso = c.iso2.toLowerCase();
+    const isoRegex = new RegExp(`\\b${iso}\\b`, "i");
+    if (isoRegex.test(q)) {
+      return c.country.toLowerCase();
+    }
+    
+    // Check if any of the cities are explicitly named
+    for (const city of c.cities) {
+      const cityName = city.name.toLowerCase();
+      const cityRegex = new RegExp(`\\b${cityName}\\b`, "i");
+      if (cityRegex.test(q)) {
+        return c.country.toLowerCase();
+      }
+    }
+  }
+
+  // Fallback helper for adjectives/common variations
+  if (q.includes("south african") || q.includes(" sa ")) return "south africa";
+  if (q.includes("chinese")) return "china";
+  if (q.includes("swedish")) return "sweden";
+  if (q.includes("swiss")) return "switzerland";
+  if (q.includes("italian")) return "italy";
+  if (q.includes("american") || q.includes("us ")) return "united states";
+  if (q.includes("british")) return "united kingdom";
+  
   return null;
 };
+
+// Build a fast lookup Set of lowercase valid terms/words from the search dataset
+const datasetWords = new Set<string>();
+
+searchDataset.countries.forEach(c => {
+  const countryLower = c.country.toLowerCase();
+  datasetWords.add(countryLower);
+  countryLower.split(/\s+/).forEach(w => datasetWords.add(w.replace(/[^a-z0-9]/g, "")));
+  
+  c.cities.forEach(city => {
+    const cityLower = city.name.toLowerCase();
+    datasetWords.add(cityLower);
+    cityLower.split(/\s+/).forEach(w => datasetWords.add(w.replace(/[^a-z0-9]/g, "")));
+    if (city.zip) {
+      datasetWords.add(city.zip.toLowerCase());
+    }
+  });
+  if (c.iso2) {
+    datasetWords.add(c.iso2.toLowerCase());
+  }
+});
+
+if (searchDataset.products.digital) {
+  searchDataset.products.digital.forEach(p => {
+    const pLower = p.toLowerCase();
+    datasetWords.add(pLower);
+    pLower.split(/\s+/).forEach(w => datasetWords.add(w.replace(/[^a-z0-9]/g, "")));
+  });
+}
+
+if (searchDataset.products.physical) {
+  searchDataset.products.physical.forEach(p => {
+    const pLower = p.toLowerCase();
+    datasetWords.add(pLower);
+    pLower.split(/\s+/).forEach(w => datasetWords.add(w.replace(/[^a-z0-9]/g, "")));
+  });
+}
+
+if (searchDataset.search_phrases) {
+  searchDataset.search_phrases.forEach(sp => {
+    const spLower = sp.toLowerCase();
+    datasetWords.add(spLower);
+    spLower.split(/\s+/).forEach(w => datasetWords.add(w.replace(/[^a-z0-9]/g, "")));
+  });
+}
+
+if (searchDataset.social_platforms) {
+  searchDataset.social_platforms.forEach(p => {
+    datasetWords.add(p.name.toLowerCase());
+    if (p.focus) {
+      p.focus.forEach(f => {
+        const fLower = f.toLowerCase();
+        datasetWords.add(fLower);
+        fLower.split(/\s+/).forEach(w => datasetWords.add(w.replace(/[^a-z0-9]/g, "")));
+      });
+    }
+  });
+}
 
 const getDynamicFallbackResults = (query: string): DemandResult[] => {
   const cleanQuery = query.trim();
   if (!cleanQuery) return [];
 
   const targetCountry = detectQueryCountry(cleanQuery);
-  const qLower = cleanQuery.toLowerCase();
+  const cleanQNoPunct = cleanQuery.replace(/[,.?!;:]/g, " ");
+  const qLower = cleanQNoPunct.toLowerCase();
   const isSupplyChain = qLower.includes("supplier") || qLower.includes("manufacturer") || 
                         qLower.includes("logistics") || qLower.includes("supply chain") || 
                         qLower.includes("freight") || qLower.includes("import") || 
@@ -29,45 +111,79 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
                         qLower.includes("factories") || qLower.includes("sourcing") || 
                         qLower.includes("procurement") || qLower.includes("distributor");
 
-  // Geographic distributions:
-  const chinaLocs = [
-    "Shenzhen, China", "Guangzhou, China", "Shanghai, China", "Yiwu, China", 
-    "Ningbo, China", "Dongguan, China", "Zhejiang, China", "Fujian, China"
-  ];
-  const philippinesLocs = ["Manila, Philippines", "Cebu City, Philippines", "Davao City, Philippines", "Pasig, Philippines"];
-  const thailandLocs = ["Bangkok, Thailand", "Chonburi, Thailand", "Samut Prakan, Thailand", "Chiang Mai, Thailand"];
-  const vietnamLocs = ["Ho Chi Minh City, Vietnam", "Hanoi, Vietnam", "Binh Duong, Vietnam", "Hai Phong, Vietnam"];
-  const hkLocs = ["Kowloon, Hong Kong", "Wan Chai, Hong Kong", "Central, Hong Kong", "New Territories, Hong Kong"];
-  const singaporeLocs = ["Singapore", "Changi, Singapore", "Jurong, Singapore", "Singapore Tech District"];
-  const swedenLocs = ["Stockholm, Sweden", "Gothenburg, Sweden", "Malmö, Sweden", "Uppsala, Sweden"];
-  const switzerlandLocs = ["Zürich, Switzerland", "Geneva, Switzerland", "Basel, Switzerland", "Lugano, Switzerland"];
-  const italyLocs = ["Milan, Italy", "Prato, Italy", "Bologna, Italy", "Florence, Italy"];
-  const usaLocs = ["Los Angeles, CA", "Seattle, WA", "New York, NY", "Miami, FL", "Chicago, IL", "Austin, TX", "San Francisco, CA"];
-  const ukLocs = ["London, UK", "Manchester, UK", "Birmingham, UK", "Southampton, UK"];
+  const isPlumber = qLower.includes("plumb") || qLower.includes("pipe") || qLower.includes("drain") || qLower.includes("leak") || qLower.includes("water") || qLower.includes("heating") || qLower.includes("boiler") || qLower.includes("toilet") || qLower.includes("sink") || qLower.includes("faucet") || qLower.includes("clog");
+  const isConstruction = qLower.includes("construct") || qLower.includes("build") || qLower.includes("remodel") || qLower.includes("renovat") || qLower.includes("contractor") || qLower.includes("renovation") || qLower.includes("concrete") || qLower.includes("masonry") || qLower.includes("structural") || qLower.includes("blueprint");
+  const isStartupTech = qLower.includes("startup") || qLower.includes("ai") || qLower.includes("software") || qLower.includes("saas") || qLower.includes("developer") || qLower.includes("coding") || qLower.includes("app") || qLower.includes("llm") || qLower.includes("gpt") || qLower.includes("programmer") || qLower.includes("tech");
+  const isEcommerce = qLower.includes("shop") || qLower.includes("ecommerce") || qLower.includes("e-commerce") || qLower.includes("online") || qLower.includes("product") || qLower.includes("store") || qLower.includes("cloth") || qLower.includes("apparel") || qLower.includes("fashion") || qLower.includes("garment") || qLower.includes("shirt") || qLower.includes("shoe") || qLower.includes("bag") || qLower.includes("purse") || qLower.includes("handbag") || qLower.includes("retail");
+
+  const isLookingForBuyers = qLower.includes("sell") || qLower.includes("buyer") || qLower.includes("customer") || qLower.includes("client") || qLower.includes("shopper") || qLower.includes("who wants to buy") || qLower.includes("who wants to purchase") || qLower.includes("purchase my");
+
+  // Extract custom product/service target name cleanly
+  let productTarget = "high-end products";
+  
+  // 1. Direct match with product dataset
+  let detectedProduct: string | null = null;
+  const allProducts = [...searchDataset.products.digital, ...searchDataset.products.physical];
+  // Sort products from longest to shortest to ensure greedy matching
+  const sortedProducts = [...allProducts].sort((a, b) => b.length - a.length);
+  for (const prod of sortedProducts) {
+    if (qLower.includes(prod.toLowerCase())) {
+      detectedProduct = prod;
+      break;
+    }
+  }
+
+  if (detectedProduct) {
+    productTarget = detectedProduct.toLowerCase();
+  } else {
+    // 2. Fallback to stopword cleaning
+    const stopWords = ["sell", "my", "find", "buyers", "for", "search", "me", "get", "how", "who", "wants", "buy", "buying", "here", "there", "looking", "need", "hire", "with", "global", "brand", "brands", "a", "an", "the", "to", "in", "at", "by", "of", "business"];
+    const countryWords = [
+      "china", "chinese", "philippines", "philipines", "thailand", "vietnam", "viet", "nam", "hong", "kong", "hongkong", 
+      "singapore", "sweden", "swedish", "switzerland", "swiss", "italy", "italian", "usa", "america", "uk", "united", "kingdom",
+      "south", "africa", "african", "london", "stockholm", "milan", "manila", "bangkok", "hanoi", "zurich", "geneva",
+      "johannesburg", "cape", "town", "durban", "pretoria", "sa"
+    ];
+    let words = cleanQNoPunct.toLowerCase().split(/\s+/).filter(Boolean);
+    let cleanedWords = words.filter(w => !stopWords.includes(w) && !countryWords.includes(w));
+    if (cleanedWords.length > 0) {
+      productTarget = cleanedWords.join(" ");
+    } else {
+      if (qLower.includes("boutique")) productTarget = "boutique fashion items";
+      else if (qLower.includes("clothing") || qLower.includes("clothes")) productTarget = "wholesale clothing";
+      else if (qLower.includes("sneaker") || qLower.includes("shoes")) productTarget = "premium footwear";
+      else productTarget = "organic goods";
+    }
+  }
+
+  if (productTarget === "boutique") {
+    productTarget = "boutique clothing";
+  }
 
   const getAllLocationsForMix = (): string[] => {
-    let locs: string[] = [];
     if (targetCountry) {
-      if (targetCountry === "china") return chinaLocs;
-      if (targetCountry === "philippines") return philippinesLocs;
-      if (targetCountry === "thailand") return thailandLocs;
-      if (targetCountry === "vietnam") return vietnamLocs;
-      if (targetCountry === "hong kong") return hkLocs;
-      if (targetCountry === "singapore") return singaporeLocs;
-      if (targetCountry === "sweden") return swedenLocs;
-      if (targetCountry === "switzerland") return switzerlandLocs;
-      if (targetCountry === "italy") return italyLocs;
-      if (targetCountry === "usa") return usaLocs;
-      if (targetCountry === "uk") return ukLocs;
+      // Find matching country in searchDataset
+      const matched = searchDataset.countries.find(c => c.country.toLowerCase() === targetCountry.toLowerCase());
+      if (matched && matched.cities && matched.cities.length > 0) {
+        return matched.cities.map(ct => `${ct.name}, ${matched.country}`);
+      }
     }
 
-    if (isSupplyChain) {
-      // Prioritize Supply Chain heavy regions if no specific country is given
-      locs = [...chinaLocs, ...vietnamLocs, ...italyLocs, ...hkLocs, ...singaporeLocs, ...thailandLocs, ...swedenLocs, ...switzerlandLocs];
-    } else {
-      locs = [...swedenLocs, ...switzerlandLocs, ...italyLocs, ...singaporeLocs, ...hkLocs, ...usaLocs, ...ukLocs, ...philippinesLocs, ...thailandLocs, ...vietnamLocs, ...chinaLocs];
-    }
-    return locs;
+    // Default mixed distribution across key countries in our dataset
+    const representationCountries = ["china", "united states", "united kingdom", "south africa", "sweden", "switzerland", "italy", "singapore", "vietnam", "philippines", "germany", "australia", "canada", "france", "japan", "brazil", "india", "nigeria", "egypt", "mexico"];
+    let defaultCities: string[] = [];
+    
+    representationCountries.forEach(rc => {
+      const match = searchDataset.countries.find(c => c.country.toLowerCase() === rc);
+      if (match && match.cities) {
+        // Take up to 3 cities for variety
+        match.cities.slice(0, 3).forEach(city => {
+          defaultCities.push(`${city.name}, ${match.country}`);
+        });
+      }
+    });
+
+    return defaultCities.length > 0 ? defaultCities : ["Cape Town, South Africa", "Stockholm, Sweden", "New York, US", "Milan, Italy"];
   };
 
   const getQueryVariants = (q: string): string[] => {
@@ -79,6 +195,34 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
         "B2B sourcing specialist", "freight forwarding coordinator", "product sourcing agent",
         "quality control inspector", "production factory partner", "custom carton manufacturer",
         "ocean freight specialist", "ISO certified production hub"
+      ];
+    }
+    if (term.includes("plumb") || term.includes("leak") || term.includes("drain") || term.includes("pipe") || term.includes("water") || term.includes("heating")) {
+      return [
+        "certified commercial plumber", "emergency leak response plumber", "licensed plumbing contractor",
+        "drain jetting technician", "industrial copper pipe installer", "grease trap plumbing inspector",
+        "reliable heating and pipe specialist", "emergency plumbing technician"
+      ];
+    }
+    if (term.includes("construct") || term.includes("build") || term.includes("remodel") || term.includes("renovat") || term.includes("contractor")) {
+      return [
+        "licensed general contractor", "commercial construction company", "residential remodeling firm",
+        "prefab building constructor", "steel frame construction engineer", "high-end home renovation builder",
+        "structural estimating estimator", "smart construction services firm"
+      ];
+    }
+    if (term.includes("startup") || term.includes("ai") || term.includes("software") || term.includes("saas") || term.includes("developer") || term.includes("coding") || term.includes("app")) {
+      return [
+        "AI startup team", "custom software development company", "innovative SaaS architect",
+        "full stack MVP developer", "machine learning pipeline engineer", "conversational AI integration partner",
+        "high-growth tech cofounder", "software company developers"
+      ];
+    }
+    if (term.includes("shop") || term.includes("ecommerce") || term.includes("e-commerce") || term.includes("online") || term.includes("cart") || term.includes("product") || term.includes("store")) {
+      return [
+        "e-commerce store developer", "Shopify checkout optimization expert", "online shopping funnel strategist",
+        "custom WooCommerce coder", "product sourcing and catalog manager", "dropship store growth manager",
+        "e-commerce brand consultant", "multi-channel digital merchant"
       ];
     }
     if (term.includes("seo") || term.includes("google") || term.includes("ranking") || term.includes("search")) {
@@ -201,6 +345,98 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
       "Check the pin comment below to download our free B2B manufacturer evaluation spreadsheet.", "Subscribe for weekly on-screen supply chain and port status updates.", "Let me know your direct sourcing challenges in the comments below!"
     ]
   };
+
+  const plumberOpeners = shuffle([
+    "Urgent: Sourcing a certified, licensed",
+    "Does anyone have warm recommendations for a commercial",
+    "Urgently hiring an experienced contract",
+    "In dire need of an independent licensed",
+    "Our commercial building is sourcing a master",
+    "Need prompt copper pipeline diagnostic from a local"
+  ]);
+
+  const plumberDetails = [
+    "to inspect and overhaul our grease trap setups and active drains",
+    "to diagnose and patch a massive sub-slab main pipe leak",
+    "for professional high-pressure drain jetting and pump repairs",
+    "to manage multi-family residential building boiler integrations"
+  ];
+
+  const plumberRequirements = [
+    "Must be fully licensed, bonded, and registered locally to start.",
+    "Require solid references of past retail or office contracts.",
+    "Must provide standard invoice paperwork and active leak certification.",
+    "We have our specifications ready and want to begin physical assessment this week."
+  ];
+
+  const constructionOpeners = shuffle([
+    "Seeking a highly-rated design-build",
+    "Hiring an experienced general contracting",
+    "We need competitive estimates from a licensed",
+    "Our real estate development group is sourcing a commercial",
+    "Ready to execute a contract with a professional sustainable",
+    "Can anyone refer a certified custom regional"
+  ]);
+
+  const constructionDetails = [
+    "for a high-end light industrial warehouse rebuild",
+    "to layout prefab concrete building foundation panels",
+    "to manage structural steel frame layouts and structural extensions",
+    "to handle eco-friendly residential custom timber villa remodeling"
+  ];
+
+  const constructionRequirements = [
+    "Looking for a building contracting partner with strict safety and compliance records.",
+    "Must support standard digital blueprint exchange and CAD mapping exports.",
+    "Requires full worker's comp insurance coverage and bonding standards.",
+    "Budget has room for absolute quality, looking to break ground early next month."
+  ];
+
+  const startupTechOpeners = shuffle([
+    "Our AI startup is scouting a certified",
+    "Seeking an independent tech partner or custom",
+    "Sourcing a premium specialized custom",
+    "We are an innovative startup looking for a skilled",
+    "We need to implement secure custom integration with a",
+    "Drop your decks! Sourcing an expert developer or"
+  ]);
+
+  const startupTechDetails = [
+    "to build out our intelligent multi-agent SaaS dashboard",
+    "to implement local Gemini LLM models into customer reply funnels",
+    "for a real-time offline-first inventory synchronizer system",
+    "to design our NextJS MVP and manage secure SQL integrations"
+  ];
+
+  const startupTechRequirements = [
+    "Must show verified past GitHub contributions or software company samples.",
+    "Experience with secure API routing and clean state management is required.",
+    "Individual practitioners or small agile tech agencies only, no generic body shops.",
+    "We are fully backed and ready to onboard the right contractor team this week."
+  ];
+
+  const ecommerceOpeners = shuffle([
+    "Who is the absolute expert for a freelance",
+    "Our new online shopping platform is scouting an",
+    "Looking to migrate and scale our store with a custom",
+    "Sourcing a technical advisor to audit or setup our",
+    "Hiring a solo specialist or e-commerce",
+    "In need of a direct expert for online shopping"
+  ]);
+
+  const ecommerceDetails = [
+    "integrated with high converting Shopify checkout actions",
+    "to direct custom product sourcing pipelines from verified low MOQ factories",
+    "to manage multi-channel online shopping and marketing catalog syncs",
+    "for a complete conversion rate optimization and speed audit"
+  ];
+
+  const ecommerceRequirements = [
+    "Must have proven experience with high-volume digital dropship brands.",
+    "Looking for someone fluent in conversion psychology and pixel tracking.",
+    "Ready to start immediately on a flexible hourly retainer contract.",
+    "Must show live e-commerce stores you have personally built or optimized."
+  ];
 
   const marketingAndDevOpeners = shuffle([
     "Who is the absolute GOAT for a freelance",
@@ -343,22 +579,55 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
     
     let content = "";
     
-    // Pop a unique prefix/opener from the pre-shuffled lists. This guarantees 100% unique sentence starters.
-    const opener = isSupplyChain 
-      ? (supplyChainOpeners.pop() || "Sourcing an verified") 
-      : (marketingAndDevOpeners.pop() || "Hiring an freelance");
-    
-    if (isSupplyChain) {
+    if (isLookingForBuyers) {
+      const isSoftwareOrTech = productTarget.toLowerCase().includes("software") || 
+                               productTarget.toLowerCase().includes("saas") || 
+                               productTarget.toLowerCase().includes("app") || 
+                               productTarget.toLowerCase().includes("ai") || 
+                               productTarget.toLowerCase().includes("code") || 
+                               productTarget.toLowerCase().includes("coding") || 
+                               productTarget.toLowerCase().includes("website") || 
+                               productTarget.toLowerCase().includes("dev") || 
+                               productTarget.toLowerCase().includes("system");
+      
+      const pCap = productTarget.charAt(0).toUpperCase() + productTarget.slice(1);
+      const req = ecommerceRequirements[Math.floor(Math.random() * ecommerceRequirements.length)];
+      const ctaList = marketingAndDevCTAs[platform] || marketingAndDevCTAs.Twitter;
+      const cta = ctaList[Math.floor(Math.random() * ctaList.length)];
+      
+      let templates = [];
+      if (isSoftwareOrTech) {
+        templates = [
+          `Title: Sourcing a high-performance ${pCap} solution in ${loc}?\n\nBody: Hey everyone, trying to buy or license a solid ${productTarget} system for our local operations in ${loc}. ${req} ${cta}`,
+          `Anyone recommend a premier ${productTarget} developer or platform for our agency in ${loc}? We need immediate setup. ${req} ${cta}`,
+          `Urgently looking to procure custom ${productTarget} solutions for our retail network in ${loc}. Send portfolio deck and pricing. ${cta}`,
+          `DM OPEN: Scouting dedicated teams or developers who supply customized ${productTarget} in ${loc}. ${req} ${cta}`,
+          `How we streamline our workflows using a specialized ${productTarget} in ${loc}. DM references! ${cta}`
+        ];
+      } else {
+        templates = [
+          `Title: Where to buy premium bulk ${pCap} near ${loc}?\n\nBody: Hi all! We are expanding our local inventory and scouting reliable suppliers who can ship high-quality ${productTarget} directly to ${loc}. ${req} ${cta}`,
+          `Scouting independent makers or distributors of ${productTarget} for our custom boutique in ${loc}. Please DM me with your catalog! ${cta}`,
+          `Urgently looking to buy and stock wholesale ${productTarget} for our retail storefront in ${loc}. Requirements: ${req} ${cta}`,
+          `WTB: bulk quantities of ${productTarget} ready for delivery to ${loc}. Hit me up with details if you are selling! ${cta}`,
+          `We are launching a seasonal curated collection in ${loc} and searching for unique ${productTarget} designers/sellers. Contact us immediately! ${cta}`,
+          `Does anyone have a vetted contact for a high-quality ${productTarget} wholesale source in ${loc}? ${req} ${cta}`,
+          `DM open: Looking to purchase custom ${productTarget} for our local operations in ${loc}. Pls send pricing models! ${cta}`
+        ];
+      }
+      content = templates[Math.floor(Math.random() * templates.length)];
+    } else if (isSupplyChain) {
+      // Pop a unique prefix/opener from the pre-shuffled lists. This guarantees 100% unique sentence starters.
+      const opener = supplyChainOpeners.pop() || "Sourcing an verified";
       const detail = supplyChainDetails[Math.floor(Math.random() * supplyChainDetails.length)];
       const req = supplyChainRequirements[Math.floor(Math.random() * supplyChainRequirements.length)];
-      
       const ctaList = supplyChainCTAs[platform] || supplyChainCTAs.Twitter;
       const cta = ctaList[Math.floor(Math.random() * ctaList.length)];
 
       if (platform === 'Twitter') {
         content = `${opener} ${variant} in ${loc} ${detail}? ${req} ${cta}`;
       } else if (platform === 'Reddit') {
-        content = `Title: ${opener} ${variant} in ${loc}?\n\nBody: Hey everyone, we're currently launching custom lines and need to locate a reliable ${variant} based in ${loc} ${detail}. ${req} ${cta}`;
+        content = `Title: ${opener} ${variant} in ${loc}?\n\nBody: Hey everyone, we're currently launching product lines and need to locate a reliable ${variant} based in ${loc} ${detail}. ${req} ${cta}`;
       } else if (platform === 'LinkedIn') {
         content = `🌎 ${opener} ${variant} who understands regional distribution in ${loc}?\n\nOur trade workflow is seeking direct partnerships ${detail}.\n\nRequirements:\n- ${req}\n\n${cta}`;
       } else if (platform === 'Instagram' || platform === 'TikTok') {
@@ -368,10 +637,82 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
       } else { // YouTube
         content = `${opener} ${variant} in ${loc}! Complete Evaluation Tutorial: how we establish lines ${detail}. ${cta}`;
       }
+    } else if (isPlumber) {
+      const opener = plumberOpeners.pop() || "Sourcing a certified";
+      const detail = plumberDetails[Math.floor(Math.random() * plumberDetails.length)];
+      const req = plumberRequirements[Math.floor(Math.random() * plumberRequirements.length)];
+      const ctaList = marketingAndDevCTAs[platform] || marketingAndDevCTAs.Twitter;
+      const cta = ctaList[Math.floor(Math.random() * ctaList.length)];
+
+      if (platform === 'Twitter') {
+        content = `${opener} ${variant} in ${loc} ${detail}? ${req} ${cta}`;
+      } else if (platform === 'Reddit') {
+        content = `Title: Sourcing a ${variant} around ${loc}?\n\nBody: Hey guys, our property management is looking for an expert ${variant} ${detail}. ${req} ${cta}`;
+      } else if (platform === 'LinkedIn') {
+        content = `🔧 Sourcing a ${variant} for our commercial facilities in ${loc}!\n\nOpen contract for immediate review: looking for specialized plumbers ${detail}. Requirements: ${req} ${cta}`;
+      } else if (platform === 'Instagram' || platform === 'TikTok') {
+        content = `💧 Sourcing a certified ${variant} in ${loc}! ${detail}. ${req} ${cta}`;
+      } else {
+        content = `Professional plumbing audit: how we hire a local ${variant} in ${loc}. ${cta}`;
+      }
+    } else if (isConstruction) {
+      const opener = constructionOpeners.pop() || "Sourcing a licensed";
+      const detail = constructionDetails[Math.floor(Math.random() * constructionDetails.length)];
+      const req = constructionRequirements[Math.floor(Math.random() * constructionRequirements.length)];
+      const ctaList = marketingAndDevCTAs[platform] || marketingAndDevCTAs.Twitter;
+      const cta = ctaList[Math.floor(Math.random() * ctaList.length)];
+
+      if (platform === 'Twitter') {
+        content = `${opener} ${variant} near ${loc} ${detail}? ${req} ${cta}`;
+      } else if (platform === 'Reddit') {
+        content = `Title: any recommended ${variant} in the ${loc} area?\n\nBody: Hello, we need competitive bids from a certified ${variant} ${detail}. ${req} ${cta}`;
+      } else if (platform === 'LinkedIn') {
+        content = `🏢 Hiring General Contractor or ${variant} in ${loc}!\n\nScope covers heavy operations: ${detail}. Must coordinate compliance. ${req} ${cta}`;
+      } else if (platform === 'Instagram' || platform === 'TikTok') {
+        content = `🏗️ scouting our next certified general contractor or ${variant} in ${loc}! ${detail}. ${req} ${cta}`;
+      } else {
+        content = `Commercial Construction Masterclass: bidding a ${variant} project in ${loc}. ${cta}`;
+      }
+    } else if (isStartupTech) {
+      const opener = startupTechOpeners.pop() || "Hiring an AI";
+      const detail = startupTechDetails[Math.floor(Math.random() * startupTechDetails.length)];
+      const req = startupTechRequirements[Math.floor(Math.random() * startupTechRequirements.length)];
+      const ctaList = marketingAndDevCTAs[platform] || marketingAndDevCTAs.Twitter;
+      const cta = ctaList[Math.floor(Math.random() * ctaList.length)];
+
+      if (platform === 'Twitter') {
+        content = `${opener} ${variant} in ${loc} ${detail}? ${req} ${cta}`;
+      } else if (platform === 'Reddit') {
+        content = `Title: Need to hire a software company or ${variant} in ${loc}?\n\nBody: Hey everyone, our high-growth startup is seeking an awesome ${variant} ${detail}. ${req} ${cta}`;
+      } else if (platform === 'LinkedIn') {
+        content = `🚀 Sourcing an innovative software company or ${variant} in ${loc}!\n\nWe has open budget for the right AI startup or developers: ${detail}. ${req} ${cta}`;
+      } else if (platform === 'Instagram' || platform === 'TikTok') {
+        content = `🔥 Hiring a skilled developer or ${variant} in ${loc}! Let's build custom MVPs ${detail}. ${req} ${cta}`;
+      } else {
+        content = `How we scaffolded our AI startup project using a custom ${variant} in ${loc}. ${cta}`;
+      }
+    } else if (isEcommerce) {
+      const opener = ecommerceOpeners.pop() || "Seeking an e-commerce";
+      const detail = ecommerceDetails[Math.floor(Math.random() * ecommerceDetails.length)];
+      const req = ecommerceRequirements[Math.floor(Math.random() * ecommerceRequirements.length)];
+      const ctaList = marketingAndDevCTAs[platform] || marketingAndDevCTAs.Twitter;
+      const cta = ctaList[Math.floor(Math.random() * ctaList.length)];
+
+      if (platform === 'Twitter') {
+        content = `${opener} ${variant} in ${loc} ${detail}? ${req} ${cta}`;
+      } else if (platform === 'Reddit') {
+        content = `Title: Recommendations for an e-commerce or ${variant} expert in ${loc}?\n\nBody: Hi all, trying to scale our online shopping channels and need a certified ${variant} ${detail}. ${req} ${cta}`;
+      } else if (platform === 'LinkedIn') {
+        content = `🛒 Escalating our online shopping checkout speed in ${loc}!\n\nSeeking a talented ${variant} who can coordinate: ${detail}. ${req} ${cta}`;
+      } else if (platform === 'Instagram' || platform === 'TikTok') {
+        content = `📦 Growing our retail store with a specialized ${variant} in ${loc}! If you make high-converting online shopping layouts ${detail}. ${req} ${cta}`;
+      } else {
+        content = `E-commerce Sourcing masterclass: building a custom Shopify/WooCommerce store using a ${variant} in ${loc}. ${cta}`;
+      }
     } else {
+      const opener = marketingAndDevOpeners.pop() || "Seeking an experienced";
       const detail = marketingAndDevDetails[Math.floor(Math.random() * marketingAndDevDetails.length)];
       const req = marketingAndDevRequirements[Math.floor(Math.random() * marketingAndDevRequirements.length)];
-      
       const ctaList = marketingAndDevCTAs[platform] || marketingAndDevCTAs.Twitter;
       const cta = ctaList[Math.floor(Math.random() * ctaList.length)];
 
@@ -503,16 +844,26 @@ export const getClosestIndustryKeyword = (word: string): string => {
     "supplier", "suppliers", "manufacturer", "manufacturers", "logistics", "supply", "chain",
     "shipping", "freight", "factory", "factories", "manufacturing", "sourcing", "source", "import", "export", 
     "distributor", "distributors", "warehousing", "procurement",
+    // clothing & products & e-commerce
+    "clothes", "clothing", "apparel", "fashion", "garment", "garments", "textile", "textiles",
+    "shirt", "pants", "shoes", "shoe", "bags", "bag", "handbag", "handbags", "store", "storefront",
+    "shop", "shopping", "ecommerce", "e-commerce", "online", "product", "products", "goods", "merchandise",
+    "sneakers", "sneaker", "heels", "heel", "boots", "boot",
+    // professional & local services
+    "plumber", "plumbers", "plumbing", "contractor", "contractors", "construction", "remodel", "remodeling",
+    "renovate", "renovation", "build", "builder", "builders", "leak", "leaks", "drain", "drains", "pipe", "pipes",
+    "water", "heating", "boiler", "boilers", "facility", "facilities",
     // regions & countries
     "china", "chinese", "philippines", "thailand", "vietnam", "hong", "kong", "singapore", "sweden", "switzerland", "italy",
     "usa", "uk"
   ];
 
   const exemptWords = [
-    "in", "for", "to", "at", "by", "with", "of", "and", "or", "the", "a", "an", "is", "are", "be", "from", "looking", "need", "hire", "with", "global", "brand", "brands"
+    "in", "for", "to", "at", "by", "with", "of", "and", "or", "the", "a", "an", "is", "are", "be", "from", "looking", "need", "hire", "with", "global", "brand", "brands",
+    "sell", "find", "buyers", "search", "me", "buyer", "get", "how", "who", "wants", "buy", "buying", "my", "owner", "customer", "customers", "client", "clients", "here", "there"
   ];
 
-  if (popularKeywords.includes(w) || exemptWords.includes(w)) {
+  if (popularKeywords.includes(w) || exemptWords.includes(w) || datasetWords.has(w)) {
     return word;
   }
 
@@ -526,37 +877,20 @@ export const getClosestIndustryKeyword = (word: string): string => {
                       hasConsonantCluster ||
                       w === "ghsxdt";
 
-  let bestKeyword = "growth";
-  let bestScore = -Infinity;
-
-  const getOverlapCount = (s1: string, s2: string): number => {
-    const chars1 = s1.split('');
-    const chars2 = s2.split('');
-    let overlap = 0;
-    const usedIndices = new Set<number>();
-    for (const c1 of chars1) {
-      const matchIndex = chars2.findIndex((c2, idx) => c2 === c1 && !usedIndices.has(idx));
-      if (matchIndex !== -1) {
-        overlap++;
-        usedIndices.add(matchIndex);
-      }
-    }
-    return overlap;
-  };
+  let bestKeyword = w;
+  let minDistance = Infinity;
 
   for (const kw of popularKeywords) {
     const dist = getLevenshteinDistance(w, kw);
-    const overlap = getOverlapCount(w, kw);
-    const lengthDiff = Math.abs(w.length - kw.length);
-    const score = (overlap * 2.5) - (dist * 1.5) - (lengthDiff * 0.5);
-
-    if (score > bestScore) {
-      bestScore = score;
+    if (dist < minDistance) {
+      minDistance = dist;
       bestKeyword = kw;
     }
   }
 
-  if (isGibberish || bestScore > -2.0) {
+  // Only correct spelling of popular keywords if the typo is extremely close (distance <= 2)
+  // or if the input is detected as gibberish.
+  if (minDistance <= 2 || isGibberish) {
     return bestKeyword;
   }
 
@@ -567,10 +901,14 @@ export const correctQuerySearch = (query: string): { corrected: string; original
   const cleanQ = query.trim();
   if (!cleanQ) return { corrected: "", original: "", isDifferent: false };
 
+  // Remove punctuation when evaluating word tokens to avoid trailing/leading punctuation corrupting spelling matching
   const words = cleanQ.split(/\s+/);
   const correctedWords = words.map(word => {
-    if (/^[a-zA-Z]+$/.test(word)) {
-      return getClosestIndustryKeyword(word);
+    const cleanWord = word.replace(/[^a-zA-Z]/g, "");
+    if (/^[a-zA-Z]+$/.test(cleanWord)) {
+      const correctedClean = getClosestIndustryKeyword(cleanWord);
+      // Re-attach punctuation if any was there originally
+      return word.replace(cleanWord, correctedClean);
     }
     return word;
   });

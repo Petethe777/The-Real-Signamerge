@@ -1,0 +1,555 @@
+{
+  "countries": [
+    {
+      "country": "Taiwan",
+      "iso2": "TW",
+      "cities": [
+        { "name": "Taipei", "zip": "100" },
+        { "name": "Kaohsiung", "zip": "800" },
+        { "name": "Taichung", "zip": "400" },
+        { "name": "Tainan", "zip": "700" }
+      ]
+    },
+    {
+      "country": "Tajikistan",
+      "iso2": "TJ",
+      "cities": [
+        { "name": "Dushanbe", "zip": "734001" },
+        { "name": "Khujand", "zip": "735700" }
+      ]
+    },
+    {
+      "country": "Tanzania",
+      "iso2": "TZ",
+      "cities": [
+        { "name": "Dar es Salaam", "zip": "0000" },
+        { "name": "Dodoma", "zip": "0000" },
+        { "name": "Mwanza", "zip": "0000" },
+        { "name": "Zanzibar City", "zip": "0000" }
+      ]
+    },
+    {
+      "country": "Thailand",
+      "iso2": "TH",
+      "cities": [
+        { "name": "Bangkok", "zip": "10110" },
+        { "name": "Chiang Mai", "zip": "50000" },
+        { "name": "Pattaya", "zip": "20150" },
+        { "name": "Phuket", "zip": "83000" },
+        { "name": "Hat Yai", "zip": "90110" }
+      ]
+    },
+    {
+      "country": "Timor-Leste",
+      "iso2": "TL",
+      "cities": [
+        { "name": "Dili", "zip": "0000" },
+        { "name": "Baucau", "zip": "0000" }
+      ]
+    },
+    {
+      "country": "Togo",
+      "iso2": "TG",
+      "cities": [
+        { "name": "Lomé", "zip": "00228" },
+        { "name": "Sokodé", "zip": "00228" }
+      ]
+    },
+    {
+      "country": "Tonga",
+      "iso2": "TO",
+      "cities": [
+        { "name": "Nukuʻalofa", "zip": "0000" },
+        { "name": "Neiafu", "zip": "0000" }
+      ]
+    },
+    {
+      "country": "Trinidad and Tobago",
+      "iso2": "TT",
+      "cities": [
+        { "name": "Port of Spain", "zip": "000000" },
+        { "name": "San Fernando", "zip": "000000" },
+        { "name": "Chaguanas", "zip": "000000" }
+      ]
+    },
+    {
+      "country": "Tunisia",
+      "iso2": "TN",
+      "cities": [
+        { "name": "Tunis", "zip": "1001" },
+        { "name": "Sfax", "zip": "3000" },
+        { "name": "Sousse", "zip": "4000" }
+      ]
+    },
+    {
+      "country": "Turkey",
+      "iso2": "TR",
+      "cities": [
+        { "name": "Istanbul", "zip": "34000" },
+        { "name": "Ankara", "zip": "06000" },
+        { "name": "Izmir", "zip": "35000" },
+        { "name": "Bursa", "zip": "16000" },
+        { "name": "Antalya", "zip": "07000" },
+        { "name": "Adana", "zip": "01000" },
+        { "name": "Gaziantep", "zip": "27000" }
+      ]
+    },
+    {
+      "country": "Turkmenistan",
+      "iso2": "TM",
+      "cities": [
+        { "name": "Ashgabat", "zip": "744000" },
+        { "name": "Türkmenabat", "zip": "746000" }
+      ]
+    },
+    {
+      "country": "Tuvalu",
+      "iso2": "TV",
+      "cities": [
+        { "name": "Funafuti", "zip": "0000" },
+        { "name": "Savave", "zip": "0000" }
+      ]
+    },
+    {
+      "country": "Uganda",
+      "iso2": "UG",
+      "cities": [
+        { "name": "Kampala", "zip": "0000" },
+        { "name": "Gulu", "zip": "0000" },
+        { "name": "Mbarara", "zip": "0000" },
+        { "name": "Jinja", "zip": "0000" }
+      ]
+    },
+    {
+      "country": "Ukraine",
+      "iso2": "UA",
+      "cities": [
+        { "name": "Kyiv", "zip": "01001" },
+        { "name": "Kharkiv", "zip": "61001" },
+        { "name": "Odessa", "zip": "65001" },
+        { "name": "Dnipro", "zip": "49001" },
+        { "name": "Lviv", "zip": "79001" }
+      ]
+    },
+    {
+      "country": "United Arab Emirates",
+      "iso2": "AE",
+      "cities": [
+        { "name": "Dubai", "zip": "00000" },
+        { "name": "Abu Dhabi", "zip": "00000" },
+        { "name": "Sharjah", "zip": "00000" },
+        { "name": "Ajman", "zip": "00000" },
+        { "name": "Ras Al Khaimah", "zip": "00000" }
+      ]
+    },
+    {
+      "country": "United Kingdom",
+      "iso2": "GB",
+      "cities": [
+        { "name": "London", "zip": "EC1A 1BB" },
+        { "name": "Birmingham", "zip": "B1 1BB" },
+        { "name": "Manchester", "zip": "M1 1AE" },
+        { "name": "Glasgow", "zip": "G1 1AF" },
+        { "name": "Leeds", "zip": "LS1 1BA" },
+        { "name": "Liverpool", "zip": "L1 0AA" },
+        { "name": "Edinburgh", "zip": "EH1 1YZ" },
+        { "name": "Bristol", "zip": "BS1 4DJ" },
+        { "name": "Cardiff", "zip": "CF10 1EP" },
+        { "name": "Belfast", "zip": "BT1 5GS" }
+      ]
+    },
+    {
+      "country": "United States",
+      "iso2": "US",
+      "cities": [
+        { "name": "New York", "zip": "10001" },
+        { "name": "Los Angeles", "zip": "90001" },
+        { "name": "Chicago", "zip": "60601" },
+        { "name": "Houston", "zip": "77001" },
+        { "name": "Phoenix", "zip": "85001" },
+        { "name": "Philadelphia", "zip": "19101" },
+        { "name": "San Antonio", "zip": "78201" },
+        { "name": "San Diego", "zip": "92101" },
+        { "name": "Dallas", "zip": "75201" },
+        { "name": "San Francisco", "zip": "94102" },
+        { "name": "Austin", "zip": "73301" },
+        { "name": "Seattle", "zip": "98101" },
+        { "name": "Miami", "zip": "33101" },
+        { "name": "Atlanta", "zip": "30301" },
+        { "name": "Boston", "zip": "02101" },
+        { "name": "Denver", "zip": "80201" },
+        { "name": "Las Vegas", "zip": "89101" },
+        { "name": "Portland", "zip": "97201" },
+        { "name": "Nashville", "zip": "37201" },
+        { "name": "Detroit", "zip": "48201" }
+      ]
+    },
+    {
+      "country": "Uruguay",
+      "iso2": "UY",
+      "cities": [
+        { "name": "Montevideo", "zip": "11000" },
+        { "name": "Salto", "zip": "50000" },
+        { "name": "Paysandú", "zip": "60000" }
+      ]
+    },
+    {
+      "country": "Uzbekistan",
+      "iso2": "UZ",
+      "cities": [
+        { "name": "Tashkent", "zip": "100000" },
+        { "name": "Samarkand", "zip": "140100" },
+        { "name": "Namangan", "zip": "160100" }
+      ]
+    },
+    {
+      "country": "Vanuatu",
+      "iso2": "VU",
+      "cities": [
+        { "name": "Port Vila", "zip": "0000" },
+        { "name": "Luganville", "zip": "0000" }
+      ]
+    },
+    {
+      "country": "Vatican City",
+      "iso2": "VA",
+      "cities": [
+        { "name": "Vatican City", "zip": "00120" }
+      ]
+    },
+    {
+      "country": "Venezuela",
+      "iso2": "VE",
+      "cities": [
+        { "name": "Caracas", "zip": "1010" },
+        { "name": "Maracaibo", "zip": "4001" },
+        { "name": "Valencia", "zip": "2001" },
+        { "name": "Barquisimeto", "zip": "3001" }
+      ]
+    },
+    {
+      "country": "Vietnam",
+      "iso2": "VN",
+      "cities": [
+        { "name": "Hanoi", "zip": "100000" },
+        { "name": "Ho Chi Minh City", "zip": "700000" },
+        { "name": "Da Nang", "zip": "550000" },
+        { "name": "Hoi An", "zip": "560000" },
+        { "name": "Nha Trang", "zip": "650000" }
+      ]
+    },
+    {
+      "country": "Yemen",
+      "iso2": "YE",
+      "cities": [
+        { "name": "Sanaa", "zip": "00967" },
+        { "name": "Aden", "zip": "00967" },
+        { "name": "Taiz", "zip": "00967" }
+      ]
+    },
+    {
+      "country": "Zambia",
+      "iso2": "ZM",
+      "cities": [
+        { "name": "Lusaka", "zip": "10101" },
+        { "name": "Kitwe", "zip": "20101" },
+        { "name": "Ndola", "zip": "30101" },
+        { "name": "Livingstone", "zip": "40101" }
+      ]
+    },
+    {
+      "country": "Zimbabwe",
+      "iso2": "ZW",
+      "cities": [
+        { "name": "Harare", "zip": "00263" },
+        { "name": "Bulawayo", "zip": "00263" },
+        { "name": "Mutare", "zip": "00263" },
+        { "name": "Gweru", "zip": "00263" }
+      ]
+    }
+  ],
+  "products": {
+    "digital": [
+      "Online courses", "eBooks", "PDF guides", "Video tutorials", "Webinars", "Membership sites",
+      "Subscription newsletters", "Software as a Service (SaaS)", "Mobile apps", "Desktop apps",
+      "Browser extensions", "Website templates", "Graphic design templates", "Canva templates",
+      "PowerPoint templates", "Notion templates", "WordPress themes", "Shopify themes", "Plugins and add-ons",
+      "Stock photos", "Stock videos", "Stock music / audio", "Illustrations and clipart", "Icon packs",
+      "Font packs", "3D models", "Lightroom presets", "Photoshop actions", "Motion graphics",
+      "Animated logos", "Social media templates", "Email templates", "Resume templates", "Business plan templates",
+      "Financial spreadsheets", "Legal document templates", "Coaching programs", "Digital art", "NFTs",
+      "Music beats", "Podcast episodes", "Audiobooks", "Translation services", "Virtual assistant services",
+      "SEO audits", "Website audits", "Brand strategy guides", "Marketing toolkits", "Content calendars",
+      "Blog post packs", "Social media content packs", "Lead magnet kits", "Sales funnel templates",
+      "Landing page templates", "Ad copy templates", "Chatbot scripts", "Automation workflows", "API access",
+      "Data analytics dashboards", "CRM systems", "Project management tools", "Password managers", "VPN services",
+      "Cloud storage", "Cybersecurity tools", "Online calculators", "AI writing tools", "AI image generators",
+      "Language learning apps", "Fitness tracking apps", "Meditation apps", "Productivity apps", "Habit tracking apps",
+      "Journaling apps", "Finance management apps", "Investment platforms", "Cryptocurrency wallets",
+      "NFT marketplaces", "Online tutoring platforms", "Test prep courses", "Certification programs",
+      "Code bootcamps", "Freelance marketplaces", "Job boards", "Dating apps", "Community platforms",
+      "Online games", "Game skins and DLC", "Virtual reality experiences", "Augmented reality filters"
+    ],
+    "physical": [
+      "Sneakers / trainers", "Running shoes", "Boots", "Sandals", "Heels", "Loafers", "Slippers",
+      "T-shirts", "Hoodies", "Jackets", "Jeans", "Dresses", "Suits", "Activewear", "Sportswear",
+      "Swimwear", "Underwear", "Socks", "Hats / caps", "Beanies", "Scarves", "Gloves", "Belts",
+      "Handbags", "Backpacks", "Wallets", "Sunglasses", "Watches", "Jewellery", "Rings", "Necklaces",
+      "Earrings", "Bracelets", "Perfume / cologne", "Skincare products", "Moisturisers", "Serums",
+      "Sunscreen", "Face masks", "Lip balm", "Lipstick", "Foundation", "Mascara", "Eyeliner",
+      "Eyeshadow palettes", "Nail polish", "Hair extensions", "Wigs", "Haircare products", "Shampoo and conditioner",
+      "Hair oils", "Hair dye", "Electric shavers", "Razors", "Toothbrushes", "Toothpaste", "Deodorant",
+      "Body lotion", "Bath salts", "Candles", "Diffusers and oils", "Home décor", "Picture frames",
+      "Cushions and pillows", "Rugs", "Wall art / posters", "Plants and pots", "Kitchen utensils", "Cookware",
+      "Cutlery", "Coffee makers", "Blenders", "Air fryers", "Microwaves", "Toasters", "Water filters",
+      "Storage boxes", "Organisers", "Bedding sets", "Towels", "Shower curtains", "Mirrors", "Lighting fixtures",
+      "Furniture", "Office chairs", "Desks", "Standing desks", "Laptops", "Smartphones", "Tablets", "Smartwatches",
+      "Wireless earbuds", "Headphones", "Bluetooth speakers", "Power banks", "Phone cases", "Screen protectors",
+      "USB hubs", "Webcams", "Ring lights", "Green screens", "Microphones", "Cameras", "Drones", "Gaming consoles",
+      "Gaming controllers", "Gaming chairs", "Gaming monitors", "Fitness equipment", "Dumbbells", "Resistance bands",
+      "Yoga mats", "Jump ropes", "Water bottles", "Protein shakers", "Supplements", "Vitamins", "Protein powder",
+      "Pre-workout", "Energy drinks", "Snack boxes", "Organic food", "Coffee beans", "Tea collections",
+      "Spice sets", "Meal prep containers", "Baby clothes", "Baby toys", "Educational toys", "Board games",
+      "Card games", "Puzzles", "Books", "Journals", "Stationery", "Art supplies", "Craft kits", "Sewing supplies",
+      "Knitting supplies", "Gardening tools", "Seeds and plants", "Pet food", "Pet toys", "Pet accessories",
+      "Car accessories", "Car cleaning kits", "Motorcycle gear", "Bicycle accessories", "Travel bags",
+      "Luggage", "Travel adapters", "Travel pillows", "Camping gear", "Sleeping bags", "Tents", "Hiking boots",
+      "Outdoor clothing", "Safety gear", "First aid kits", "Medical devices", "Hearing aids", "Reading glasses",
+      "Orthopaedic supports", "Wedding items", "Party supplies", "Gift wrapping", "Custom merchandise",
+      "Branded clothing", "Corporate gifts", "Trophies and awards", "Flags and banners", "Printed materials"
+    ]
+  },
+  "search_phrases": [
+    "looking for", "need help with", "where to find", "best place to buy", "supplier of", "manufacturer of",
+    "distributor of", "wholesaler of", "retailer of", "stockist of", "reseller of", "who sells", "buying",
+    "purchasing", "interested in buying", "want to buy", "looking to purchase", "seeking supplier", "need a vendor",
+    "recommend a shop", "recommend a store", "recommend a brand", "which brand", "best brand for", "affordable",
+    "budget-friendly", "cheap", "low cost", "economical", "value for money", "best deal", "discount", "sale",
+    "clearance", "bulk order", "wholesale price", "trade price", "bulk buy", "buy in bulk", "large quantity",
+    "minimum order quantity", "MOQ", "sample order", "free sample", "trial", "custom order", "personalised",
+    "bespoke", "made to order", "custom-made", "handmade", "artisan", "craft", "unique", "one-of-a-kind",
+    "exclusive", "limited edition", "pre-order", "in stock", "available now", "out of stock", "back in stock",
+    "restock", "when available", "notify me", "waitlist", "fast shipping", "same day delivery", "next day delivery",
+    "express shipping", "free delivery", "free shipping", "international shipping", "worldwide delivery",
+    "ship to South Africa", "ship to Africa", "deliver to my address", "local delivery", "collect in store",
+    "click and collect", "pickup", "drop-off point", "authentic", "genuine", "original", "certified", "licensed",
+    "official", "fake vs real", "how to spot fake", "trusted seller", "verified seller", "rated seller", "top rated",
+    "highly reviewed", "5 star", "best rated", "customer reviews", "testimonials", "unboxing", "review",
+    "honest review", "comparison", "vs", "alternative to", "better than", "similar to", "beginner-friendly",
+    "easy to use", "user-friendly", "intuitive", "plug and play", "professional grade", "enterprise-level",
+    "commercial use", "personal use", "for home use", "for office use", "for business use", "for resale",
+    "dropshipping", "white label", "private label", "OEM", "Amazon FBA", "eBay seller", "Etsy shop", "Shopify store",
+    "WooCommerce", "online store", "e-commerce", "marketplace", "boutique", "independent retailer", "small business",
+    "startup", "brand new brand", "established brand", "luxury brand", "premium brand", "entry-level brand",
+    "local brand", "imported brand", "South African brand", "African brand", "European brand", "American brand",
+    "Asian brand", "Chinese manufacturer", "Turkish supplier", "Indian supplier", "factory direct",
+    "direct from factory", "direct from manufacturer", "cut out the middleman", "no middleman", "sourcing agent",
+    "buying agent", "procurement", "supply chain", "looking for clients", "looking for customers",
+    "find new customers", "grow my customer base", "customer acquisition", "lead generation", "potential buyers",
+    "target market", "target audience", "ideal customer", "customer profile", "buyer persona", "demographics",
+    "market research", "niche market", "underserved market", "emerging market", "new market", "local market",
+    "global market", "online market", "social media market", "Instagram buyers", "Facebook marketplace",
+    "TikTok shop", "Twitter/X buyers", "LinkedIn clients", "Pinterest shoppers", "YouTube audience",
+    "Reddit community buyers", "Discord community", "Telegram group buyers", "WhatsApp group buyers",
+    "small business owner", "entrepreneur", "solopreneur", "freelancer", "consultant", "currency converter",
+    "agency owner", "coach", "trainer", "influencer", "content creator", "blogger", "vlogger", "podcaster",
+    "streamer", "reseller", "affiliate", "brand ambassador", "promoter", "distributor", "franchise owner",
+    "dealer", "agent", "broker", "middleman", "fashion enthusiast", "sneakerhead", "sneaker collector",
+    "fashion blogger", "beauty influencer", "makeup artist", "hair stylist", "nail technician", "personal trainer",
+    "fitness influencer", "health coach", "nutritionist", "life coach", "business coach", "mindset coach",
+    "relationship coach", "real estate agent", "property developer", "interior designer", "architect",
+    "graphic designer", "web designer", "UI/UX designer", "motion designer", "photographer", "videographer",
+    "cinematographer", "editor", "animator", "software developer", "app developer", "web developer",
+    "backend developer", "full stack developer", "data scientist", "AI engineer", "product manager",
+    "digital marketer", "SEO specialist", "PPC manager", "social media manager", "email marketer", "copywriter",
+    "content writer", "ghostwriter", "translator", "virtual assistant", "customer service agent", "support agent",
+    "accountant", "bookkeeper", "tax consultant", "financial advisor", "lawyer", "legal consultant", "HR consultant",
+    "recruitment agency", "event planner", "wedding planner", "caterer", "florist", "decorator", "DJ", "musician",
+    "band", "singer", "MC", "host", "speaker", "teacher", "tutor", "mentor", "academic", "researcher", "scientist",
+    "doctor", "dentist", "therapist", "psychologist", "physiotherapist", "veterinarian", "farmer",
+    "agricultural supplier", "food producer", "restaurant owner", "café owner", "food truck owner", "baker",
+    "chef", "hotel owner", "Airbnb host", "travel agent", "tour operator", "logistics company", "courier service",
+    "freight forwarder", "clearing agent", "manufacturer", "factory owner", "importer", "exporter", "trader",
+    "charity", "NGO", "non-profit", "social enterprise", "community organisation", "church", "mosque", "temple",
+    "religious organisation", "school", "university", "training provider", "education institution", "hospital",
+    "clinic", "pharmacy", "medical supplier", "healthcare provider", "looking for B2B clients", "B2C customers",
+    "B2B leads", "B2C leads", "corporate clients", "enterprise clients", "SME clients", "startup clients",
+    "government contracts", "tender opportunities", "RFP", "proposal request", "partnership opportunity",
+    "collaboration", "joint venture", "sponsorship", "investment opportunity", "funding", "grant",
+    "crowdfunding backers", "angel investor", "venture capital", "private equity", "seed funding", "bootstrapped",
+    "self-funded", "looking for backers", "loyalty programme", "rewards programme", "referral programme",
+    "affiliate programme", "reseller programme", "partner programme", "subscription box", "monthly box",
+    "gift box", "mystery box", "second-hand", "refurbished", "pre-owned", "vintage", "antique", "collectible",
+    "rare find", "eco-friendly", "sustainable", "organic", "natural", "vegan", "cruelty-free", "fair trade",
+    "ethically sourced", "recycled", "zero waste", "black-owned business", "women-owned business",
+    "youth-owned business", "rural supplier", "community business", "locally made", "online shopper",
+    "impulse buyer", "conscious consumer", "deal hunter", "first-time buyer", "repeat customer", "loyal customer",
+    "VIP customer", "high-value customer", "premium buyer", "luxury shopper", "who buys", "who needs", "who uses",
+    "target for", "market to", "advertise to", "reach", "connect with", "engage with", "sell to", "pitch to",
+    "prospect", "cold outreach", "warm lead", "hot lead", "inbound lead", "outbound lead", "qualified lead",
+    "unqualified lead", "follow up", "nurture", "convert", "close the deal", "upsell", "cross-sell", "retain",
+    "churn", "winback", "reactivate", "product launch", "new product", "just launched", "coming soon", "beta users",
+    "early adopters", "founding members", "launch customers", "product testers", "beta testers", "focus group",
+    "survey respondents", "ambassador search", "influencer search", "brand rep", "model search", "hiring",
+    "recruitment", "job opening", "vacancy", "talent search", "contractor", "freelance work", "gig work",
+    "remote work", "work from home", "side hustle", "passive income", "multiple income streams",
+    "dropshipper needed", "fulfilment partner", "warehouse partner", "packaging supplier", "label printer",
+    "branding agency", "looking for an agent in Africa", "representative in", "sales rep in", "expand to Africa",
+    "enter South African market", "enter Nigerian market", "expand to Asia", "global expansion", "market entry",
+    "who in my area", "near me", "close to me", "in my city", "in my country", "online only", "ships internationally",
+    "global brand", "trending", "viral product", "going viral", "everyone is buying", "must-have",
+    "sold out everywhere", "hard to find", "customer complaint", "bad review", "how to fix", "replace", "warranty",
+    "guarantee", "money back", "return policy", "refund", "just started", "new to", "exploring options",
+    "comparing prices", "price check", "quote request", "get a quote", "request a proposal", "send me pricing",
+    "how much does", "what does it cost", "is it worth it", "is it good", "does it work", "proven results",
+    "case study", "success story", "before and after", "transformation", "results", "ROI", "return on investment",
+    "cost-benefit", "break-even", "profit margin", "how to start", "getting started", "beginner guide",
+    "step by step", "tutorial", "course recommendation", "what do I need", "checklist", "starter kit", "essentials",
+    "stay at home mom", "stay at home dad", "housewife", "parent", "new parent", "student", "university student",
+    "college student", "high school student", "graduate", "postgraduate", "PhD student", "researcher",
+    "retired person", "pensioner", "senior citizen", "elderly shopper", "millennial", "Gen Z", "Gen X", "boomer",
+    "young professional", "expat", "immigrant", "diaspora", "international student", "digital nomad", "remote worker",
+    "work from home professional", "gig worker", "task rabbit", "Uber driver", "Bolt driver", "market trader",
+    "street vendor", "salon owner", "barber shop", "nail salon", "beauty salon owner", "gym owner", "personal gym",
+    "CrossFit box owner", "yoga studio", "spa owner", "massage therapist", "reflexologist", "acupuncturist",
+    "mechanic", "auto body shop", "panel beater", "tyre shop", "electrician", "plumber", "contractor", "builder",
+    "carpenter", "tiler", "painter", "roofer", "handyman", "truck driver", "taxi owner", "minibus owner", "bus owner",
+    "pilot", "cabin crew", "travel professional", "soldier", "military", "police officer", "security guard",
+    "private security", "nurse", "midwife", "paramedic", "emergency responder", "social worker",
+    "community developer", "NGO worker", "pastor", "minister", "imam", "rabbi", "priest", "artist", "sculptor",
+    "painter", "muralist", "graffiti artist", "fashion designer", "clothing manufacturer", "tailor", "seamstress",
+    "jewellery designer", "furniture maker", "leather worker", "ceramics artist", "pottery maker", "candle maker",
+    "soap maker", "struggling to find", "can't find", "no one stocks", "unavailable in", "not sold in my country",
+    "doesn't ship to Africa", "hard to import", "customs issues", "import duties", "duty free", "tax-free",
+    "overpriced in", "cheaper alternative", "more affordable option", "same quality lower price", "knockoff warning",
+    "beware of fakes", "quality issues", "poor quality", "good quality", "high quality", "long lasting", "durable",
+    "tough", "heavy duty", "industrial grade", "lightweight", "compact", "portable", "travel size", "fragile",
+    "delicate", "careful packaging needed", "urgent order", "rush order", "needed by", "deadline", "sold out",
+    "when will it be back", "alternative while out of stock", "price drop", "just discovered", "found on TikTok",
+    "saw on Instagram", "went viral", "recommended by", "as seen on", "featured in", "sponsored by",
+    "unboxing reaction", "honest opinion", "real review", "not sponsored", "paid partnership", "collab", "brand deal",
+    "gifted", "trying for the first time", "testing out", "first impressions", "long term review", "after 6 months",
+    "still using", "repurchase", "would I buy again", "worth every cent", "waste of money", "overrated",
+    "underrated", "hidden gem", "sleeper hit", "cult favourite", "popular in", "trending in", "must buy in",
+    "customer support", "after sales service", "warranty claim", "repair service", "replacement part", "spare parts",
+    "how to use", "instruction manual", "setup guide", "user guide", "maintenance tips", "care instructions",
+    "washing instructions", "storage tips", "best practices", "pro tips", "hacks", "upgrade path", "next level",
+    "advanced version", "pro version", "enterprise plan", "business plan", "team plan", "family plan",
+    "Cape Town buyer", "Durban shopper", "Pretoria", "Lagos customer", "Nairobi buyer", "Accra shopper",
+    "Cairo market", "Casablanca buyer", "Kigali", "Kampala", "Dar es Salaam", "Lusaka", "Harare", "Gaborone",
+    "Windhoek", "Port Louis", "East Africa market", "West Africa buyer", "North Africa", "Made in Africa",
+    "African entrepreneur", "flea market", "boot sale", "bazaar", "souk", "Facebook Marketplace listing",
+    "OLX listing", "Gumtree listing", "Takealot seller", "Superbalist customer", "Zando buyer", "Bash.com",
+    "Faithful to Nature", "Yuppiechef", "Amazon seller", "eBay buyer", "Etsy customer", "Alibaba buyer",
+    "AliExpress order", "Wish buyer", "Temu customer", "Shein customer", "ASOS buyer", "Boohoo", "Nike customer",
+    "Adidas buyer", "Puma shopper", "Apple customer", "Samsung buyer", "Xiaomi user", "YouTube creator",
+    "TikTok creator", "Instagram creator", "content monetisation", "brand deals", "sponsored content",
+    "UGC creator", "user generated content", "creator marketplace", "micro influencer", "nano influencer",
+    "macro influencer", "mega influencer", "celebrity endorsement", "affiliate link", "promo code for followers",
+    "discount link", "referral link", "track conversions", "UTM link", "landing page for ad", "conversion rate",
+    "click through rate", "cost per click", "cost per acquisition", "lifetime value", "average order value",
+    "cart abandonment", "checkout optimisation", "Black Friday deals", "Cyber Monday", "Christmas gift ideas",
+    "New Year sale", "Valentine's Day gifts", "Mother's Day", "Father's Day", "Easter", "Eid gifts",
+    "Diwali shopping", "back to school", "end of year sale", "mid-year sale", "summer sale", "winter collection",
+    "seasonal discount", "birthday gift ideas", "anniversary gift", "wedding gift", "graduation gift",
+    "baby shower gift", "housewarming gift", "thank you gift", "corporate gift ideas", "staff gift", "already bought",
+    "happy customer", "love this product", "highly recommend", "telling my friends", "sharing this", "reviewing this",
+    "rating this", "left a review", "returned it", "exchanged it", "got a refund", "complained about", "escalated to",
+    "resolved by", "loyal to brand", "brand loyal", "switched brands", "trying a competitor",
+    "went with another supplier", "came back to", "regret not buying sooner", "drop shipping supplier",
+    "fulfilment centre", "third party logistics", "3PL provider", "bonded warehouse", "cold storage supplier",
+    "perishable goods", "frozen goods delivery", "last mile delivery", "same day courier", "overnight courier",
+    "door to door delivery", "address verification", "PO Box delivery", "apartment delivery",
+    "gated estate delivery", "farm delivery", "rural delivery", "self pickup", "locker pickup", "bulk SMS campaign",
+    "email blast", "cold call list", "prospect list", "data list purchase", "contact database", "CRM import",
+    "sales pipeline", "discovery call", "sales call", "demo request", "product demo", "free trial signup",
+    "free tier", "freemium model", "paid upgrade", "cancel subscription", "downgrade plan", "pause subscription",
+    "reactivate account", "account manager", "dedicated support", "priority support", "SLA", "onboarding process",
+    "training included", "implementation support", "migration help", "data export", "data import", "API integration",
+    "Zapier integration", "webhook", "white glove service", "concierge service", "premium service tier",
+    "satisfaction guarantee", "no questions asked return", "30 day trial", "14 day free trial", "risk free",
+    "money back guarantee", "happiness guarantee", "peer recommendation", "word of mouth", "referral from friend",
+    "community recommended", "expert recommended", "doctor recommended", "dietitian approved", "certified nutritionist",
+    "ISO certified", "quality certified", "FDA approved", "SABS approved", "CE marked", "halal certified",
+    "kosher certified", "organic certified", "fair trade certified", "ships to US", "available in the US",
+    "US-based supplier", "US seller", "ships from USA", "made in USA", "American-made", "domestic shipping",
+    "USPS shipping", "UPS delivery", "FedEx shipping", "Amazon Prime eligible", "available on Amazon",
+    "Prime delivery", "two-day shipping", "California-based", "New York seller", "Texas supplier", "Florida retailer",
+    "Midwest distributor", "East Coast seller", "West Coast brand", "American small business", "American brand",
+    "US-owned business", "women-owned American business", "minority-owned business", "Black-owned American business",
+    "veteran-owned business", "available at Walmart", "available at Target", "available at Best Buy",
+    "available at Costco", "Sam's Club", "Whole Foods", "Trader Joe's", "available on Etsy US", "eBay US seller",
+    "Shopify US store", "sales tax included", "no sales tax", "tax-exempt purchase", "ships to Canada",
+    "Canadian seller", "Canadian brand", "made in Canada", "Canadian-owned business", "ships from Canada",
+    "Toronto supplier", "Vancouver seller", "Montreal retailer", "Calgary distributor", "available on Amazon Canada",
+    "Canadian Amazon seller", "ships within Canada", "free shipping Canada", "Canada Post delivery",
+    "no duty to Canada", "duty-free to Canada", "HST included", "GST included", "available at Canadian Tire",
+    "available at Indigo", "available at Shoppers", "ships to UK", "UK seller", "UK brand", "made in UK",
+    "British-made", "British brand", "available in the UK", "UK supplier", "ships from UK", "Royal Mail delivery",
+    "Hermes delivery", "DPD delivery", "available on Amazon UK", "UK Amazon seller", "UK Etsy seller",
+    "available at John Lewis", "available at Marks and Spencer", "available at Argos", "available at Boots",
+    "available at Selfridges", "available at ASOS UK", "VAT included", "ex-VAT price", "no import duties UK",
+    "ships to Europe", "EU seller", "European brand", "made in Europe", "European supplier", "ships within EU",
+    "EU warehouse", "fulfilled in EU", "VAT registered EU", "no customs within EU", "Schengen zone delivery",
+    "DHL Europe", "DPD Europe", "GLS delivery", "PostNL delivery", "available in Germany", "available in France",
+    "available in Netherlands", "available in Spain", "available in Italy", "available in Sweden",
+    "available in Belgium", "available in Austria", "available in Poland", "German quality", "French design",
+    "Italian craftsmanship", "Scandinavian design", "Nordic brand", "Swiss made", "Swiss quality",
+    "English-language support", "US dollar pricing", "Canadian dollar pricing", "GBP pricing", "Euro pricing",
+    "ships to North America", "North American brand", "transatlantic shipping", "ships to Western Europe",
+    "no import hassle", "fast US delivery", "fast UK delivery", "fast EU delivery", "ships to all 50 states",
+    "ships nationwide US", "nationwide delivery UK", "free returns US", "free returns UK", "free returns EU",
+    "30-day return US", "easy returns policy", "hassle-free returns", "GDPR compliant", "CCPA compliant",
+    "data privacy compliant", "American Express accepted", "Visa and Mastercard accepted", "Apple Pay accepted",
+    "Google Pay accepted", "registered US business", "LLC", "Inc", "Ltd UK", "GmbH", "BBB accredited",
+    "Trustpilot rated", "Google Reviews", "Yelp rated", "Chamber of Commerce member", "Better Business Bureau"
+  ],
+  "social_platforms": [
+    { "name": "Facebook", "url": "https://facebook.com", "type": "social_network", "focus": ["general", "marketplace", "groups", "ads"] },
+    { "name": "Instagram", "url": "https://instagram.com", "type": "visual_social", "focus": ["photos", "reels", "stories", "shopping", "influencers"] },
+    { "name": "X (formerly Twitter)", "url": "https://x.com", "type": "microblogging", "focus": ["news", "real-time", "communities", "ads"] },
+    { "name": "TikTok", "url": "https://tiktok.com", "type": "short_video", "focus": ["viral content", "entertainment", "TikTok Shop", "influencers"] },
+    { "name": "Threads", "url": "https://threads.net", "type": "microblogging", "focus": ["text posts", "Instagram integration", "communities"] },
+    { "name": "YouTube", "url": "https://youtube.com", "type": "video", "focus": ["long-form video", "shorts", "tutorials", "ads", "monetisation"] },
+    { "name": "LinkedIn", "url": "https://linkedin.com", "type": "professional_network", "focus": ["B2B", "job search", "thought leadership", "ads"] },
+    { "name": "Pinterest", "url": "https://pinterest.com", "type": "visual_discovery", "focus": ["inspiration", "shopping", "DIY", "fashion", "home décor"] },
+    { "name": "Reddit", "url": "https://reddit.com", "type": "community_forum", "focus": ["subreddits", "communities", "reviews", "AMAs", "niche interests"] },
+    { "name": "Snapchat", "url": "https://snapchat.com", "type": "ephemeral_messaging", "focus": ["stories", "younger audience", "AR filters", "ads"] },
+    { "name": "WhatsApp", "url": "https://whatsapp.com", "type": "messaging", "focus": ["direct messaging", "groups", "broadcast lists", "WhatsApp Business"] },
+    { "name": "Telegram", "url": "https://telegram.org", "type": "messaging", "focus": ["channels", "groups", "bots", "communities"] },
+    { "name": "Discord", "url": "https://discord.com", "type": "community_chat", "focus": ["gaming", "communities", "voice chat", "servers"] },
+    { "name": "Truth Social", "url": "https://truthsocial.com", "type": "social_network", "focus": ["conservative media", "US politics", "free speech"] },
+    { "name": "Clubhouse", "url": "https://clubhouse.com", "type": "audio_social", "focus": ["live audio", "rooms", "networking", "thought leadership"] },
+    { "name": "Mastodon", "url": "https://mastodon.social", "type": "decentralised_social", "focus": ["open source", "privacy", "federated network"] },
+    { "name": "Bluesky", "url": "https://bsky.app", "type": "decentralised_social", "focus": ["microblogging", "open protocol", "Twitter alternative"] },
+    { "name": "Tumblr", "url": "https://tumblr.com", "type": "blogging", "focus": ["creative content", "fandoms", "niche communities", "GIFs"] },
+    { "name": "Quora", "url": "https://quora.com", "type": "q_and_a", "focus": ["knowledge sharing", "thought leadership", "SEO", "ads"] },
+    { "name": "Medium", "url": "https://medium.com", "type": "blogging", "focus": ["long-form articles", "thought leadership", "newsletters"] },
+    { "name": "Substack", "url": "https://substack.com", "type": "newsletter_platform", "focus": ["paid newsletters", "subscriber communities", "writers"] },
+    { "name": "Patreon", "url": "https://patreon.com", "type": "creator_monetisation", "focus": ["memberships", "exclusive content", "fan support"] },
+    { "name": "Twitch", "url": "https://twitch.tv", "type": "live_streaming", "focus": ["gaming", "live streaming", "subscriptions", "donations"] },
+    { "name": "Kick", "url": "https://kick.com", "type": "live_streaming", "focus": ["gaming", "live streaming", "creator-friendly monetisation"] },
+    { "name": "Rumble", "url": "https://rumble.com", "type": "video", "focus": ["alternative video platform", "free speech", "US-focused"] },
+    { "name": "BeReal", "url": "https://bereal.com", "type": "social_network", "focus": ["authentic photos", "younger audience", "dual camera"] },
+    { "name": "Lemon8", "url": "https://lemon8-app.com", "type": "visual_social", "focus": ["lifestyle", "fashion", "beauty", "ByteDance platform"] },
+    { "name": "MeWe", "url": "https://mewe.com", "type": "social_network", "focus": ["privacy-focused", "no ads", "groups"] },
+    { "name": "Vero", "url": "https://vero.co", "type": "social_network", "focus": ["ad-free", "curated content", "creatives"] },
+    { "name": "LinkedIn Newsletter", "url": "https://linkedin.com", "type": "newsletter_platform", "focus": ["B2B", "professional audience", "thought leadership"] },
+    { "name": "Twitter/X Spaces", "url": "https://x.com", "type": "audio_social", "focus": ["live audio", "communities", "real-time conversation"] },
+    { "name": "Instagram Broadcast Channels", "url": "https://instagram.com", "type": "broadcast_channel", "focus": ["one-to-many messaging", "creator updates"] },
+    { "name": "Facebook Groups", "url": "https://facebook.com/groups", "type": "community", "focus": ["niche communities", "buy and sell groups", "support groups"] },
+    { "name": "WhatsApp Channels", "url": "https://whatsapp.com", "type": "broadcast_channel", "focus": ["news", "brand updates", "community broadcasts"] },
+    { "name": "Nairaland", "url": "https://nairaland.com", "type": "community_forum", "focus": ["Nigeria", "West Africa", "general discussion", "marketplace"] },
+    { "name": "Jodel", "url": "https://jodel.com", "type": "local_social", "focus": ["local community", "anonymous", "Europe-focused"] },
+    { "name": "Weibo", "url": "https://weibo.com", "type": "microblogging", "focus": ["China", "news", "entertainment", "marketing"] },
+    { "name": "WeChat", "url": "https://weixin.qq.com", "type": "super_app", "focus": ["China", "messaging", "payments", "mini programs", "B2B"] },
+    { "name": "Line", "url": "https://line.me", "type": "messaging", "focus": ["Japan", "Southeast Asia", "messaging", "stickers", "business accounts"] },
+    { "name": "KakaoTalk", "url": "https://kakao.com", "type": "messaging", "focus": ["South Korea", "messaging", "commerce", "entertainment"] },
+    { "name": "VKontakte (VK)", "url": "https://vk.com", "type": "social_network", "focus": ["Russia", "CIS countries", "groups", "marketplace"] },
+    { "name": "Odnoklassniki", "url": "https://ok.ru", "type": "social_network", "focus": ["Russia", "older demographic", "communities"] },
+    { "name": "Taringa", "url": "https://taringa.net", "type": "community_forum", "focus": ["Latin America", "Spanish-speaking", "content sharing"] },
+    { "name": "ShareChat", "url": "https://sharechat.com", "type": "social_network", "focus": ["India", "regional languages", "short video"] },
+    { "name": "Moj", "url": "https://mojapp.in", "type": "short_video", "focus": ["India", "regional content", "TikTok alternative"] },
+    { "name": "Josh", "url": "https://josh.app", "type": "short_video", "focus": ["India", "short video", "entertainment"] }
+  ]
+}

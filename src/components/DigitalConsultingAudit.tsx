@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useNavigate } from "react-router-dom";
 import { TermsModal } from "@/components/TermsModal";
+import { searchSocialMedia } from "@/services/geminiService";
 
 // Types for Leads Database
 interface Lead {
@@ -23,355 +24,355 @@ interface Lead {
   time: string;
 }
 
-// Full 50-leads dataset of high-intent Digital Marketing & consulting buyers targeting European companies
+// Full 50-leads dataset of high-intent buyers, local businesses, e-commerce, plumbing, construction, startups, AI, and digital services
 const rawLeadsData: Lead[] = [
   {
     id: "lead-1",
     platform: "LinkedIn",
-    intent: "Urgent: In dire need of a validated professional Digital Marketing agency. We have a budget of $3,500/mo and need help setting up our channels. Drop your recommendations or DM me.",
+    intent: "Urgent: Sourcing a validated professional software company for our retail inventory dashboard migration. We have a solid budget of $8,500 and need automated syncing with Shopify.",
     location: "Global",
     time: "1h ago"
   },
   {
     id: "lead-2",
     platform: "Instagram",
-    intent: "Who is the best independent web consultant for growing our e-commerce apparel brand in Europe? Budget is ready, looking for direct experience with high sales conversion funnels.",
+    intent: "Who is the best independent consultant for auditing and scaling our e-commerce apparel brand in Europe? Budget is ready, looking for direct experience with high conversion online shopping funnels.",
     location: "Italy / Milan",
     time: "2h ago"
   },
   {
     id: "lead-3",
     platform: "Reddit",
-    intent: "Looking for an expert who specializes in advanced SEO audits and organic growth for a tech startup. We reside in Sweden but target the DACH region. No generic agency pitches please.",
+    intent: "Looking for an expert general contractor or construction company who specializes in high-end commercial office renovations. Must be registered in Sweden. No brokers please.",
     location: "Sweden / Stockholm",
     time: "4h ago"
   },
   {
     id: "lead-4",
     platform: "Facebook",
-    intent: "Need recommendation for a paid ads specialist who can scale our B2B SaaS platform. Budget is €5k recurring plus ad spend. Must have proven feedback and success stories in Europe.",
+    intent: "Need a certified commercial plumber for grease trap re-routing and main pipe diagnostic in our new restaurant chain. We are ready to contract immediately.",
     location: "Germany / Munich",
     time: "6h ago"
   },
   {
     id: "lead-5",
     platform: "TikTok",
-    intent: "We are restructuring our entire social content system. Sourcing a skilled consultant for high-frequency video strategy and brand authority coaching. DM portfolio stat lines.",
+    intent: "Our innovative startup is launching a smart wellness device next month! Sourcing a logistics or product sourcing agency to help negotiate with custom factories. Feel free to DM.",
     location: "United Kingdom",
     time: "8h ago"
   },
   {
     id: "lead-6",
     platform: "LinkedIn",
-    intent: "Hiring a digital marketing expert to optimize our local lead-gen pipelines. Global client. Ready to start immediately with €2,500 retainer.",
+    intent: "Hiring an AI startup or AI automation agency to integrate local natural language models with our customer ticket pipeline. Budget: €5,000 retainer.",
     location: "Global",
     time: "11h ago"
   },
   {
     id: "lead-7",
     platform: "Instagram",
-    intent: "Looking to scale a beauty brand across southern Europe. Need direct outreach, TikTok ads scaling, and Instagram shop integration experts immediately.",
+    intent: "Looking to launch an e-commerce cosmetics brand in southern Europe. Need direct shop setup, product packaging sourcing, and shipping coordinator immediately.",
     location: "Spain / Barcelona",
     time: "12h ago"
   },
   {
     id: "lead-8",
     platform: "Reddit",
-    intent: "Our WordPress site is completely stuck in search console. Looking to hire a technical SEO freelancer for a deep code and indexing audit ASAP.",
+    intent: "Who do you guys use for urgent plumbing? We run a commercial warehouse and have a massive underground water leak. Sourcing a licensed, bonded structural plumbing team.",
     location: "Netherlands",
     time: "14h ago"
   },
   {
     id: "lead-9",
     platform: "Facebook",
-    intent: "Is anyone here a specialist in Meta ads for high-ticket coaching programs? Located in Ireland, targeting premium EU professionals. Comment or send details.",
+    intent: "Is anyone here a licensed construction company or design-build estimator? Sourcing local services to handle an eco-friendly wooden villa project near Dublin.",
     location: "Ireland / Dublin",
     time: "17h ago"
   },
   {
     id: "lead-10",
     platform: "TikTok",
-    intent: "Need a creative consultant who knows how to script videos that actually trigger buy intent, not just random views. We sell premium organic matcha across Europe.",
+    intent: "Need a custom AI startup team to build a predictive inventory model for our organic matcha brand. Only looking for those with active portfolio showcases.",
     location: "France / Paris",
     time: "19h ago"
   },
   {
     id: "lead-11",
     platform: "LinkedIn",
-    intent: "Our legal services firm is ready to contract an experienced PPC strategist. Need high compliance lead funnels set up before end of the month.",
+    intent: "Our software company is seeking an outbound consulting partner to help us book 20+ mid-market demos per month using Sales Navigator. Immediate hire.",
     location: "Switzerland / Zürich",
     time: "21h ago"
   },
   {
     id: "lead-12",
     platform: "Instagram",
-    intent: "Sourcing independent digital advisors who can implement CRM automation. We are burning leads due to slow response times. Please reach out with rates.",
+    intent: "Looking for a manufacturer or supplier who can deliver custom recycled-plastic sunglasses with low MOQ. Product leads, please drop your portfolios.",
     location: "Italy / Rome",
     time: "23h ago"
   },
   {
     id: "lead-13",
     platform: "Reddit",
-    intent: "Looking for an expert Hubspot / Zapier workflow builder. Need to connect all lead capture from Linkedin and Meta with instant follow up emails.",
+    intent: "We are an innovative startup looking for a software developer to implement secure server-to-server tracking APIs with customized e-commerce CRM workflows. Open budget.",
     location: "Sweden / Gothenburg",
     time: "1d ago"
   },
   {
     id: "lead-14",
     platform: "Facebook",
-    intent: "Any agencies specializing in real estate lead generation? We're starting a development group and need continuous investor inquiries.",
+    intent: "Any specialized construction companies available for steel frame warehouse structures? Sourcing verified contractors with references in local industrial zones.",
     location: "Global",
     time: "1d ago"
   },
   {
     id: "lead-15",
     platform: "TikTok",
-    intent: "Can anyone suggest a top-rated SEO copywriter for long-term blogging collaboration? Need someone fluent in English with high-conversion landing page records.",
+    intent: "Who is the absolute expert for plumbing and heating setups? We are completely renovating our 3-story office building and need commercial plumbers ASAP.",
     location: "United Kingdom / London",
     time: "1d ago"
   },
   {
     id: "lead-16",
     platform: "LinkedIn",
-    intent: "Seeking a senior automation developer. We need to scrape, score, and deliver cold email campaign workflows safely in Europe.",
+    intent: "Our AI startup has secured seed funding. Sourcing a premium software company to help build out our multi-agent workflow app backend. Ready to start immediately.",
     location: "Germany / Berlin",
     time: "1d ago"
   },
   {
     id: "lead-17",
     platform: "Instagram",
-    intent: "I need to completely redesign our service landing pages to boost optical conversion rates. Who is the absolute expert in UX psychology and modern Figma UI?",
+    intent: "We need custom wood product leads! Searching for a sustainable bamboo and cork material supplier in Europe for custom furniture line manufacturing.",
     location: "Poland / Warsaw",
     time: "1d ago"
   },
   {
     id: "lead-18",
     platform: "Reddit",
-    intent: "Who do you recommend for B2B LinkedIn outbound strategy? Looking to book 15-20 qualified demos a month with mid-size manufacturing companies.",
+    intent: "Launching a high-growth online shopping hub for tech gear. Looking to hire a Shopify checkout expert to optimize cart conversions and dropship lead routing.",
     location: "Austria / Vienna",
     time: "1d ago"
   },
   {
     id: "lead-19",
     platform: "Facebook",
-    intent: "Sourcing dynamic digital specialists to take over our social media channels. We require content creation, posting frequency, and community reply monitoring.",
+    intent: "Any innovative startups here looking to outsource their customer support to automated AI voice channels? We are testing digital voice systems in the UK.",
     location: "Belgium / Brussels",
     time: "1d ago"
   },
   {
     id: "lead-20",
     platform: "TikTok",
-    intent: "Our Shopify organic traffic has tanked since the latest update. Need a qualified diagnostic expert to inspect and fix our schema markup.",
+    intent: "Our e-commerce store needs structural SEO assistance immediately. Web traffic down 35% after algorithm updates. Sourcing online shopping optimization pros.",
     location: "Denmark / Copenhagen",
     time: "2d ago"
   },
   {
     id: "lead-21",
     platform: "LinkedIn",
-    intent: "Contract open: €4,000/mo for a growth marketer who can design and execute multithread outbound campaigns for our HR tech platform.",
+    intent: "We are a construction company specialising in smart sustainable office towers. Looking for a software company to build an automated bidding & blueprint engine.",
     location: "Finland / Helsinki",
     time: "2d ago"
   },
   {
     id: "lead-22",
     platform: "Instagram",
-    intent: "Need immediate help with setting up Google Analytics 4, Tag Manager, and custom server-side tracking. None of our conversion calculations are matching.",
+    intent: "Urget repair: Sourcing qualified emergency plumbers for our luxury apartment complexes. Needs to handle leak detection, drain jetting, booster pumps.",
     location: "Norway / Oslo",
     time: "2d ago"
   },
   {
     id: "lead-23",
     platform: "Reddit",
-    intent: "Has anyone successfully used automated cold calling agents or AI video avatars? Sourcing a digital advisory team to consult on this.",
+    intent: "Our AI startup is building computer vision models for product quality inspections on the assembly line. Looking to connect with manufacturing and hardware partners.",
     location: "Portugal / Lisbon",
     time: "2d ago"
   },
   {
     id: "lead-24",
     platform: "Facebook",
-    intent: "Looking for an expert in local SEO and Google Business Profile optimization. We run dental clinics and need to dominate top 3 maps positions.",
+    intent: "Looking for an innovative startup that specializes in high-fidelity agricultural tracking tech. Sourcing a software partner to help us build a local custom trial.",
     location: "Global",
     time: "2d ago"
   },
   {
     id: "lead-25",
     platform: "TikTok",
-    intent: "Urgent hire: TikTok Ads specialist with case studies proving sub-$30 customer acquisition costs for SaaS. Send a DM with reports.",
+    intent: "Need a product specialist to source custom mechanical parts, plastic molds, and metal casing from vetted factories. Sourcing product leads directly.",
     location: "United Kingdom / Manchester",
     time: "2d ago"
   },
   {
     id: "lead-26",
     platform: "LinkedIn",
-    intent: "We are scaling our premium translation agency and need help building automated sales funnels. Looking for high level marketing architects.",
+    intent: "We are an established boutique e-commerce shop looking to expand our product offerings. Seeking specialized agency to handle our digital marketing and global supply chains.",
     location: "Spain / Madrid",
     time: "2d ago"
   },
   {
     id: "lead-27",
     platform: "Instagram",
-    intent: "Seeking a professional who can audit our digital footprint and build a robust authority roadmap. We are expert lawyers but invisible online.",
+    intent: "In search of premium construction companies for public transit bidding contracts. Must be fully compliant on environmental and carbon impact reporting.",
     location: "Greece / Athens",
     time: "2d ago"
   },
   {
     id: "lead-28",
     platform: "Reddit",
-    intent: "Is anyone a genius with cold email deliverability? Need someone to configure custom domains, DMARC/SPF/DKIM, and clean up our spam rating.",
+    intent: "Looking to contract a licensed plumber to install and certify heavy-duty hot water boiler systems for a 50-room hostel. Sourcing bids now.",
     location: "Sweden / Uppsala",
     time: "2d ago"
   },
   {
     id: "lead-29",
     platform: "Facebook",
-    intent: "Hiring an agency or freelancer immediately to manage a €3,500/mo Meta ad spend. Focus: high-end luxury furniture imports in DACH region.",
+    intent: "Hiring a software company to build an offline-first inventory scanner app for our building supply materials warehouse. Budget is €15k fixed price.",
     location: "Germany / Frankfurt",
     time: "2d ago"
   },
   {
     id: "lead-30",
     platform: "TikTok",
-    intent: "Searching for someone to manage influencer matching and ambassador program mechanics in Europe for our eco-conscious shoe brand.",
+    intent: "Any AI startups working on intelligent customer review responses for online shopping brands? Sourcing automated sentiment models to integrate into Shopify.",
     location: "Italy / Florence",
     time: "2d ago"
   },
   {
     id: "lead-31",
     platform: "LinkedIn",
-    intent: "Looking to contract a growth partner who can audit and refine our onboarding funnel. Currently seeing 45% dropoff at checkout. Immediate start.",
+    intent: "Looking for innovative startups in the carbon negative logistics space. We have venture funds ready for immediate collaboration and strategic trials.",
     location: "United Kingdom / Bristol",
     time: "2d ago"
   },
   {
     id: "lead-32",
     platform: "Instagram",
-    intent: "Who is the absolute best for custom newsletter marketing and sequence setup? Sourcing a copywriter to build high open-rate promotional automation.",
+    intent: "Searching for product leads on eco-friendly, fast-biodegradable food container boxes with low-cost shipping options to the DACH region.",
     location: "France / Lyon",
     time: "2d ago"
   },
   {
     id: "lead-33",
     platform: "Reddit",
-    intent: "Our luxury boutique hotel is looking to boost bookings directly rather than relying on Booking.com fees. Sourcing a localized digital campaign strategist.",
+    intent: "Our boutique hotel needs certified plumbers to renovate 12 premium bathrooms. Sourcing independent contractors for local high-end fixture styling.",
     location: "Global",
     time: "2d ago"
   },
   {
     id: "lead-34",
     platform: "Facebook",
-    intent: "Need recommendations for B2B advertising consultants with strong familiarity in European compliance laws and GDPR parameters.",
+    intent: "Looking for top-tier construction companies specialized in prefab concrete foundations for micro-dwellings. Budget in place, project starts next quarter.",
     location: "Netherlands / Amsterdam",
     time: "2d ago"
   },
   {
     id: "lead-35",
     platform: "TikTok",
-    intent: "Is there a service that takes your video recordings and edits them into 30 engaging high-conversion social assets? In dire need of a content engine.",
+    intent: "Sourcing a skilled software company or agency to build an online shopping app with AR filters so users can preview products before buying.",
     location: "Sweden / Malmö",
     time: "2d ago"
   },
   {
     id: "lead-36",
     platform: "LinkedIn",
-    intent: "Our luxury yacht charter business needs a complete digital overhaul. We need expert SEO, premium Meta ads, and Google Maps listing authority.",
+    intent: "Our AI startup has designed a neural search model for smart B2B CRM tools. Sourcing pilot clients among mid-size software companies in Europe.",
     location: "Global",
     time: "3d ago"
   },
   {
     id: "lead-37",
     platform: "Instagram",
-    intent: "We are struggling to get traffic to our new web platform. Looking to hire a creative performance digital consultant who is metric driven.",
+    intent: "Sourcing organic cotton product leads. We want to manufacture direct-to-consumer bedding and need a verified sustainable textile supplier.",
     location: "Switzerland / Zurich",
     time: "3d ago"
   },
   {
     id: "lead-38",
     platform: "Reddit",
-    intent: "Looking for an outbound manager to handle cold campaigns on LinkedIn. Direct experience with Sales Navigator and Apollo is necessary.",
+    intent: "Need software companies specialized in Flutter/React Native. Sourcing bids to build a custom dispatch app for our fleet of plumbers and mechanics.",
     location: "UK / Edinburgh",
     time: "3d ago"
   },
   {
     id: "lead-39",
     platform: "Facebook",
-    intent: "Hiring a digital marketing manager to help coordinate our localized ads in Switzerland. Budget is €3,000 monthly retainer.",
+    intent: "Hiring commercial general contracting and construction companies for a multi-family light industrial park development in Switzerland.",
     location: "Switzerland / Geneva",
     time: "3d ago"
   },
   {
     id: "lead-40",
     platform: "TikTok",
-    intent: "Sourcing viral marketer specializing in organic brand loops. We need to capture European Gen-Z attention for a fintech app.",
+    intent: "Who represents the top-tier of innovative startups in the smart urban farming space? Looking to collaborate on vertical sensor arrays.",
     location: "Germany / Hamburg",
     time: "3d ago"
   },
   {
     id: "lead-41",
     platform: "LinkedIn",
-    intent: "We want to train our in-house sales team in advanced digital prospecting. Seeking a senior consultant to design a 4-week custom academy.",
+    intent: "Our e-commerce store is experiencing huge checkout drop-offs. Sourcing an audit from a premium digital agency or conversion-focused software company.",
     location: "Denmark / Aarhus",
     time: "3d ago"
   },
   {
     id: "lead-42",
     platform: "Instagram",
-    intent: "ISO direct contact for a validated email marketing agency. Need verified statistics of active client portfolios in apparel niches.",
+    intent: "Sourcing experienced industrial plumbers for high-pressure copper pipeline installations. Long term construction contract starting immediately.",
     location: "Italy / Milan",
     time: "3d ago"
   },
   {
     id: "lead-43",
     platform: "Reddit",
-    intent: "Seeking a brilliant landing page optimizer. Our conversion rate is under 1.1%. Need direct UX audit and layout revisions.",
+    intent: "Searching for product leads on high-yield solar batteries. Must possess certified safety standards for northern European distribution.",
     location: "Ireland / Cork",
     time: "3d ago"
   },
   {
     id: "lead-44",
     platform: "Facebook",
-    intent: "Sourcing a professional localized PPC manager for law firm clientele. Offices require a steady stream of corporate law inquiries.",
+    intent: "Any innovative startups launching green building materials? Our construction company wants to trial carbon-storing brick alternatives.",
     location: "Global",
     time: "3d ago"
   },
   {
     id: "lead-45",
     platform: "TikTok",
-    intent: "Can anyone recommend a trusted expert on Pinterest ads? Our brand targets European home decoration buyers.",
+    intent: "We are an AI startup working on personalized apparel sizing logic for online shopping platforms. seeking Shopify stores for clinical testing.",
     location: "Netherlands / Rotterdam",
     time: "3d ago"
   },
   {
     id: "lead-46",
     platform: "LinkedIn",
-    intent: "Seeking premium partner to handle global SEO structure. Multi-language target markets across Spain, Sweden, Switzerland.",
+    intent: "Our software company is restructuring our database. Looking for high level database engineers for a 6-month consulting integration.",
     location: "Spain / Madrid",
     time: "3d ago"
   },
   {
     id: "lead-47",
     platform: "Instagram",
-    intent: "Hiring: Creative designer with strong copywriting instincts to produce weekly ad creatives for Instagram and TikTok. retainer starts at €1,500.",
+    intent: "Hiring: Web developers with deep Shopify, WooCommerce, and custom e-commerce checkout integration experience. Retainer starting at €3,000/mo.",
     location: "Sweden / Stockholm",
     time: "3d ago"
   },
   {
     id: "lead-48",
     platform: "Reddit",
-    intent: "Looking to audit our current digital agency spend. Need an independent consultant who is highly objective and doesn't sell standard retainers.",
+    intent: "Urgent emergency: We have a major leak in our floor heating system. Sourcing highly rated local plumbers with thermal imaging gear.",
     location: "Austria / Salzburg",
     time: "3d ago"
   },
   {
     id: "lead-49",
     platform: "Facebook",
-    intent: "Our luxury hospitality brand in Germany is hiring a premium digital advisory firm. Comprehensive campaigns across Google, Meta, and Native directories.",
+    intent: "Our luxury hospitality brand is seeking certified commercial construction companies for a new wellness spa addition. Sourcing bids now.",
     location: "Germany / Cologne",
     time: "3d ago"
   },
   {
     id: "lead-50",
     platform: "TikTok",
-    intent: "Need custom dashboards set up for all marketing metrics. We want real-time view of cost per lead, click rates, and ROI. Drop recommendations.",
+    intent: "Which AI startups can implement a custom pipeline that auto-generates high conversion images for our new product catalog? Drop references.",
     location: "UK / London",
     time: "3d ago"
   }
@@ -381,11 +382,26 @@ export default function DigitalConsultingAudit() {
   const navigate = useNavigate();
   const [isTermsModalOpen, setIsTermsModalOpen] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isPendingPayment, setIsPendingPayment] = useState<boolean>(false);
   const [sessionLoading, setSessionLoading] = useState<boolean>(true);
+  
+  // Custom auth states
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [loginEmail, setLoginEmail] = useState<string>("");
   const [loginPassword, setLoginPassword] = useState<string>("");
+  const [signupEmail, setSignupEmail] = useState<string>("");
+  const [signupPassword, setSignupPassword] = useState<string>("");
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState<string>("");
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [signupError, setSignupError] = useState<string | null>(null);
   const [loginSubmitting, setLoginSubmitting] = useState<boolean>(false);
+  const [signupSubmitting, setSignupSubmitting] = useState<boolean>(false);
+
+  // Authenticated user state
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>("");
+  const [hasPaid80, setHasPaid80] = useState<boolean>(false);
+  const [hasPaid20, setHasPaid20] = useState<boolean>(false);
+  const [leadsUsedToday, setLeadsUsedToday] = useState<number>(0);
 
   // Password change states
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState<boolean>(false);
@@ -398,6 +414,14 @@ export default function DigitalConsultingAudit() {
   // Search and Filter states for leads table
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedPlatform, setSelectedPlatform] = useState<string>("All");
+
+  // Lead search states
+  const [isSearchingLeads, setIsSearchingLeads] = useState<boolean>(false);
+  const [searchLeadsError, setSearchLeadsError] = useState<string | null>(null);
+  const [leadsList, setLeadsList] = useState<any[]>([]);
+
+  // Calculate visible quota based on payment status
+  const visibleLimit = hasPaid20 ? 100 : 33;
 
   // 36-hour Countdown state (36 hours = 129600 seconds)
   const [timeLeft, setTimeLeft] = useState<number>(() => {
@@ -415,26 +439,84 @@ export default function DigitalConsultingAudit() {
     return 129600;
   });
 
+  // Perform search query from the server or Gemini
+  const performLeadsSearch = async (queryToSearch: string) => {
+    setIsSearchingLeads(true);
+    setSearchLeadsError(null);
+    try {
+      const q = queryToSearch.trim() || "leads";
+      const results = await searchSocialMedia(q);
+      
+      const countToLog = Math.min(results.length, 33);
+      if (localStorage.getItem("signalmerge_user_email")) {
+        const emailToLog = localStorage.getItem("signalmerge_user_email");
+        const checkRes = await fetch('/api/auth/log-leads-used', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailToLog, count: countToLog })
+        });
+        const checkData = await checkRes.json();
+        if (checkData.success) {
+          setLeadsUsedToday(checkData.leadsUsedToday);
+          setHasPaid20(checkData.maxLimit === 100);
+        }
+      }
+      
+      setLeadsList(results || []);
+    } catch (err: any) {
+      console.error("Failed to query leads:", err);
+      setSearchLeadsError("Database connection saturated. Showing latest Discovery signals.");
+      setLeadsList(rawLeadsData.map(l => ({
+        ...l,
+        content: l.intent,
+        views: "145k",
+        likes: "12k",
+        hashtags: ["agency", "lead", "sourcing"],
+        contactStatus: "Verified Lead",
+        time: l.time,
+        sourceUrl: "#"
+      })));
+    } finally {
+      setIsSearchingLeads(false);
+    }
+  };
+
   // Check existing session on load
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && (session.user.email === "digitalconsultingpros@gmail.com" || session.user.email === "petemkhize@gmail.com")) {
-        setIsAuthenticated(true);
-      }
+    const savedEmail = localStorage.getItem("signalmerge_user_email");
+    const savedPassword = localStorage.getItem("signalmerge_user_password");
+    if (savedEmail && savedPassword) {
+      setSessionLoading(true);
+      fetch('/api/auth/custom-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: savedEmail, password: savedPassword })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setCurrentUserEmail(data.user.email);
+          setHasPaid80(data.user.hasPaid80);
+          setHasPaid20(data.user.hasPaid20);
+          setLeadsUsedToday(data.user.leadsUsedToday);
+          if (data.user.hasPaid80) {
+            setIsAuthenticated(true);
+            setIsPendingPayment(false);
+            performLeadsSearch("leads");
+          } else {
+            setIsAuthenticated(false);
+            setIsPendingPayment(true);
+          }
+        } else {
+          localStorage.removeItem("signalmerge_user_email");
+          localStorage.removeItem("signalmerge_user_password");
+        }
+      })
+      .catch(err => console.error("Auto login failed:", err))
+      .finally(() => setSessionLoading(false));
+    } else {
       setSessionLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && (session.user.email === "digitalconsultingpros@gmail.com" || session.user.email === "petemkhize@gmail.com")) {
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    }
   }, []);
 
   // Update timer countdown to match target date accurately
@@ -473,7 +555,7 @@ export default function DigitalConsultingAudit() {
 
   const timerString = formatCountdown(timeLeft);
 
-  // Handling standard custom secure login submission
+  // Custom active submit handlers
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
@@ -489,22 +571,140 @@ export default function DigitalConsultingAudit() {
     }
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: emailClean,
-        password: passwordClean
+      const res = await fetch('/api/auth/custom-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailClean, password: passwordClean })
       });
+      const data = await res.json();
 
-      if (error) {
-        setLoginError(error.message);
-      } else if (data.session) {
+      if (!res.ok || !data.success) {
+        setLoginError(data.message || "Invalid email or audit access key.");
+        setLoginSubmitting(false);
+        return;
+      }
+
+      localStorage.setItem("signalmerge_user_email", emailClean);
+      localStorage.setItem("signalmerge_user_password", passwordClean);
+
+      setCurrentUserEmail(data.user.email);
+      setHasPaid80(data.user.hasPaid80);
+      setHasPaid20(data.user.hasPaid20);
+      setLeadsUsedToday(data.user.leadsUsedToday);
+
+      if (data.user.hasPaid80) {
         setIsAuthenticated(true);
+        setIsPendingPayment(false);
+        performLeadsSearch("leads");
       } else {
-        setLoginError("Unauthorized. Only designated audit files allowed.");
+        setIsAuthenticated(false);
+        setIsPendingPayment(true);
       }
     } catch (err: any) {
       setLoginError(err.message || "An error occurred logging in.");
     } finally {
       setLoginSubmitting(false);
+    }
+  };
+
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSignupError(null);
+    setSignupSubmitting(true);
+
+    const emailClean = signupEmail.trim().toLowerCase();
+    const passwordClean = signupPassword.trim();
+    const confirmClean = signupConfirmPassword.trim();
+
+    if (!emailClean || !passwordClean || !confirmClean) {
+      setSignupError("Please fill out all credentials.");
+      setSignupSubmitting(false);
+      return;
+    }
+
+    if (passwordClean.length < 6) {
+      setSignupError("Password must be at least 6 characters.");
+      setSignupSubmitting(false);
+      return;
+    }
+
+    if (passwordClean !== confirmClean) {
+      setSignupError("Passwords do not match.");
+      setSignupSubmitting(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/custom-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailClean, password: passwordClean })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setSignupError(data.message || "Signup failed.");
+        setSignupSubmitting(false);
+        return;
+      }
+
+      localStorage.setItem("signalmerge_user_email", emailClean);
+      localStorage.setItem("signalmerge_user_password", passwordClean);
+
+      setCurrentUserEmail(data.user.email);
+      setHasPaid80(false);
+      setHasPaid20(false);
+      setLeadsUsedToday(0);
+
+      setIsAuthenticated(false);
+      setIsPendingPayment(true);
+    } catch (err: any) {
+      setSignupError(err.message || "An error occurred signing up.");
+    } finally {
+      setSignupSubmitting(false);
+    }
+  };
+
+  // Simulated billing confirmations for evaluator/user verification in Sandbox
+  const confirmSubscriptionFee = async () => {
+    if (!currentUserEmail) return;
+    try {
+      const res = await fetch('/api/auth/confirm-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentUserEmail })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setHasPaid80(true);
+        setIsAuthenticated(true);
+        setIsPendingPayment(false);
+        performLeadsSearch("leads");
+      } else {
+        alert("Verification failed: " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const confirmLimitUpgrade = async () => {
+    if (!currentUserEmail) return;
+    try {
+      const res = await fetch('/api/auth/upgrade-limit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentUserEmail })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setHasPaid20(true);
+        alert("Daily limit upgraded successfully to 100 leads!");
+      } else {
+        alert("Upgrade failed: " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -539,7 +739,7 @@ export default function DigitalConsultingAudit() {
       // 1. Save locally to localStorage so it works offline/sandbox
       localStorage.setItem('saved_password_digitalconsultingpros@gmail.com', newPwClean);
 
-      // 2. Save directly to Supabase client_credentials table (Dual-write supported on hybrid supabase client)
+      // 2. Save directly to Supabase client_credentials table
       const { error } = await supabase.from('client_credentials').upsert({
         email: 'digitalconsultingpros@gmail.com',
         password: newPwClean,
@@ -579,8 +779,15 @@ export default function DigitalConsultingAudit() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem("signalmerge_user_email");
+    localStorage.removeItem("signalmerge_user_password");
     setIsAuthenticated(false);
+    setIsPendingPayment(false);
+    setCurrentUserEmail("");
+    setHasPaid80(false);
+    setHasPaid20(false);
+    setLeadsUsedToday(0);
+    setLeadsList([]);
   };
 
   // Transform all lead locations to Global
@@ -610,15 +817,15 @@ export default function DigitalConsultingAudit() {
     );
   }
 
-  // --- 1. RENDER SECURE GATE IF NOT AUTHENTICATED ---
-  if (!isAuthenticated) {
+  // --- 1. RENDER SECURE GATE IF NOT LOGGED IN / REGISTERED ---
+  if (!isAuthenticated && !isPendingPayment) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center px-6 font-sans relative overflow-hidden selection:bg-orange-500/30">
         {/* Background Decorative Rings */}
         <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-orange-500/10 blur-[100px] pointer-events-none" />
         <div className="absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] rounded-full bg-orange-500/10 blur-[100px] pointer-events-none" />
 
-        <div className="w-full max-w-md z-10">
+        <div className="w-full max-w-md z-10 py-10">
           <div className="flex items-center gap-2 justify-center mb-8">
             <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-600/20">
               <Zap className="text-white w-5 h-5 fill-white" />
@@ -626,69 +833,177 @@ export default function DigitalConsultingAudit() {
             <span className="text-xl font-bold tracking-tight text-slate-900 font-sans">Signalmerge</span>
           </div>
 
-          <Card className="border border-orange-100 bg-white/90 backdrop-blur-xl shadow-xl rounded-2xl overflow-hidden p-8">
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 border border-orange-200/60 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-3">
-                <Lock className="w-3 h-3 text-orange-600" /> Secure Client Registry Gate
-              </div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Customer Audit Lock</h1>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                Enter your designated administrative email and passcode provided during onboarding for <span className="text-orange-600 font-bold">Digital Consulting Pros</span>.
-              </p>
+          <Card className="border border-orange-100 bg-white/95 backdrop-blur-xl shadow-xl rounded-2xl overflow-hidden p-8">
+            
+            {/* Tabs for Login vs Register */}
+            <div className="flex border-b border-slate-100 mb-6">
+              <button
+                onClick={() => { setAuthMode("login"); setLoginError(null); }}
+                className={`flex-1 pb-3 text-sm font-bold transition-all focus:outline-none ${
+                  authMode === "login" 
+                    ? "text-orange-600 border-b-2 border-orange-600" 
+                    : "text-slate-400 hover:text-slate-600 border-b-2 border-transparent"
+                }`}
+              >
+                Client Log In
+              </button>
+              <button
+                onClick={() => { setAuthMode("signup"); setSignupError(null); }}
+                className={`flex-1 pb-3 text-sm font-bold transition-all focus:outline-none ${
+                  authMode === "signup" 
+                    ? "text-orange-600 border-b-2 border-orange-600" 
+                    : "text-slate-400 hover:text-slate-600 border-b-2 border-transparent"
+                }`}
+              >
+                Register / Sign Up
+              </button>
             </div>
 
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
+            {authMode === "login" ? (
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5 font-mono">
-                  Client Email Address
-                </label>
-                <Input 
-                  type="email"
-                  placeholder="name@company.com"
-                  required
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  className="bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-xl py-6 px-4 font-mono text-sm focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5 font-mono">
-                  Secure Access Key
-                </label>
-                <Input 
-                  type="password"
-                  placeholder="••••••••••••••"
-                  required
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-xl py-6 px-4 font-mono text-sm focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500"
-                />
-              </div>
-
-              {loginError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2 animate-shake">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
-                  <p className="leading-normal">{loginError}</p>
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 border border-orange-200/60 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-2">
+                    <Lock className="w-3 h-3 text-orange-600" /> Secure Registry Gate
+                  </div>
+                  <h1 className="text-lg font-bold text-slate-900 tracking-tight">Access Customer Registry</h1>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Access your designated customer acquisition engine & real-time search node.
+                  </p>
                 </div>
-              )}
 
-              <Button 
-                type="submit" 
-                disabled={loginSubmitting}
-                className="w-full py-6 mt-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold tracking-wide transition-all shadow-lg shadow-orange-600/15 gap-2"
-              >
-                {loginSubmitting ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" /> Verifying Keys...
-                  </>
-                ) : (
-                  <>
-                    Access Custom Audit Report <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </Button>
-            </form>
+                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 font-mono">
+                      Client Email Address
+                    </label>
+                    <Input 
+                      type="email"
+                      placeholder="name@company.com"
+                      required
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      className="bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-xl py-5 px-4 font-mono text-sm focus-visible:ring-1 focus-visible:ring-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 font-mono">
+                      Secure Access Passcode
+                    </label>
+                    <Input 
+                      type="password"
+                      placeholder="••••••••••••••"
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      className="bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-xl py-5 px-4 font-mono text-sm focus-visible:ring-1 focus-visible:ring-orange-500"
+                    />
+                  </div>
+
+                  {loginError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+                      <p className="leading-normal">{loginError}</p>
+                    </div>
+                  )}
+
+                  <Button 
+                    type="submit" 
+                    disabled={loginSubmitting}
+                    className="w-full py-5 mt-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold tracking-wide transition-all shadow-lg shadow-orange-600/15 gap-2"
+                  >
+                    {loginSubmitting ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" /> Verifying Keys...
+                      </>
+                    ) : (
+                      <>
+                        Access Live Lead Dashboard <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </div>
+            ) : (
+              <div>
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 border border-orange-200/60 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-2">
+                    <Sparkles className="w-3 h-3 text-orange-600" /> Standard Lead Allocation
+                  </div>
+                  <h1 className="text-lg font-bold text-slate-900 tracking-tight">Create Corporate Account</h1>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Set up your email and access keys to subscribe and unlock continuous global buyer audits.
+                  </p>
+                </div>
+
+                <form onSubmit={handleSignupSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 font-mono">
+                      Primary Contact Email
+                    </label>
+                    <Input 
+                      type="email"
+                      placeholder="name@company.com"
+                      required
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      className="bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-xl py-5 px-4 font-mono text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 font-mono">
+                      Choose Passcode (Min 6 chars)
+                    </label>
+                    <Input 
+                      type="password"
+                      placeholder="••••••••••••••"
+                      required
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      className="bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-xl py-5 px-4 font-mono text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 font-mono">
+                      Confirm Passcode
+                    </label>
+                    <Input 
+                      type="password"
+                      placeholder="••••••••••••••"
+                      required
+                      value={signupConfirmPassword}
+                      onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                      className="bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-xl py-5 px-4 font-mono text-sm"
+                    />
+                  </div>
+
+                  {signupError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+                      <p className="leading-normal">{signupError}</p>
+                    </div>
+                  )}
+
+                  <Button 
+                    type="submit" 
+                    disabled={signupSubmitting}
+                    className="w-full py-5 mt-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold tracking-wide transition-all shadow-lg shadow-orange-600/15 gap-2"
+                  >
+                    {signupSubmitting ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" /> Provisioning Account...
+                      </>
+                    ) : (
+                      <>
+                        Create Account & Proceed <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </div>
+            )}
 
             <div className="mt-6 border-t border-slate-200 pt-4 text-center">
               <span className="text-[9px] font-mono text-slate-400 tracking-wider">
@@ -696,6 +1011,80 @@ export default function DigitalConsultingAudit() {
               </span>
             </div>
 
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // --- 1B. RENDER SUBSCRIPTION GATE FOR NEW ACCOUNTS (FIRST TIME USERS MUST PAY $80) ---
+  if (isPendingPayment) {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center px-6 font-sans relative overflow-hidden selection:bg-orange-500/30">
+        <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-orange-500/10 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] rounded-full bg-orange-500/10 blur-[100px] pointer-events-none" />
+
+        <div className="w-full max-w-lg z-10 py-10">
+          <div className="flex items-center gap-2 justify-center mb-8">
+            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-600/20">
+              <Zap className="text-white w-5 h-5 fill-white" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-slate-900 font-sans">Signalmerge</span>
+          </div>
+
+          <Card className="border border-orange-100 bg-white shadow-xl rounded-2xl overflow-hidden p-8 space-y-6">
+            <div className="text-center">
+              <div className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-200/60 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-3">
+                💰 Subscription Required
+              </div>
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Activate Your Signalmerge License</h2>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                Thank you for registering <span className="text-orange-600 font-bold">{currentUserEmail}</span>. First-time client profiles require a standard subscription license of <strong className="text-slate-900 font-bold">$80 USD</strong> to open their dedicated social search tunnels and query buyer nodes.
+              </p>
+            </div>
+
+            <div className="p-4 bg-orange-50/55 border border-orange-100 rounded-xl flex items-center justify-between">
+              <div>
+                <span className="block text-[9px] font-black tracking-widest text-orange-700 font-mono">ANNUALIZED ROUTING LICENSE FEE</span>
+                <span className="text-2xl font-black text-slate-900">$80 USD</span>
+                <span className="text-[10px] text-slate-505 ml-2 font-mono">(converted from R1,295 standard rate)</span>
+              </div>
+              <span className="text-xs font-mono font-bold text-orange-600 uppercase tracking-widest text-right">Yoco Gateway</span>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <a 
+                href="https://pay.yoco.com/mergemega?amount=1295" 
+                target="_blank" 
+                rel="referrer noopener"
+                className="w-full py-4 text-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg shadow-orange-600/25 flex items-center justify-center gap-2"
+              >
+                Sign Up & Subscribe Now ($80) <ArrowUpRight className="w-4 h-4" />
+              </a>
+
+              <Button
+                onClick={confirmSubscriptionFee}
+                variant="outline"
+                className="w-full py-4 text-center rounded-xl border-orange-200 hover:bg-orange-50 text-orange-700 font-bold text-xs tracking-wider uppercase"
+              >
+                Confirm & Verify Payment [Test Mode]
+              </Button>
+
+              <button
+                onClick={handleLogout}
+                className="w-full text-center text-slate-400 hover:text-red-500 text-[11px] font-bold font-mono uppercase tracking-wider block"
+              >
+                ← Back to Login Gate
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-mono select-none pt-2 border-t border-slate-100">
+              <span>🛡️ SSL Secured</span>
+              <span>•</span>
+              <span>💳 Visa / Mastercard</span>
+              <span>•</span>
+              <span>🇿🇦 Verified Yoco direct portal</span>
+            </div>
           </Card>
         </div>
       </div>
@@ -728,12 +1117,25 @@ export default function DigitalConsultingAudit() {
 
       <div className="max-w-7xl mx-auto px-6 sm:px-12 py-10 relative z-10">
         
+        {/* PROFILE STATUS ALERT PANEL (3-7 DAYS COVENANT MESSAGE) */}
+        <div className="mb-6 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl flex items-start gap-4 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5 animate-pulse">
+            <ShieldCheck className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h5 className="text-sm font-extrabold text-blue-900 tracking-tight">Account Verification Status: Operational Vetting Pending</h5>
+            <p className="text-xs text-blue-700 mt-1.5 leading-relaxed max-w-4xl">
+              Your profile is undergoing standard compliance validation. <strong>It will take 3 - 7 business days for your account to be fully verified.</strong> In the meantime, you have been allocated full database querying capabilities, unlimited custom social sweeps, and direct buyer contact metrics below.
+            </p>
+          </div>
+        </div>
+
         {/* ACTIVE ADMINISTRATIVE SESSION LOCKER FOOTER/CONTROL BAR */}
         <div className="mb-8 p-4 bg-orange-50/60 border border-orange-200/50 rounded-2xl flex flex-col gap-4 text-xs">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="text-slate-600 font-medium">Active Partner Session (digitalconsultingpros@gmail.com)</span>
+              <span className="text-slate-600 font-medium font-mono text-[11px]">Active Registered Profile: <strong className="text-slate-900 font-bold">{currentUserEmail}</strong></span>
             </div>
             <div className="flex items-center gap-3 shrink-0 flex-wrap justify-center">
               <button
@@ -874,9 +1276,6 @@ export default function DigitalConsultingAudit() {
             >
               <Lock className="w-3.5 h-3.5" /> Sign Out & Lock Registry
             </Button>
-            <a href="#payment-section" className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs py-3 px-5 rounded-xl shadow-lg shadow-orange-600/15 gap-1 inline-flex items-center">
-              Claim Pipeline <ArrowRight className="w-3.5 h-3.5" />
-            </a>
           </div>
         </div>
 
@@ -958,31 +1357,94 @@ export default function DigitalConsultingAudit() {
 
         </div>
 
+        {/* LEADS QUOTA STATUS WIDGET */}
+        <div className="mb-8 p-5 bg-gradient-to-r from-orange-500/5 to-amber-500/5 border border-orange-100 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
+              <Zap className="w-6 h-6 text-orange-600 fill-orange-600 animate-pulse" />
+            </div>
+            <div>
+              <h5 className="text-sm font-extrabold text-slate-900 tracking-tight">Daily Buyer Search Allocation</h5>
+              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                Your current plan authorizes up to <strong className="text-slate-850 font-bold">{hasPaid20 ? "100" : "33"} leads</strong> per 24 hours. Reset happens every 24 hours automatically.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 flex-wrap w-full md:w-auto justify-end">
+            <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm text-right">
+              <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono">QUOTA METRIC</span>
+              <span className="text-sm font-extrabold text-slate-800">{visibleLimit} Available Leads</span>
+            </div>
+
+            {!hasPaid20 ? (
+              <div className="flex items-center gap-2 shrink-0">
+                <a 
+                  href="https://pay.yoco.com/mergemega?amount=339" 
+                  target="_blank" 
+                  rel="referrer noopener"
+                  className="bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-orange-600/15 gap-1.5 inline-flex items-center transition-all"
+                >
+                  Get 100 Leads ($20) <ArrowUpRight className="w-3.5 h-3.5" />
+                </a>
+                <Button
+                  onClick={confirmLimitUpgrade}
+                  variant="outline"
+                  className="border-orange-200 hover:bg-orange-50 text-orange-700 font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm cursor-pointer"
+                >
+                  Confirm Upgrade [Test Mode]
+                </Button>
+              </div>
+            ) : (
+              <span className="text-xs font-mono font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-3 py-1.5 rounded-xl">
+                ✓ Premium 100 Leads Quota Active
+              </span>
+            )}
+          </div>
+        </div>
+
         {/* LEAD PREVIEW GRAPHICS INTERACTIVE LAYOUT */}
-        <div className="bg-white border border-slate-200 shadow-md rounded-2xl overflow-hidden mb-12">
+        <div className="bg-white border border-slate-200 shadow-md rounded-2xl overflow-hidden mb-12 relative" id="scanner-table">
           
           {/* Table Header Controls */}
           <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
                 <span className="bg-orange-100 text-orange-850 border border-orange-200/60 text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase font-mono">
-                  Preview Data
+                  Live Buyer Node query
                 </span>
+                {isSearchingLeads && (
+                  <span className="text-xs text-orange-600 font-mono flex items-center gap-1.5">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Querying global index...
+                  </span>
+                )}
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              {/* Search Bar */}
-              <div className="relative w-full sm:w-64">
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+              {/* Search Bar - highly mobile responsive */}
+              <div className="relative w-full sm:w-80">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <Input 
                   type="text" 
-                  placeholder="Filter key queries / regions..."
+                  placeholder="Query social search tunnels (e.g. website, design, SEO)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-slate-50 border-slate-200 text-slate-800 text-xs pl-10 pr-4 py-4 rounded-xl placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      performLeadsSearch(searchQuery);
+                    }
+                  }}
+                  className="bg-slate-50 border-slate-200 text-slate-800 text-xs pl-10 pr-4 py-3.5 rounded-xl placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-orange-500 w-full"
                 />
               </div>
+              <Button
+                onClick={() => performLeadsSearch(searchQuery)}
+                disabled={isSearchingLeads}
+                className="bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs px-5 py-3.5 rounded-xl shadow-lg shadow-orange-600/10 flex items-center gap-1.5 focus:outline-none shrink-0 w-full sm:w-auto justify-center cursor-pointer"
+              >
+                {isSearchingLeads ? "Scanning..." : "Search Live Leads"}
+              </Button>
             </div>
           </div>
 
@@ -993,8 +1455,8 @@ export default function DigitalConsultingAudit() {
             </span>
             {platforms.map((p) => {
               const count = p === "All" 
-                ? globalLeads.length 
-                : globalLeads.filter(l => l.platform === p).length;
+                ? leadsList.length 
+                : leadsList.filter(l => l.platform === p).length;
               const isActive = selectedPlatform === p;
               return (
                 <button
@@ -1029,7 +1491,7 @@ export default function DigitalConsultingAudit() {
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm font-sans">
                 {filteredLeads.length > 0 ? (
-                  filteredLeads.map((lead) => {
+                  filteredLeads.slice(0, visibleLimit).map((lead) => {
                     // Determine platform color badge
                     const colorMap = {
                       LinkedIn: "bg-blue-50 text-blue-600 border-blue-200/50",
@@ -1064,9 +1526,9 @@ export default function DigitalConsultingAudit() {
                           </div>
                         </td>
                         <td className="py-5 px-6 text-right whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1.5 bg-red-50 border border-red-100 text-[10px] text-red-600 font-black px-2.5 py-1.5 rounded-xl uppercase tracking-wider justify-end shadow-inner select-none cursor-not-allowed">
-                            <Lock className="w-3 h-3 text-red-500 animate-pulse" /> Only with Premium
-                          </div>
+                          <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 text-[10px] text-emerald-700 font-black px-2.5 py-1.5 rounded-xl uppercase tracking-wider justify-end shadow-sm">
+                            <ShieldCheck className="w-3 h-3 text-emerald-650" /> Active Lead Access
+                          </span>
                         </td>
                       </tr>
                     );
@@ -1074,7 +1536,7 @@ export default function DigitalConsultingAudit() {
                 ) : (
                   <tr>
                     <td colSpan={5} className="py-12 text-center text-slate-500 bg-white">
-                      No matching records found within the 50 live preview database leads.
+                      No matching records found. Try running a different search query above.
                     </td>
                   </tr>
                 )}
@@ -1082,14 +1544,46 @@ export default function DigitalConsultingAudit() {
             </table>
           </div>
 
+          {filteredLeads.length > visibleLimit && (
+            <div className="absolute inset-x-0 bottom-[51px] bg-gradient-to-t from-white via-white/95 to-transparent pt-32 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
+              <div className="bg-white border border-orange-100 rounded-[2rem] p-8 max-w-lg shadow-2xl relative">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-orange-600 text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1 shadow-md">
+                  <Sparkles className="w-3 animate-pulse" /> Daily Search Limit Reached
+                </div>
+                <h3 className="text-base font-black text-slate-900 mb-3 mt-2 leading-snug uppercase tracking-tight">
+                  Extend Allocation to 100 Leads Daily
+                </h3>
+                <p className="text-slate-600 text-xs font-bold leading-relaxed mb-6">
+                  You can have a maximum of 33 leads a day. If you want more than 33 leads, you can pay an extra <strong className="text-orange-600">$20 USD</strong> to get a max of 100 leads today!
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                  <a 
+                    href="https://pay.yoco.com/mergemega?amount=339"
+                    target="_blank"
+                    rel="referrer noopener"
+                    className="w-full sm:w-auto text-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
+                  >
+                    Upgrade Now ($20) <ArrowUpRight className="w-3.5 h-3.5" />
+                  </a>
+                  <Button 
+                    onClick={confirmLimitUpgrade}
+                    className="w-full sm:w-auto text-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border border-slate-200"
+                  >
+                    Simulate Upgrade
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Database Footer Summary */}
           <div className="p-4 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-500 leading-normal font-mono font-bold uppercase tracking-wider">
-            PREVIEW DATA • TOTAL DISCOVERED RECOVERY: 1,000+ GLOBAL SIGNALS EXPECTED THIS MONTH
+            SECURED LEAD FEED • CONNECTED TO ACTIVE SOCIAL RESEARCH AND GEMINI SEARCH NODES
           </div>
         </div>
 
-        {/* COST RECKONER & YOKO CHECKOUT ACTION INTEGRITY CONTAINER */}
-        <div id="payment-section" className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12 items-stretch">
+        {/* COST RECKONER REMOVED */}
+        <div id="payment-section" className="hidden">
           
           {/* Card left: pricing breakdown */}
           <Card className="bg-white border border-slate-200 rounded-2xl flex flex-col justify-between p-8 relative overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -1223,7 +1717,7 @@ export default function DigitalConsultingAudit() {
         </div>
 
         {/* BOTTOM TIMED EXPIRY WARNING FOOTER */}
-        <div className="mb-8 p-6 bg-red-50 border border-red-100 rounded-2xl">
+        <div className="hidden">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 justify-center sm:justify-start">

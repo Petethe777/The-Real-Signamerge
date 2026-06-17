@@ -1,0 +1,817 @@
+[
+  {
+    "country": "Afghanistan",
+    "iso2": "AF",
+    "cities": [
+      { "name": "Kabul", "zip": "1001" },
+      { "name": "Kandahar", "zip": "3101" },
+      { "name": "Herat", "zip": "3301" },
+      { "name": "Mazar-i-Sharif", "zip": "2101" }
+    ]
+  },
+  {
+    "country": "Albania",
+    "iso2": "AL",
+    "cities": [
+      { "name": "Tirana", "zip": "1001" },
+      { "name": "Durrës", "zip": "2001" },
+      { "name": "Vlorë", "zip": "9401" },
+      { "name": "Shkodër", "zip": "4001" }
+    ]
+  },
+  {
+    "country": "Algeria",
+    "iso2": "DZ",
+    "cities": [
+      { "name": "Algiers", "zip": "16000" },
+      { "name": "Oran", "zip": "31000" },
+      { "name": "Constantine", "zip": "25000" },
+      { "name": "Annaba", "zip": "23000" }
+    ]
+  },
+  {
+    "country": "Andorra",
+    "iso2": "AD",
+    "cities": [
+      { "name": "Andorra la Vella", "zip": "AD500" },
+      { "name": "Escaldes-Engordany", "zip": "AD700" },
+      { "name": "Encamp", "zip": "AD200" }
+    ]
+  },
+  {
+    "country": "Angola",
+    "iso2": "AO",
+    "cities": [
+      { "name": "Luanda", "zip": "1000" },
+      { "name": "Huambo", "zip": "2000" },
+      { "name": "Lobito", "zip": "3000" },
+      { "name": "Benguela", "zip": "4000" }
+    ]
+  },
+  {
+    "country": "Antigua and Barbuda",
+    "iso2": "AG",
+    "cities": [
+      { "name": "Saint John's", "zip": "AG001" },
+      { "name": "Codrington", "zip": "AG002" }
+    ]
+  },
+  {
+    "country": "Argentina",
+    "iso2": "AR",
+    "cities": [
+      { "name": "Buenos Aires", "zip": "C1000" },
+      { "name": "Córdoba", "zip": "X5000" },
+      { "name": "Rosario", "zip": "S2000" },
+      { "name": "Mendoza", "zip": "M5500" },
+      { "name": "La Plata", "zip": "B1900" }
+    ]
+  },
+  {
+    "country": "Armenia",
+    "iso2": "AM",
+    "cities": [
+      { "name": "Yerevan", "zip": "0001" },
+      { "name": "Gyumri", "zip": "3100" },
+      { "name": "Vanadzor", "zip": "2000" }
+    ]
+  },
+  {
+    "country": "Australia",
+    "iso2": "AU",
+    "cities": [
+      { "name": "Sydney", "zip": "2000" },
+      { "name": "Melbourne", "zip": "3000" },
+      { "name": "Brisbane", "zip": "4000" },
+      { "name": "Perth", "zip": "6000" },
+      { "name": "Adelaide", "zip": "5000" },
+      { "name": "Gold Coast", "zip": "4217" },
+      { "name": "Canberra", "zip": "2600" },
+      { "name": "Darwin", "zip": "0800" }
+    ]
+  },
+  {
+    "country": "Austria",
+    "iso2": "AT",
+    "cities": [
+      { "name": "Vienna", "zip": "1010" },
+      { "name": "Graz", "zip": "8010" },
+      { "name": "Linz", "zip": "4020" },
+      { "name": "Salzburg", "zip": "5020" },
+      { "name": "Innsbruck", "zip": "6020" }
+    ]
+  },
+  {
+    "country": "Azerbaijan",
+    "iso2": "AZ",
+    "cities": [
+      { "name": "Baku", "zip": "AZ1000" },
+      { "name": "Ganja", "zip": "AZ2000" },
+      { "name": "Sumqayit", "zip": "AZ5000" }
+    ]
+  },
+  {
+    "country": "Bahamas",
+    "iso2": "BS",
+    "cities": [
+      { "name": "Nassau", "zip": "N-0001" },
+      { "name": "Freeport", "zip": "F-0001" },
+      { "name": "Marsh Harbour", "zip": "ABACO-001" }
+    ]
+  },
+  {
+    "country": "Bahrain",
+    "iso2": "BH",
+    "cities": [
+      { "name": "Manama", "zip": "317" },
+      { "name": "Riffa", "zip": "931" },
+      { "name": "Muharraq", "zip": "212" }
+    ]
+  },
+  {
+    "country": "Bangladesh",
+    "iso2": "BD",
+    "cities": [
+      { "name": "Dhaka", "zip": "1000" },
+      { "name": "Chittagong", "zip": "4000" },
+      { "name": "Sylhet", "zip": "3100" },
+      { "name": "Rajshahi", "zip": "6000" },
+      { "name": "Khulna", "zip": "9000" }
+    ]
+  },
+  {
+    "country": "Barbados",
+    "iso2": "BB",
+    "cities": [
+      { "name": "Bridgetown", "zip": "BB11000" },
+      { "name": "Speightstown", "zip": "BB25000" }
+    ]
+  },
+  {
+    "country": "Belarus",
+    "iso2": "BY",
+    "cities": [
+      { "name": "Minsk", "zip": "220000" },
+      { "name": "Gomel", "zip": "246000" },
+      { "name": "Grodno", "zip": "230000" },
+      { "name": "Brest", "zip": "224000" }
+    ]
+  },
+  {
+    "country": "Belgium",
+    "iso2": "BE",
+    "cities": [
+      { "name": "Brussels", "zip": "1000" },
+      { "name": "Antwerp", "zip": "2000" },
+      { "name": "Ghent", "zip": "9000" },
+      { "name": "Bruges", "zip": "8000" },
+      { "name": "Liège", "zip": "4000" }
+    ]
+  },
+  {
+    "country": "Belize",
+    "iso2": "BZ",
+    "cities": [
+      { "name": "Belmopan", "zip": "BZ001" },
+      { "name": "Belize City", "zip": "BZ002" },
+      { "name": "San Ignacio", "zip": "BZ003" }
+    ]
+  },
+  {
+    "country": "Benin",
+    "iso2": "BJ",
+    "cities": [
+      { "name": "Cotonou", "zip": "229" },
+      { "name": "Porto-Novo", "zip": "229" },
+      { "name": "Parakou", "zip": "229" }
+    ]
+  },
+  {
+    "country": "Bhutan",
+    "iso2": "BT",
+    "cities": [
+      { "name": "Thimphu", "zip": "11001" },
+      { "name": "Phuntsholing", "zip": "21001" },
+      { "name": "Paro", "zip": "12001" }
+    ]
+  },
+  {
+    "country": "Bolivia",
+    "iso2": "BO",
+    "cities": [
+      { "name": "Sucre", "zip": "0000" },
+      { "name": "La Paz", "zip": "0000" },
+      { "name": "Santa Cruz", "zip": "0000" },
+      { "name": "Cochabamba", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Bosnia and Herzegovina",
+    "iso2": "BA",
+    "cities": [
+      { "name": "Sarajevo", "zip": "71000" },
+      { "name": "Banja Luka", "zip": "78000" },
+      { "name": "Mostar", "zip": "88000" }
+    ]
+  },
+  {
+    "country": "Botswana",
+    "iso2": "BW",
+    "cities": [
+      { "name": "Gaborone", "zip": "0000" },
+      { "name": "Francistown", "zip": "0000" },
+      { "name": "Maun", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Brazil",
+    "iso2": "BR",
+    "cities": [
+      { "name": "São Paulo", "zip": "01310-100" },
+      { "name": "Rio de Janeiro", "zip": "20040-020" },
+      { "name": "Brasília", "zip": "70040-010" },
+      { "name": "Salvador", "zip": "40020-010" },
+      { "name": "Fortaleza", "zip": "60055-100" },
+      { "name": "Belo Horizonte", "zip": "30112-010" },
+      { "name": "Manaus", "zip": "69010-010" },
+      { "name": "Curitiba", "zip": "80010-010" }
+    ]
+  },
+  {
+    "country": "Brunei",
+    "iso2": "BN",
+    "cities": [
+      { "name": "Bandar Seri Begawan", "zip": "BS8811" },
+      { "name": "Kuala Belait", "zip": "KA1131" }
+    ]
+  },
+  {
+    "country": "Bulgaria",
+    "iso2": "BG",
+    "cities": [
+      { "name": "Sofia", "zip": "1000" },
+      { "name": "Plovdiv", "zip": "4000" },
+      { "name": "Varna", "zip": "9000" },
+      { "name": "Burgas", "zip": "8000" }
+    ]
+  },
+  {
+    "country": "Burkina Faso",
+    "iso2": "BF",
+    "cities": [
+      { "name": "Ouagadougou", "zip": "01" },
+      { "name": "Bobo-Dioulasso", "zip": "01" },
+      { "name": "Koudougou", "zip": "01" }
+    ]
+  },
+  {
+    "country": "Burundi",
+    "iso2": "BI",
+    "cities": [
+      { "name": "Gitega", "zip": "0000" },
+      { "name": "Bujumbura", "zip": "0000" },
+      { "name": "Ngozi", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Cabo Verde",
+    "iso2": "CV",
+    "cities": [
+      { "name": "Praia", "zip": "7600" },
+      { "name": "Mindelo", "zip": "2110" }
+    ]
+  },
+  {
+    "country": "Cambodia",
+    "iso2": "KH",
+    "cities": [
+      { "name": "Phnom Penh", "zip": "12000" },
+      { "name": "Siem Reap", "zip": "17000" },
+      { "name": "Battambang", "zip": "02000" }
+    ]
+  },
+  {
+    "country": "Cameroon",
+    "iso2": "CM",
+    "cities": [
+      { "name": "Yaoundé", "zip": "0000" },
+      { "name": "Douala", "zip": "0000" },
+      { "name": "Bamenda", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Canada",
+    "iso2": "CA",
+    "cities": [
+      { "name": "Toronto", "zip": "M5H 2N2" },
+      { "name": "Vancouver", "zip": "V6B 4N9" },
+      { "name": "Montreal", "zip": "H3A 1A1" },
+      { "name": "Calgary", "zip": "T2P 5G4" },
+      { "name": "Ottawa", "zip": "K1A 0A9" },
+      { "name": "Edmonton", "zip": "T5J 4L4" },
+      { "name": "Winnipeg", "zip": "R3C 0V8" },
+      { "name": "Halifax", "zip": "B3J 3N4" }
+    ]
+  },
+  {
+    "country": "Central African Republic",
+    "iso2": "CF",
+    "cities": [
+      { "name": "Bangui", "zip": "0000" },
+      { "name": "Bimbo", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Chad",
+    "iso2": "TD",
+    "cities": [
+      { "name": "N'Djamena", "zip": "0000" },
+      { "name": "Moundou", "zip": "0000" },
+      { "name": "Sarh", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Chile",
+    "iso2": "CL",
+    "cities": [
+      { "name": "Santiago", "zip": "8320000" },
+      { "name": "Valparaíso", "zip": "2340000" },
+      { "name": "Concepción", "zip": "4030000" },
+      { "name": "Antofagasta", "zip": "1240000" }
+    ]
+  },
+  {
+    "country": "China",
+    "iso2": "CN",
+    "cities": [
+      { "name": "Beijing", "zip": "100000" },
+      { "name": "Shanghai", "zip": "200000" },
+      { "name": "Guangzhou", "zip": "510000" },
+      { "name": "Shenzhen", "zip": "518000" },
+      { "name": "Chengdu", "zip": "610000" },
+      { "name": "Hangzhou", "zip": "310000" },
+      { "name": "Wuhan", "zip": "430000" },
+      { "name": "Xi'an", "zip": "710000" },
+      { "name": "Chongqing", "zip": "400000" }
+    ]
+  },
+  {
+    "country": "Colombia",
+    "iso2": "CO",
+    "cities": [
+      { "name": "Bogotá", "zip": "110111" },
+      { "name": "Medellín", "zip": "050001" },
+      { "name": "Cali", "zip": "760001" },
+      { "name": "Barranquilla", "zip": "080001" },
+      { "name": "Cartagena", "zip": "130001" }
+    ]
+  },
+  {
+    "country": "Comoros",
+    "iso2": "KM",
+    "cities": [
+      { "name": "Moroni", "zip": "0000" },
+      { "name": "Mutsamudu", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Congo (DRC)",
+    "iso2": "CD",
+    "cities": [
+      { "name": "Kinshasa", "zip": "0000" },
+      { "name": "Lubumbashi", "zip": "0000" },
+      { "name": "Mbuji-Mayi", "zip": "0000" },
+      { "name": "Goma", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Congo (Republic)",
+    "iso2": "CG",
+    "cities": [
+      { "name": "Brazzaville", "zip": "0000" },
+      { "name": "Pointe-Noire", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Costa Rica",
+    "iso2": "CR",
+    "cities": [
+      { "name": "San José", "zip": "10101" },
+      { "name": "Cartago", "zip": "30101" },
+      { "name": "Heredia", "zip": "40101" },
+      { "name": "Alajuela", "zip": "20101" }
+    ]
+  },
+  {
+    "country": "Croatia",
+    "iso2": "HR",
+    "cities": [
+      { "name": "Zagreb", "zip": "10000" },
+      { "name": "Split", "zip": "21000" },
+      { "name": "Rijeka", "zip": "51000" },
+      { "name": "Osijek", "zip": "31000" }
+    ]
+  },
+  {
+    "country": "Cuba",
+    "iso2": "CU",
+    "cities": [
+      { "name": "Havana", "zip": "10100" },
+      { "name": "Santiago de Cuba", "zip": "90100" },
+      { "name": "Camagüey", "zip": "70100" }
+    ]
+  },
+  {
+    "country": "Cyprus",
+    "iso2": "CY",
+    "cities": [
+      { "name": "Nicosia", "zip": "1010" },
+      { "name": "Limassol", "zip": "3010" },
+      { "name": "Larnaca", "zip": "6010" },
+      { "name": "Paphos", "zip": "8010" }
+    ]
+  },
+  {
+    "country": "Czech Republic",
+    "iso2": "CZ",
+    "cities": [
+      { "name": "Prague", "zip": "110 00" },
+      { "name": "Brno", "zip": "602 00" },
+      { "name": "Ostrava", "zip": "702 00" },
+      { "name": "Plzeň", "zip": "301 00" }
+    ]
+  },
+  {
+    "country": "Denmark",
+    "iso2": "DK",
+    "cities": [
+      { "name": "Copenhagen", "zip": "1000" },
+      { "name": "Aarhus", "zip": "8000" },
+      { "name": "Odense", "zip": "5000" },
+      { "name": "Aalborg", "zip": "9000" }
+    ]
+  },
+  {
+    "country": "Djibouti",
+    "iso2": "DJ",
+    "cities": [
+      { "name": "Djibouti City", "zip": "0000" },
+      { "name": "Ali Sabieh", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Dominica",
+    "iso2": "DM",
+    "cities": [
+      { "name": "Roseau", "zip": "00152" },
+      { "name": "Portsmouth", "zip": "00175" }
+    ]
+  },
+  {
+    "country": "Dominican Republic",
+    "iso2": "DO",
+    "cities": [
+      { "name": "Santo Domingo", "zip": "10101" },
+      { "name": "Santiago", "zip": "51000" },
+      { "name": "La Romana", "zip": "22000" }
+    ]
+  },
+  {
+    "country": "Ecuador",
+    "iso2": "EC",
+    "cities": [
+      { "name": "Quito", "zip": "170150" },
+      { "name": "Guayaquil", "zip": "090150" },
+      { "name": "Cuenca", "zip": "010101" },
+      { "name": "Manta", "zip": "130802" }
+    ]
+  },
+  {
+    "country": "Egypt",
+    "iso2": "EG",
+    "cities": [
+      { "name": "Cairo", "zip": "11511" },
+      { "name": "Alexandria", "zip": "21500" },
+      { "name": "Giza", "zip": "12511" },
+      { "name": "Sharm el-Sheikh", "zip": "46619" },
+      { "name": "Luxor", "zip": "85951" }
+    ]
+  },
+  {
+    "country": "El Salvador",
+    "iso2": "SV",
+    "cities": [
+      { "name": "San Salvador", "zip": "01101" },
+      { "name": "Santa Ana", "zip": "02101" },
+      { "name": "San Miguel", "zip": "03101" }
+    ]
+  },
+  {
+    "country": "Equatorial Guinea",
+    "iso2": "GQ",
+    "cities": [
+      { "name": "Malabo", "zip": "0000" },
+      { "name": "Bata", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Eritrea",
+    "iso2": "ER",
+    "cities": [
+      { "name": "Asmara", "zip": "0000" },
+      { "name": "Keren", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Estonia",
+    "iso2": "EE",
+    "cities": [
+      { "name": "Tallinn", "zip": "10111" },
+      { "name": "Tartu", "zip": "50090" },
+      { "name": "Narva", "zip": "20304" }
+    ]
+  },
+  {
+    "country": "Eswatini",
+    "iso2": "SZ",
+    "cities": [
+      { "name": "Mbabane", "zip": "H100" },
+      { "name": "Manzini", "zip": "M200" }
+    ]
+  },
+  {
+    "country": "Ethiopia",
+    "iso2": "ET",
+    "cities": [
+      { "name": "Addis Ababa", "zip": "1000" },
+      { "name": "Dire Dawa", "zip": "1000" },
+      { "name": "Mekelle", "zip": "1000" },
+      { "name": "Gondar", "zip": "1000" }
+    ]
+  },
+  {
+    "country": "Fiji",
+    "iso2": "FJ",
+    "cities": [
+      { "name": "Suva", "zip": "0000" },
+      { "name": "Lautoka", "zip": "0000" },
+      { "name": "Nadi", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Finland",
+    "iso2": "FI",
+    "cities": [
+      { "name": "Helsinki", "zip": "00100" },
+      { "name": "Tampere", "zip": "33100" },
+      { "name": "Turku", "zip": "20100" },
+      { "name": "Oulu", "zip": "90100" }
+    ]
+  },
+  {
+    "country": "France",
+    "iso2": "FR",
+    "cities": [
+      { "name": "Paris", "zip": "75001" },
+      { "name": "Lyon", "zip": "69001" },
+      { "name": "Marseille", "zip": "13001" },
+      { "name": "Toulouse", "zip": "31000" },
+      { "name": "Nice", "zip": "06000" },
+      { "name": "Nantes", "zip": "44000" },
+      { "name": "Bordeaux", "zip": "33000" },
+      { "name": "Strasbourg", "zip": "67000" }
+    ]
+  },
+  {
+    "country": "Gabon",
+    "iso2": "GA",
+    "cities": [
+      { "name": "Libreville", "zip": "0000" },
+      { "name": "Port-Gentil", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Gambia",
+    "iso2": "GM",
+    "cities": [
+      { "name": "Banjul", "zip": "0000" },
+      { "name": "Serekunda", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Georgia",
+    "iso2": "GE",
+    "cities": [
+      { "name": "Tbilisi", "zip": "0100" },
+      { "name": "Kutaisi", "zip": "4600" },
+      { "name": "Batumi", "zip": "6010" }
+    ]
+  },
+  {
+    "country": "Germany",
+    "iso2": "DE",
+    "cities": [
+      { "name": "Berlin", "zip": "10115" },
+      { "name": "Hamburg", "zip": "20095" },
+      { "name": "Munich", "zip": "80331" },
+      { "name": "Cologne", "zip": "50667" },
+      { "name": "Frankfurt", "zip": "60311" },
+      { "name": "Stuttgart", "zip": "70173" },
+      { "name": "Düsseldorf", "zip": "40213" },
+      { "name": "Leipzig", "zip": "04109" },
+      { "name": "Nuremberg", "zip": "90402" }
+    ]
+  },
+  {
+    "country": "Ghana",
+    "iso2": "GH",
+    "cities": [
+      { "name": "Accra", "zip": "GA-000" },
+      { "name": "Kumasi", "zip": "AK-000" },
+      { "name": "Tamale", "zip": "NR-000" },
+      { "name": "Takoradi", "zip": "WR-000" }
+    ]
+  },
+  {
+    "country": "Greece",
+    "iso2": "GR",
+    "cities": [
+      { "name": "Athens", "zip": "10431" },
+      { "name": "Thessaloniki", "zip": "54621" },
+      { "name": "Patras", "zip": "26221" },
+      { "name": "Heraklion", "zip": "71201" }
+    ]
+  },
+  {
+    "country": "Grenada",
+    "iso2": "GD",
+    "cities": [
+      { "name": "Saint George's", "zip": "0000" },
+      { "name": "Gouyave", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Guatemala",
+    "iso2": "GT",
+    "cities": [
+      { "name": "Guatemala City", "zip": "01001" },
+      { "name": "Quetzaltenango", "zip": "09001" },
+      { "name": "Escuintla", "zip": "05001" }
+    ]
+  },
+  {
+    "country": "Guinea",
+    "iso2": "GN",
+    "cities": [
+      { "name": "Conakry", "zip": "0000" },
+      { "name": "Nzérékoré", "zip": "0000" },
+      { "name": "Kankan", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Guinea-Bissau",
+    "iso2": "GW",
+    "cities": [
+      { "name": "Bissau", "zip": "1000" },
+      { "name": "Bafatá", "zip": "1061" }
+    ]
+  },
+  {
+    "country": "Guyana",
+    "iso2": "GY",
+    "cities": [
+      { "name": "Georgetown", "zip": "0000" },
+      { "name": "Linden", "zip": "0000" }
+    ]
+  },
+  {
+    "country": "Haiti",
+    "iso2": "HT",
+    "cities": [
+      { "name": "Port-au-Prince", "zip": "HT6110" },
+      { "name": "Cap-Haïtien", "zip": "HT1310" },
+      { "name": "Gonaïves", "zip": "HT3210" }
+    ]
+  },
+  {
+    "country": "Honduras",
+    "iso2": "HN",
+    "cities": [
+      { "name": "Tegucigalpa", "zip": "11101" },
+      { "name": "San Pedro Sula", "zip": "21101" },
+      { "name": "La Ceiba", "zip": "31101" }
+    ]
+  },
+  {
+    "country": "Hungary",
+    "iso2": "HU",
+    "cities": [
+      { "name": "Budapest", "zip": "1011" },
+      { "name": "Debrecen", "zip": "4024" },
+      { "name": "Miskolc", "zip": "3525" },
+      { "name": "Pécs", "zip": "7621" }
+    ]
+  },
+  {
+    "country": "Iceland",
+    "iso2": "IS",
+    "cities": [
+      { "name": "Reykjavik", "zip": "101" },
+      { "name": "Akureyri", "zip": "600" },
+      { "name": "Kópavogur", "zip": "200" }
+    ]
+  },
+  {
+    "country": "India",
+    "iso2": "IN",
+    "cities": [
+      { "name": "Mumbai", "zip": "400001" },
+      { "name": "Delhi", "zip": "110001" },
+      { "name": "Bengaluru", "zip": "560001" },
+      { "name": "Hyderabad", "zip": "500001" },
+      { "name": "Chennai", "zip": "600001" },
+      { "name": "Kolkata", "zip": "700001" },
+      { "name": "Pune", "zip": "411001" },
+      { "name": "Ahmedabad", "zip": "380001" },
+      { "name": "Jaipur", "zip": "302001" },
+      { "name": "Surat", "zip": "395001" }
+    ]
+  },
+  {
+    "country": "Indonesia",
+    "iso2": "ID",
+    "cities": [
+      { "name": "Jakarta", "zip": "10110" },
+      { "name": "Surabaya", "zip": "60111" },
+      { "name": "Bandung", "zip": "40111" },
+      { "name": "Medan", "zip": "20111" },
+      { "name": "Bali (Denpasar)", "zip": "80111" },
+      { "name": "Yogyakarta", "zip": "55111" },
+      { "name": "Makassar", "zip": "90111" }
+    ]
+  },
+  {
+    "country": "Iran",
+    "iso2": "IR",
+    "cities": [
+      { "name": "Tehran", "zip": "1111111111" },
+      { "name": "Mashhad", "zip": "9111111111" },
+      { "name": "Isfahan", "zip": "8111111111" },
+      { "name": "Shiraz", "zip": "7111111111" }
+    ]
+  },
+  {
+    "country": "Iraq",
+    "iso2": "IQ",
+    "cities": [
+      { "name": "Baghdad", "zip": "10011" },
+      { "name": "Basra", "zip": "61001" },
+      { "name": "Mosul", "zip": "41001" },
+      { "name": "Erbil", "zip": "44001" }
+    ]
+  },
+  {
+    "country": "Ireland",
+    "iso2": "IE",
+    "cities": [
+      { "name": "Dublin", "zip": "D01" },
+      { "name": "Cork", "zip": "T12" },
+      { "name": "Limerick", "zip": "V94" },
+      { "name": "Galway", "zip": "H91" }
+    ]
+  },
+  {
+    "country": "Israel",
+    "iso2": "IL",
+    "cities": [
+      { "name": "Jerusalem", "zip": "9100001" },
+      { "name": "Tel Aviv", "zip": "6100001" },
+      { "name": "Haifa", "zip": "3100001" },
+      { "name": "Be'er Sheva", "zip": "8400001" }
+    ]
+  },
+  {
+    "country": "Italy",
+    "iso2": "IT",
+    "cities": [
+      { "name": "Rome", "zip": "00118" },
+      { "name": "Milan", "zip": "20121" },
+      { "name": "Naples", "zip": "80121" },
+      { "name": "Turin", "zip": "10121" },
+      { "name": "Palermo", "zip": "90121" },
+      { "name": "Genoa", "zip": "16121" },
+      { "name": "Bologna", "zip": "40121" },
+      { "name": "Florence", "zip": "50121" },
+      { "name": "Venice", "zip": "30121" }
+    ]
+  },
+  {
+    "country": "Ivory Coast",
+    "iso2": "CI",
+    "cities": [
+      { "name": "Abidjan", "zip": "00225" },
+      { "name": "Bouaké", "zip": "00225" },
+      { "name": "Yamoussoukro", "zip": "00225" }
+    ]
+  }
+]

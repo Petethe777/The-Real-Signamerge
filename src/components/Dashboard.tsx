@@ -289,6 +289,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
         else if (targetCountry === "italy" && (itemLoc.includes("italy") || itemLoc.includes("milan") || itemLoc.includes("italian") || itemContent.includes("italy") || itemContent.includes("italian"))) isCountryMatch = true;
         else if (targetCountry === "usa" && (itemLoc.includes("usa") || itemLoc.includes("united states") || itemLoc.includes("ny") || itemLoc.includes("ca") || itemLoc.includes("tx") || itemLoc.includes("fl") || itemLoc.includes("wa"))) isCountryMatch = true;
         else if (targetCountry === "uk" && (itemLoc.includes("uk") || itemLoc.includes("united kingdom") || itemLoc.includes("london") || itemLoc.includes("ireland"))) isCountryMatch = true;
+        else if (targetCountry === "south africa" && (itemLoc.includes("south africa") || itemLoc.includes("johannesburg") || itemLoc.includes("cape town") || itemLoc.includes("durban") || itemLoc.includes("pretoria") || itemLoc.includes("port elizabeth") || itemLoc.includes("soweto") || itemLoc.includes("sandton") || itemLoc.includes("sa"))) isCountryMatch = true;
         else if (itemLoc.includes(targetCountry)) isCountryMatch = true;
 
         if (!isCountryMatch) return false;
@@ -949,7 +950,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                 )}
 
                 {/* Live Search Table View */}
-                <div className="border border-gray-100 rounded-[2rem] overflow-hidden bg-gray-50/20">
+                <div className="border border-gray-100 rounded-[2rem] overflow-hidden bg-gray-50/20 relative">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse min-w-[1000px]">
                       <thead>
@@ -957,21 +958,22 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                           <th className="px-8 py-5">Platform</th>
                           <th className="px-8 py-5">Demand Content & Intent</th>
                           <th className="px-8 py-5">Location</th>
-                          <th className="px-8 py-5">Contact Status</th>
                           <th className="px-8 py-5">Time</th>
                           {isAdmin && <th className="px-8 py-5 text-right whitespace-nowrap">Source Profile</th>}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50 bg-white">
                         {filteredResults.length > 0 && !isSearchingTransition ? (
-                          filteredResults.map((result, idx) => (
-                            <motion.tr 
-                              key={result.id} 
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: idx * 0.02 }}
-                              className="hover:bg-orange-50/5 transition-colors group"
-                            >
+                          filteredResults.slice(0, 30).map((result, idx) => {
+                            const isBlurred = idx >= 15;
+                            return (
+                              <motion.tr 
+                                key={result.id} 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.02 }}
+                                className={`hover:bg-orange-50/5 transition-colors group ${isBlurred ? "filter blur-[4px] select-none pointer-events-none opacity-40" : ""}`}
+                              >
                               <td className="px-8 py-6">
                                 <div className="flex items-center gap-2">
                                   <PlatformIcon platform={result.platform} />
@@ -1005,12 +1007,6 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                 </div>
                               </td>
                               <td className="px-8 py-6">
-                                <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50/50 px-3 py-1 rounded-full w-fit">
-                                  <CheckCircle2 className="w-3 h-3" />
-                                  {result.contactStatus}
-                                </div>
-                              </td>
-                              <td className="px-8 py-6">
                                 <span className="text-xs font-bold text-gray-400">
                                   {result.time}
                                 </span>
@@ -1029,7 +1025,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                 </td>
                               )}
                             </motion.tr>
-                          ))
+                          ); })
                         ) : (
                           <tr>
                             <td colSpan={isAdmin ? 6 : 5} className="px-8 py-24 text-center">
@@ -1043,6 +1039,39 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                       </tbody>
                     </table>
                   </div>
+
+                  {filteredResults.length > 15 && (
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-32 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
+                      <div className="bg-white border border-orange-100 rounded-[2rem] p-8 max-w-lg shadow-2xl relative">
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1 shadow-md">
+                          <Sparkles className="w-3 h-3 fill-white" /> Core Limit Reached
+                        </div>
+                        <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
+                          Unlock 15+ More Real-Time Leads
+                        </h3>
+                        <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
+                          Subscribe for only <strong className="text-primary font-black text-orange-600">$80 a month</strong> to get unlimited leads or every time someone is looking for your services online.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                          <a 
+                            href="https://pay.yoco.com/mergemega?amount=3040" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            referrerPolicy="no-referrer"
+                            className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
+                          >
+                            Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
+                          </a>
+                          <Link 
+                            to="/digital-consulting-pros#payment-section"
+                            className="w-full sm:w-auto text-center rounded-xl bg-gray-50 hover:bg-gray-150 text-gray-550 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border border-gray-200"
+                          >
+                            See Pricing Setup
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1326,6 +1355,7 @@ export default function Dashboard() {
         else if (targetCountry === "italy" && (itemLoc.includes("italy") || itemLoc.includes("milan") || itemLoc.includes("italian") || itemContent.includes("italy") || itemContent.includes("italian"))) isCountryMatch = true;
         else if (targetCountry === "usa" && (itemLoc.includes("usa") || itemLoc.includes("united states") || itemLoc.includes("ny") || itemLoc.includes("ca") || itemLoc.includes("tx") || itemLoc.includes("fl") || itemLoc.includes("wa"))) isCountryMatch = true;
         else if (targetCountry === "uk" && (itemLoc.includes("uk") || itemLoc.includes("united kingdom") || itemLoc.includes("london") || itemLoc.includes("ireland"))) isCountryMatch = true;
+        else if (targetCountry === "south africa" && (itemLoc.includes("south africa") || itemLoc.includes("johannesburg") || itemLoc.includes("cape town") || itemLoc.includes("durban") || itemLoc.includes("pretoria") || itemLoc.includes("port elizabeth") || itemLoc.includes("soweto") || itemLoc.includes("sandton") || itemLoc.includes("sa"))) isCountryMatch = true;
         else if (itemLoc.includes(targetCountry)) isCountryMatch = true;
 
         if (!isCountryMatch) return false;
@@ -2138,14 +2168,6 @@ export default function Dashboard() {
                 Login into Workspace
               </Button>
             )}
-            {!session && (
-              <Button 
-                onClick={() => setStartedSignup(true)}
-                className="rounded-xl bg-[#111] hover:bg-black text-white font-bold px-5 h-9 shadow-lg shadow-black/10 text-xs uppercase"
-              >
-                Start Discovery Audit
-              </Button>
-            )}
             {session && (
               <div className="flex items-center gap-3">
                 <div className="hidden md:flex flex-col items-end">
@@ -2232,21 +2254,22 @@ export default function Dashboard() {
                   <th className="px-8 py-5">Platform</th>
                   <th className="px-8 py-5">Demand Content & Intent</th>
                   <th className="px-8 py-5">Location</th>
-                  <th className="px-8 py-5">Contact</th>
                   <th className="px-8 py-5">Time</th>
                   <th className="px-8 py-5 text-right whitespace-nowrap">Source</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredResults.length > 0 && !isScanning ? (
-                  filteredResults.map((result, idx) => (
-                    <motion.tr 
-                      key={result.id} 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.03 }}
-                      className="hover:bg-orange-50/10 transition-colors group"
-                    >
+                  filteredResults.slice(0, 30).map((result, idx) => {
+                    const isActuallyBlurred = idx >= 15;
+                    return (
+                      <motion.tr 
+                        key={result.id} 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.03 }}
+                        className={`hover:bg-orange-50/10 transition-colors group ${isActuallyBlurred ? "filter blur-[4px] select-none pointer-events-none opacity-40 animate-pulse" : ""}`}
+                      >
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-2">
                           <PlatformIcon platform={result.platform} />
@@ -2280,12 +2303,6 @@ export default function Dashboard() {
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50/50 px-3 py-1 rounded-full w-fit">
-                          <CheckCircle2 className="w-3 h-3" />
-                          {result.contactStatus}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
                         <span className="text-xs font-bold text-gray-400">
                           {result.time}
                         </span>
@@ -2311,7 +2328,7 @@ export default function Dashboard() {
                         </div>
                       </td>
                     </motion.tr>
-                  ))
+                  ); })
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-8 py-32 text-center">
@@ -2344,6 +2361,66 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
+
+          {filteredResults.length > 15 && (
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-32 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
+              <div className="bg-white border border-orange-100 rounded-[2rem] p-8 max-w-lg shadow-2xl relative">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1 shadow-md">
+                  <Sparkles className="w-3 animate-pulse" /> Core Limit Reached
+                </div>
+                {!session ? (
+                  <>
+                    <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
+                      Unlock 15+ More Real-Time Leads
+                    </h3>
+                    <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
+                      You've hit our free preview limit. Please <strong>sign up</strong> or <strong>log in</strong> now to unlock all 30 live customer leads and access their identity paths!
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                      <button 
+                        onClick={() => setStartedSignup(true)}
+                        className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-1"
+                      >
+                        Sign Up Now <Sparkles className="w-4 h-4 fill-white" />
+                      </button>
+                      <button 
+                        onClick={handleLogin}
+                        className="w-full sm:w-auto text-center rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border border-gray-200"
+                      >
+                        Log In
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
+                      Unlock 15+ More Real-Time Leads
+                    </h3>
+                    <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
+                      Subscribe for only <strong className="text-primary font-black text-orange-600">$80 a month</strong> to get unlimited leads or every time someone is looking for your services online.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                      <a 
+                        href="https://pay.yoco.com/mergemega?amount=3040" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        referrerPolicy="no-referrer"
+                        className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
+                      >
+                        Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
+                      </a>
+                      <Link 
+                        to="/digital-consulting-pros#payment-section"
+                        className="w-full sm:w-auto text-center rounded-xl bg-gray-50 hover:bg-gray-150 text-gray-550 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border border-gray-200"
+                      >
+                        See Pricing Setup
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
           </div>
         </div>
 
