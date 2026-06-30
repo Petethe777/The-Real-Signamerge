@@ -1,6 +1,49 @@
 import { DemandResult } from "../types";
 import { searchDataset } from "../data/customerSearchDataset";
 
+export function scrubLocationFromContent(content: string, loc: string): string {
+  if (!content) return "";
+  let clean = content;
+  
+  if (loc) {
+    const parts = loc
+      .split(/[\s,/\-\(\)]+/)
+      .map(p => p.trim())
+      .filter(p => p.length > 2 && !["and", "the", "for", "with", "from"].includes(p.toLowerCase()));
+      
+    parts.forEach(part => {
+      const escaped = part.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+      clean = clean.replace(regex, '');
+    });
+  }
+
+  // Remove common geographic labels just in case
+  const commonLocationWords = [
+    "London", "New York", "NYC", "San Francisco", "Austin", "TX", "Seattle", "WA", "Italy", "Rome", "Milan", "Como", 
+    "China", "Shenzhen", "Hong Kong", "Hongkong", "Singapore", "Vietnam", "Hanoi", "Philippines", "Manila",
+    "Sweden", "Stockholm", "Switzerland", "Zurich", "Geneva", "Swiss", "United States", "USA", "United Kingdom", "UK",
+    "South Africa", "Johannesburg", "Cape Town", "Durban", "Pretoria", "California", "Germany", "France", "Japan", "Paris", "Tokyo",
+    "Stockholm port distribution", "Prato fashion industrial zone", "Shenzhen region"
+  ];
+  
+  commonLocationWords.forEach(word => {
+    const escaped = word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+    clean = clean.replace(regex, '');
+  });
+
+  // Clean up dangling prepositions and spaces
+  clean = clean
+    .replace(/\b(in|around|near|based in|to|out of|area of|from|around the|in the|for)\s+([,.;?!]|$|\s)/gi, '$2')
+    .replace(/\b(in|around|near|based in|to|out of|area of|from|around the|in the|for)\s+$/gi, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([,.;?!])/g, '$1')
+    .trim();
+
+  return clean;
+}
+
 export const detectQueryCountry = (query: string): string | null => {
   const q = query.toLowerCase().trim();
   
@@ -731,28 +774,6 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
       }
     }
     
-    // Inject custom country branding references to make regional leads feel 100% authentic
-    if (cleanQuery.toLowerCase().includes("china") || loc.toLowerCase().includes("china")) {
-      if (!content.toLowerCase().includes("china") && !content.toLowerCase().includes("chinese")) {
-        content += " Verified partner factory located in Shenzhen region.";
-      }
-    }
-    if (cleanQuery.toLowerCase().includes("sweden") || loc.toLowerCase().includes("sweden")) {
-      if (!content.toLowerCase().includes("sweden") && !content.toLowerCase().includes("swedish")) {
-        content += " Import clearance designated for Stockholm port distribution.";
-      }
-    }
-    if (cleanQuery.toLowerCase().includes("switzerland") || loc.toLowerCase().includes("switzerland")) {
-      if (!content.toLowerCase().includes("switzer") && !content.toLowerCase().includes("swiss")) {
-        content += " Direct compliance compliance aligned with Swiss import regulations.";
-      }
-    }
-    if (cleanQuery.toLowerCase().includes("italy") || loc.toLowerCase().includes("italy")) {
-      if (!content.toLowerCase().includes("ital")) {
-        content += " Sourcing direct premium materials from Prato fashion industrial zone.";
-      }
-    }
-    
     const handle = generateRandomHandle(loc);
     
     let sourceUrl = `https://www.google.com/search?q=${encodeURIComponent(variant + ' lead ' + loc)}`;
@@ -790,10 +811,12 @@ const getDynamicFallbackResults = (query: string): DemandResult[] => {
       timeString = `${hrs}h ago`;
     }
     
+    const scrubbedContent = scrubLocationFromContent(content, loc);
+    
     results.push({
       id: `fallback-${i}-${Math.random().toString(36).substring(2, 7)}`,
       platform,
-      content,
+      content: scrubbedContent,
       views: `${randomViews} views`,
       likes: `${randomLikes} likes`,
       hashtags,

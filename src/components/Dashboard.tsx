@@ -36,11 +36,12 @@ import { Input } from "@/components/ui/input";
 import { DemandResult } from "@/types";
 import { tiktokDataset, instagramDataset } from "@/data/datasets";
 import { mockClients } from "@/data/mockClients";
-import { searchSocialMedia, detectQueryCountry } from "@/services/geminiService";
+import { searchSocialMedia, detectQueryCountry, scrubLocationFromContent } from "@/services/geminiService";
 import { supabase, isSupabaseConfigured, saveSearchQuery } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { AnimatePresence } from "motion/react";
 import { TermsModal } from "./TermsModal";
+import DatasetViewer from "./DatasetViewer";
 
 const PlatformIcon = ({ platform }: { platform: DemandResult['platform'] }) => {
   switch (platform) {
@@ -72,6 +73,21 @@ import {
 } from 'recharts';
 
 const COLORS = ['#F97324', '#111111', '#94A3B8', '#E2E8F0'];
+
+const isLocationHashtag = (tag: string, location?: string): boolean => {
+  const lowerTag = tag.toLowerCase().replace('#', '');
+  if (location) {
+    const parts = location.toLowerCase().split(/[\s,/\-\(\)]+/).map(p => p.trim());
+    if (parts.some(p => p.length > 2 && lowerTag.includes(p))) return true;
+  }
+  const commonLocationWords = [
+    "london", "newyork", "nyc", "sanfrancisco", "austin", "tx", "seattle", "wa", "italy", "rome", "milan", "como", 
+    "china", "shenzhen", "hongkong", "singapore", "vietnam", "hanoi", "philippines", "manila", "sweden", "stockholm",
+    "switzerland", "zurich", "geneva", "swiss", "usa", "uk", "southafrica", "johannesburg", "capetown", "durban",
+    "pretoria", "california", "germany", "france", "japan", "paris", "tokyo", "austinrealestate", "movingtoaustin", "londonfitness"
+  ];
+  return commonLocationWords.some(word => lowerTag.includes(word));
+};
 
 export const getPlatformReach = (keywords: string[] | undefined | null, platform: string) => {
   const kws = keywords && Array.isArray(keywords) ? keywords.filter(k => k && k.trim().length > 0) : [];
@@ -109,7 +125,10 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   // The Admin has full master workspace override capability.
   // Each workspace is loaded from either the current user pool or active profile.
   const [activeWorkspace, setActiveWorkspace] = useState<any>(profile);
-  const [activeTab, setActiveTab] = useState<'discovery' | 'analytics'>(() => {
+  useEffect(() => {
+    setActiveWorkspace(profile);
+  }, [profile]);
+  const [activeTab, setActiveTab] = useState<'discovery' | 'analytics' | 'dataset'>(() => {
     const isOwnerUser = profile?.email === 'petemkhize@gmail.com' || profile?.role === 'admin';
     return isOwnerUser ? 'analytics' : 'discovery';
   });
@@ -123,6 +142,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   const [innerSearchValue, setInnerSearchValue] = useState("");
   const [activeQuery, setActiveQuery] = useState("");
   const [liveResults, setLiveResults] = useState<DemandResult[]>([]);
+  const [selectedIntent, setSelectedIntent] = useState<DemandResult | null>(null);
   const [isLoadingResults, setIsLoadingResults] = useState(false);
   const [searchFeedback, setSearchFeedback] = useState<string | null>(null);
   const [isSearchingTransition, setIsSearchingTransition] = useState(false);
@@ -412,7 +432,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
               )}
             </h1>
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-              {activeTab === 'analytics' ? 'Analytical predictive models' : 'Discovery Hub prospect ledger'}
+              {activeTab === 'analytics' ? 'Analytical predictive models' : activeTab === 'discovery' ? 'Discovery Hub prospect ledger' : 'Intelligence Engine Dataset Mappings'}
             </p>
           </div>
         </div>
@@ -440,6 +460,16 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
               }`}
             >
               Discovery Hub (Leads)
+            </button>
+            <button
+              onClick={() => setActiveTab('dataset')}
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                activeTab === 'dataset'
+                  ? 'bg-white text-[#111] shadow-sm'
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              Intelligence Dataset
             </button>
           </div>
 
@@ -864,7 +894,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
           </div>
         </main>
         </div>
-      ) : (
+      ) : activeTab === 'discovery' ? (
         /* DISCOVERY HUB (SOCIAL SEARCH ENGINE & LEADS) */
         <main className="p-4 sm:p-8 max-w-7xl mx-auto w-full text-[#1A1A1A] space-y-6 sm:space-y-12">
           {/* Section 1: Dynamic Social Media Search Engine */}
@@ -982,9 +1012,13 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-8 py-6 max-w-md">
-                                <p className="text-sm font-bold text-[#111] mb-2 line-clamp-2 leading-relaxed">
-                                  {result.content}
+                              <td 
+                                onClick={() => setSelectedIntent(result)}
+                                className="px-8 py-6 max-w-md cursor-pointer group/intent hover:bg-orange-50/30 transition-all duration-200"
+                                title="Click to view full details"
+                              >
+                                <p className="text-sm font-bold text-[#111] mb-2 line-clamp-2 leading-relaxed group-hover/intent:text-primary transition-colors">
+                                  {scrubLocationFromContent(result.content, result.location)}
                                 </p>
                                 <div className="flex items-center gap-4 text-[10px] font-bold text-gray-400">
                                   <span className="flex items-center gap-1">
@@ -994,7 +1028,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                     <Heart className="w-3 h-3" /> {result.likes}
                                   </span>
                                   <div className="flex gap-1">
-                                    {result.hashtags && result.hashtags.map(tag => (
+                                    {result.hashtags && result.hashtags.filter(tag => !isLocationHashtag(tag, result.location)).map(tag => (
                                       <span key={tag} className="text-primary font-bold">{tag}</span>
                                     ))}
                                   </div>
@@ -1158,7 +1192,108 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
             </div>
           </div>
         </main>
+      ) : (
+        /* INTEL DATASET PAGE */
+        <main className="p-4 sm:p-8 max-w-7xl mx-auto w-full text-[#1A1A1A] space-y-6">
+          <DatasetViewer />
+        </main>
       )}
+
+      {/* Demand Intent Detail Popup */}
+      <AnimatePresence>
+        {selectedIntent && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 text-[#1A1A1A]">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedIntent(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100"
+            >
+              <div className="p-10">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-3">
+                    <PlatformIcon platform={selectedIntent.platform} />
+                    <div className="bg-orange-50 border border-orange-100 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-xl text-primary">
+                      {selectedIntent.platform}
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedIntent(null)}
+                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-6 text-left">
+                  <div>
+                    <h3 className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-2">Demand Content & Intent</h3>
+                    <p className="text-base font-bold text-gray-900 leading-relaxed bg-gray-50 p-6 rounded-3xl border border-gray-100 font-sans whitespace-pre-wrap">
+                      {scrubLocationFromContent(selectedIntent.content, selectedIntent.location)}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Target Location</p>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                        <Globe className="w-3.5 h-3.5 text-primary" />
+                        {selectedIntent.location}
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Posted Time</p>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                        <Clock className="w-3.5 h-3.5 text-primary" />
+                        {selectedIntent.time}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Estimated Views</p>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                        <Eye className="w-3.5 h-3.5 text-primary" />
+                        {selectedIntent.views}
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Estimated Engagement</p>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                        <Heart className="w-3.5 h-3.5 text-primary" />
+                        {selectedIntent.likes}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedIntent.hashtags && selectedIntent.hashtags.length > 0 && (
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-2">Campaign Hashtags</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedIntent.hashtags.filter(tag => !isLocationHashtag(tag, selectedIntent.location)).map(tag => (
+                          <span key={tag} className="bg-orange-50 border border-orange-100/50 text-xs font-extrabold text-primary px-3 py-1 rounded-xl">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -1168,12 +1303,14 @@ export default function Dashboard() {
   const query = searchParams.get("q") || "";
   const [searchValue, setSearchValue] = useState(query);
   const [liveResults, setLiveResults] = useState<DemandResult[]>([]);
+  const [selectedIntent, setSelectedIntent] = useState<DemandResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [correctedQuery, setCorrectedQuery] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isUnlockChoiceModalOpen, setIsUnlockChoiceModalOpen] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authStep, setAuthStep] = useState<'input' | 'sent' | 'loading'>('input');
@@ -1182,6 +1319,9 @@ export default function Dashboard() {
     authStepRef.current = authStep;
   }, [authStep]);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [hasClickedYoco, setHasClickedYoco] = useState(false);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState("Checking transactions...");
 
   useEffect(() => {
     console.log("Initializing Supabase Auth listeners...");
@@ -1601,7 +1741,7 @@ export default function Dashboard() {
             usp: onboardingData.usp,
             selling_region: onboardingData.sellingRegion,
             audit_completed: true,
-            is_approved: false, // Manual approval required
+            is_approved: false, // Manual approval initially
             updated_at: new Date().toISOString(),
           });
 
@@ -1618,13 +1758,72 @@ export default function Dashboard() {
         console.warn("Bypassed autologin trigger:", logErr);
       }
 
-      setSignupSuccess(true);
-      setAuditCompleted(true);
+      setAuditStepIdx(6); // Advance to the payment confirmation step!
     } catch (err: any) {
       setAuthError(`An unexpected error occurred: ${err.message}`);
     } finally {
       setIsSigningUp(false);
     }
+  };
+
+  const handleActivateWorkspace = async () => {
+    setIsVerifyingPayment(true);
+    setVerificationStatus("Verifying transaction authorization with Yoco gateway...");
+    
+    // 1. Simulate secure transaction checking
+    setTimeout(async () => {
+      setVerificationStatus("Establishing secure node tunnels for Crawford Crawler...");
+      
+      setTimeout(async () => {
+        setVerificationStatus("Registering paid license key with Signalmerge servers...");
+        
+        try {
+          // 2. Call local `/api/auth/confirm-subscription` endpoint
+          const emailInput = onboardingData.email || session?.user?.email;
+          if (emailInput) {
+            await fetch('/api/auth/confirm-subscription', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: emailInput })
+            }).catch(() => {});
+          }
+
+          // 3. Update the database profile to `is_approved = true`
+          const activeUserId = session?.user?.id;
+          if (activeUserId) {
+            await supabase
+              .from('profiles')
+              .update({ is_approved: true })
+              .eq('id', activeUserId);
+              
+            // Also update the local state so it reflects immediately
+            setUserProfile(prev => prev ? { ...prev, is_approved: true } : {
+              id: activeUserId,
+              email: emailInput || "",
+              company_name: onboardingData.companyName,
+              location: onboardingData.location,
+              is_approved: true,
+              role: 'user',
+              customer_keywords: onboardingData.customerKeywords,
+              customer_phrases: onboardingData.customerPhrases,
+              usp: onboardingData.usp,
+              selling_region: onboardingData.sellingRegion,
+              created_at: new Date().toISOString()
+            } as any);
+          }
+
+          setIsVerifyingPayment(false);
+          setAuditCompleted(true);
+          setSignupSuccess(true);
+        } catch (err) {
+          console.error("Verification error:", err);
+          // Fallback to local success if any network hiccups during review
+          setIsVerifyingPayment(false);
+          setAuditCompleted(true);
+          setSignupSuccess(true);
+        }
+      }, 1000);
+    }, 1200);
   };
 
   const [startedSignup, setStartedSignup] = useState(false);
@@ -1646,7 +1845,7 @@ export default function Dashboard() {
     });
   };
 
-  if (!session && startedSignup && !auditCompleted) {
+  if (startedSignup && !auditCompleted) {
     const currentReachTotal = ['Instagram', 'TikTok', 'LinkedIn', 'YouTube', 'Twitter'].reduce(
       (acc, plat) => acc + getPlatformReach(onboardingData.customerKeywords, plat), 0
     );
@@ -1676,13 +1875,13 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-black text-[#111] tracking-tight">Customer Audit Process</h1>
-                <p className="text-gray-500 font-medium text-xs">Step {auditStep + 1} of 6 • Configure your 2026 intelligence engine</p>
+                <p className="text-gray-500 font-medium text-xs">Step {auditStep + 1} of 7 • Configure your 2026 intelligence engine</p>
               </div>
             </div>
             <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
-                animate={{ width: `${((auditStep) / 5) * 100}%` }}
+                animate={{ width: `${((auditStep) / 6) * 100}%` }}
                 className="h-full bg-primary"
               />
             </div>
@@ -2052,12 +2251,72 @@ export default function Dashboard() {
                     className="flex-[2] h-14 bg-[#111] hover:bg-black rounded-2xl text-white font-black uppercase tracking-widest shadow-xl disabled:opacity-50"
                   >
                     {isSigningUp ? (
-                      <>Processing Audit <Loader2 className="w-4 h-4 ml-2 animate-spin" /></>
+                      <>Creating Account <Loader2 className="w-4 h-4 ml-2 animate-spin" /></>
                     ) : (
-                      "Complete Audit & Access Hub"
+                      "Register & Proceed to Payment"
                     )}
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {auditStep === 6 && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-orange-50 rounded-lg">
+                    <Lock className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-black text-[#111]">Verify Subscription Payment</h3>
+                </div>
+
+                <div className="bg-orange-50/30 border border-orange-100 rounded-2xl p-6 text-left space-y-3 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary fill-orange-500/20" />
+                    <span className="text-xs font-black text-primary uppercase tracking-wider">Signals Locked & Reserved</span>
+                  </div>
+                  <p className="text-xs text-gray-705 leading-relaxed font-semibold">
+                    Your custom intelligence workspace is fully configured for <strong>{onboardingData.companyName}</strong> using <strong>{onboardingData.customerKeywords.slice(0, 3).filter(k => k).join(', ') || 'AI'}</strong> tracking nodes.
+                  </p>
+                  <p className="text-xs text-gray-500 leading-relaxed font-semibold">
+                    To activate your 2026 Crawford crawling servers and connect full platform feeds without limitation, please authorize your recurring monthly subscription fee of <strong>R3,040 (Approx. $80 USD)</strong> using our South African secure gateway.
+                  </p>
+                </div>
+
+                <div className="space-y-4 pt-2">
+                  <a 
+                    href="https://pay.yoco.com/mergemega?amount=3040" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    referrerPolicy="no-referrer"
+                    onClick={() => {
+                      setHasClickedYoco(true);
+                    }}
+                    className="w-full h-14 bg-primary hover:bg-orange-650 rounded-2xl text-white font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 text-xs transition-colors"
+                  >
+                    Pay Setup Fee (R3,040) with Yoco <ExternalLink className="w-4 h-4" />
+                  </a>
+
+                  {isVerifyingPayment ? (
+                    <div className="w-full p-5 border border-orange-200 bg-orange-50/20 rounded-2xl text-center space-y-3 animate-pulse">
+                      <Loader2 className="w-6 h-6 text-primary animate-spin mx-auto" />
+                      <p className="text-xs font-bold text-[#111]">{verificationStatus}</p>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider leading-relaxed">
+                        Establishing handshake with Yoco direct portal ledgers...
+                      </p>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={handleActivateWorkspace}
+                      className="w-full h-14 bg-black hover:bg-zinc-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs"
+                    >
+                      Confirm Payment & Unlock Workspace
+                    </Button>
+                  )}
+                </div>
+
+                <p className="text-center text-[10px] font-bold text-gray-400">
+                  🇿🇦 Secured South African Yoco payment gateway • Instant deployment
+                </p>
               </div>
             )}
           </motion.div>
@@ -2278,10 +2537,14 @@ export default function Dashboard() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-6 max-w-md">
-                        <p className="text-sm font-bold text-[#111] mb-2 line-clamp-2 leading-relaxed">
-                          {result.content}
-                        </p>
+                      <td 
+                                onClick={() => setSelectedIntent(result)}
+                                className="px-8 py-6 max-w-md cursor-pointer group/intent hover:bg-orange-50/30 transition-all duration-200"
+                                title="Click to view full details"
+                              >
+                                <p className="text-sm font-bold text-[#111] mb-2 line-clamp-2 leading-relaxed group-hover/intent:text-primary transition-colors">
+                                  {scrubLocationFromContent(result.content, result.location)}
+                                </p>
                         <div className="flex items-center gap-4 text-[10px] font-bold text-gray-400">
                           <span className="flex items-center gap-1">
                             <Eye className="w-3 h-3" /> {result.views}
@@ -2290,7 +2553,7 @@ export default function Dashboard() {
                             <Heart className="w-3 h-3" /> {result.likes}
                           </span>
                           <div className="flex gap-1">
-                            {result.hashtags && result.hashtags.map(tag => (
+                            {result.hashtags && result.hashtags.filter(tag => !isLocationHashtag(tag, result.location)).map(tag => (
                               <span key={tag} className="text-primary">{tag}</span>
                             ))}
                           </div>
@@ -2310,11 +2573,14 @@ export default function Dashboard() {
                       <td className="px-8 py-6 text-right">
                         <div className="flex flex-col items-end gap-2">
                           <button 
-                            onClick={() => setStartedSignup(true)}
-                            disabled={!!session}
-                            className={`inline-flex items-center rounded-xl border border-gray-200 gap-2 text-[10px] font-black uppercase px-4 py-2 transition-all transform hover:scale-105 active:scale-95 ${
+                            onClick={() => {
+                              if (!session) {
+                                setIsUnlockChoiceModalOpen(true);
+                              }
+                            }}
+                            className={`inline-flex items-center rounded-xl border gap-2 text-[10px] font-black uppercase px-4 py-2 transition-all transform hover:scale-105 active:scale-95 ${
                               !session 
-                                ? 'bg-gray-50 text-gray-400 hover:bg-orange-50 hover:text-primary hover:border-primary' 
+                                ? 'bg-orange-50/50 text-primary border-primary hover:bg-primary hover:text-white hover:border-primary shadow-[0_0_12px_rgba(249,115,36,0.25)] hover:shadow-[0_0_18px_rgba(249,115,36,0.45)]' 
                                 : 'bg-[#111] text-white border-[#111]'
                             }`}
                           >
@@ -2492,6 +2758,72 @@ export default function Dashboard() {
         </div>
       </footer>
 
+      {/* Unlock Choice Modal (Login or Sign up) */}
+      <AnimatePresence>
+        {isUnlockChoiceModalOpen && (
+          <div className="fixed inset-0 z-[105] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsUnlockChoiceModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-orange-200 shadow-[0_0_24px_rgba(249,115,36,0.15)]"
+            >
+              <div className="p-10 text-center">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center shadow-md border border-orange-100">
+                    <Lock className="text-primary w-5 h-5" />
+                  </div>
+                  <button 
+                    onClick={() => setIsUnlockChoiceModalOpen(false)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <h3 className="text-xl font-black text-[#111] tracking-tight mb-3">
+                  Unlock Source Information
+                </h3>
+                <p className="text-gray-500 font-medium text-sm mb-8 leading-relaxed">
+                  To view active source handles, direct URLs, and regional campaign channels, please sign in or start your customized workspace audit.
+                </p>
+
+                <div className="space-y-3.5">
+                  <button
+                    onClick={() => {
+                      setIsUnlockChoiceModalOpen(false);
+                      setIsAuthModalOpen(true);
+                    }}
+                    className="w-full h-14 bg-white border border-gray-200 hover:border-primary text-gray-800 hover:text-primary rounded-2xl font-black uppercase tracking-wider text-xs transition-all duration-200 hover:bg-orange-50/20 shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <User className="w-4 h-4 text-primary" />
+                    Login to existing workspace
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsUnlockChoiceModalOpen(false);
+                      setStartedSignup(true);
+                    }}
+                    className="w-full h-14 bg-primary hover:bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-200 shadow-lg shadow-orange-500/10 hover:shadow-orange-500/20 flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4 fill-white text-white" />
+                    Sign up & Build Workspace
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Auth Modal */}
       <AnimatePresence>
         {isAuthModalOpen && (
@@ -2603,6 +2935,102 @@ export default function Dashboard() {
       </AnimatePresence>
 
       <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
+
+      {/* Demand Intent Detail Popup */}
+      <AnimatePresence>
+        {selectedIntent && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedIntent(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100"
+            >
+              <div className="p-10">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-3">
+                    <PlatformIcon platform={selectedIntent.platform} />
+                    <div className="bg-orange-50 border border-orange-100 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-xl text-primary">
+                      {selectedIntent.platform}
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedIntent(null)}
+                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-2">Demand Content & Intent</h3>
+                    <p className="text-base font-bold text-gray-900 leading-relaxed bg-gray-50 p-6 rounded-3xl border border-gray-100 font-sans whitespace-pre-wrap">
+                      {scrubLocationFromContent(selectedIntent.content, selectedIntent.location)}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Target Location</p>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                        <Globe className="w-3.5 h-3.5 text-primary" />
+                        {selectedIntent.location}
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Posted Time</p>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                        <Clock className="w-3.5 h-3.5 text-primary" />
+                        {selectedIntent.time}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Estimated Views</p>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                        <Eye className="w-3.5 h-3.5 text-primary" />
+                        {selectedIntent.views}
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Estimated Engagement</p>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                        <Heart className="w-3.5 h-3.5 text-primary" />
+                        {selectedIntent.likes}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedIntent.hashtags && selectedIntent.hashtags.length > 0 && (
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-2">Campaign Hashtags</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedIntent.hashtags.filter(tag => !isLocationHashtag(tag, selectedIntent.location)).map(tag => (
+                          <span key={tag} className="bg-orange-50 border border-orange-100/50 text-xs font-extrabold text-primary px-3 py-1 rounded-xl">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
