@@ -121,6 +121,28 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   const isOwner = profile?.email === 'petemkhize@gmail.com';
   const isApproved = isOwner || profile?.role === 'admin' || profile?.is_approved === true;
   const isAdmin = isOwner || profile?.role === 'admin';
+  const hasPaid = profile?.hasPaid80 === true || profile?.email === 'petemkhize@gmail.com' || profile?.email === 'digitalconsultingpros@gmail.com';
+
+  const [credits, setCredits] = useState(() => {
+    if (!hasPaid) {
+      return { daily: 0, total: 0, maxDaily: 0, maxTotal: 140 };
+    }
+    const key = `signalmerge_credits_${profile?.email || 'guest'}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return { daily: 5, total: 140, maxDaily: 5, maxTotal: 140 };
+  });
+
+  useEffect(() => {
+    if (hasPaid) {
+      const key = `signalmerge_credits_${profile?.email || 'guest'}`;
+      localStorage.setItem(key, JSON.stringify(credits));
+    }
+  }, [credits, hasPaid, profile?.email]);
   
   // The Admin has full master workspace override capability.
   // Each workspace is loaded from either the current user pool or active profile.
@@ -128,10 +150,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   useEffect(() => {
     setActiveWorkspace(profile);
   }, [profile]);
-  const [activeTab, setActiveTab] = useState<'discovery' | 'analytics' | 'dataset'>(() => {
-    const isOwnerUser = profile?.email === 'petemkhize@gmail.com' || profile?.role === 'admin';
-    return isOwnerUser ? 'analytics' : 'discovery';
-  });
+  const [activeTab, setActiveTab] = useState<'discovery' | 'analytics' | 'dataset'>('discovery');
 
   const [isAuditing, setIsAuditing] = useState(isApproved);
   const [isAdminView, setIsAdminView] = useState(false);
@@ -331,6 +350,15 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
     
     // Save inner keyword search to Supabase
     saveSearchQuery(innerSearchValue, profile?.email);
+
+    // If paid user, consume 1 credit
+    if (hasPaid) {
+      setCredits(prev => {
+        const nextDaily = Math.max(0, prev.daily - 1);
+        const nextTotal = Math.max(0, prev.total - 1);
+        return { ...prev, daily: nextDaily, total: nextTotal };
+      });
+    }
     
     setIsSearchingTransition(true);
     setTimeout(() => {
@@ -432,7 +460,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
               )}
             </h1>
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-              {activeTab === 'analytics' ? 'Analytical predictive models' : activeTab === 'discovery' ? 'Discovery Hub prospect ledger' : 'Intelligence Engine Dataset Mappings'}
+              Lead Hub Prospect Ledger
             </p>
           </div>
         </div>
@@ -441,36 +469,9 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
           {/* Main Workspace Navigation */}
           <div className="bg-gray-100 p-1.5 rounded-2xl flex gap-1 border border-gray-200/50">
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                activeTab === 'analytics'
-                  ? 'bg-white text-[#111] shadow-sm'
-                  : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              Analytical Dashboard
-            </button>
-            <button
-              onClick={() => setActiveTab('discovery')}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                activeTab === 'discovery'
-                  ? 'bg-white text-[#111] shadow-sm'
-                  : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              Discovery Hub (Leads)
-            </button>
-            <button
-              onClick={() => setActiveTab('dataset')}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                activeTab === 'dataset'
-                  ? 'bg-white text-[#111] shadow-sm'
-                  : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              Intelligence Dataset
-            </button>
+            <span className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-white text-[#111] shadow-sm select-none">
+              Lead Hub (Leads)
+            </span>
           </div>
 
           {/* Admin Switch Board */}
@@ -908,12 +909,34 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                 <p className="text-xs text-gray-500 font-medium">Scrape social channels (Instagram, TikTok, LinkedIn, Twitter, YouTube) for buyer signifiers</p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-black bg-orange-50 text-primary border border-primary/20 px-3 py-1.5 rounded-xl uppercase flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Credits Widget */}
+                <div className="flex items-center gap-2 bg-orange-50 border border-orange-100/50 rounded-xl px-3 py-1.5 shadow-sm">
+                  <Zap className="w-3.5 h-3.5 text-primary fill-primary" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-wider leading-none">Daily Credit</span>
+                    <span className="text-xs font-black text-[#111] leading-none mt-1">
+                      {hasPaid ? `${credits.daily} / 5` : '0 / 0'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-[#111] border border-gray-800 rounded-xl px-3 py-1.5 shadow-sm">
+                  <Sparkles className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-wider leading-none">Total Credit</span>
+                    <span className="text-xs font-black text-white leading-none mt-1">
+                      {hasPaid ? `${credits.total} / 140` : '0 / 140'}
+                    </span>
+                  </div>
+                </div>
+
+                <span className="text-[10px] font-black bg-orange-100 text-primary border border-primary/20 px-3 py-1.5 rounded-xl uppercase flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                  Premium Full-Fidelity View
+                  {hasPaid ? "Premium Tier" : "Restricted Preview Tier (No Credits)"}
                 </span>
-                <span className="text-[10px] font-black bg-[#111] text-white px-3 py-1.5 rounded-xl uppercase">
+
+                <span className="text-[10px] font-black bg-gray-100 border border-gray-200 text-gray-700 px-3 py-1.5 rounded-xl uppercase">
                   Workspace Keywords: {userKeywords.slice(0, 3).filter(k => k).join(', ') || "outreach"}
                 </span>
               </div>
@@ -921,23 +944,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
 
             {/* Locked Content Container */}
             <div className="relative">
-              {!isAdmin && (
-                <div className="absolute inset-x-0 bottom-0 top-0 z-10 flex flex-col items-center justify-center p-6 bg-white/20 backdrop-blur-[6px] select-none pointer-events-none">
-                  <div className="text-center max-w-md mx-auto bg-white border border-orange-100/80 shadow-2xl rounded-[2rem] p-8 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200 pointer-events-auto">
-                    <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center shadow-inner relative animate-pulse">
-                      <Lock className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-black text-[#111] tracking-tight">Intent Search Engine Secured</h4>
-                      <p className="text-[11px] text-gray-500 font-semibold leading-relaxed">
-                        The Intent Search Engine is locked. Non-admin users must wait for system administrator approval. Please contact Pete Mkhize for authorized workspace activation.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className={`space-y-6 ${!isAdmin ? 'blur-md pointer-events-none select-none filter' : ''}`}>
+              <div className="space-y-6">
                 {/* Keyword Search Field */}
                 <form onSubmit={handleLocalSearch} className="relative w-full max-w-2xl mx-auto">
                   <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-gray-50 border border-gray-200 rounded-2xl p-2 gap-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all shadow-sm">
@@ -989,13 +996,13 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                           <th className="px-8 py-5">Demand Content & Intent</th>
                           <th className="px-8 py-5">Location</th>
                           <th className="px-8 py-5">Time</th>
-                          {isAdmin && <th className="px-8 py-5 text-right whitespace-nowrap">Source Profile</th>}
+                          <th className="px-8 py-5 text-right whitespace-nowrap">Source Profile</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50 bg-white">
                         {filteredResults.length > 0 && !isSearchingTransition ? (
-                          filteredResults.slice(0, 30).map((result, idx) => {
-                            const isBlurred = idx >= 15;
+                          (hasPaid ? filteredResults.slice(0, 140) : filteredResults.slice(0, 30)).map((result, idx) => {
+                            const isBlurred = !hasPaid && idx >= 15;
                             return (
                               <motion.tr 
                                 key={result.id} 
@@ -1045,9 +1052,8 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                   {result.time}
                                 </span>
                               </td>
-                              {isAdmin && (
-                                <td className="px-8 py-6 text-right">
-                                  {/* Fully Unlocked external URLs for Premium Users */}
+                              <td className="px-8 py-6 text-right">
+                                {hasPaid ? (
                                   <a 
                                     href={result.sourceUrl}
                                     target="_blank"
@@ -1056,13 +1062,21 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                   >
                                     Open Source <ExternalLink className="w-3 h-3" />
                                   </a>
-                                </td>
-                              )}
+                                ) : (
+                                  <button 
+                                    disabled 
+                                    className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 text-gray-400 gap-2 text-[10px] font-black uppercase px-4 py-2 cursor-not-allowed select-none"
+                                    title="Unlock 140 monthly credits and source links by purchasing a subscription"
+                                  >
+                                    🔒 Source Locked
+                                  </button>
+                                )}
+                              </td>
                             </motion.tr>
                           ); })
                         ) : (
                           <tr>
-                            <td colSpan={isAdmin ? 6 : 5} className="px-8 py-24 text-center">
+                            <td colSpan={6} className="px-8 py-24 text-center">
                               <div className="flex flex-col items-center gap-4">
                                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
                                 <p className="text-gray-400 text-xs font-black uppercase tracking-[0.1em]">AI Crawling Intent Databases...</p>
@@ -1074,21 +1088,21 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                     </table>
                   </div>
 
-                  {filteredResults.length > 15 && (
+                  {!hasPaid && filteredResults.length > 15 && (
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-32 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
                       <div className="bg-white border border-orange-100 rounded-[2rem] p-8 max-w-lg shadow-2xl relative">
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1 shadow-md">
                           <Sparkles className="w-3 h-3 fill-white" /> Core Limit Reached
                         </div>
                         <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
-                          Unlock 15+ More Real-Time Leads
+                          Unlock 100 Lists of Potential Clients
                         </h3>
                         <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
-                          Subscribe for only <strong className="text-primary font-black text-orange-600">$80 a month</strong> to get unlimited leads or every time someone is looking for your services online.
+                          Pay <strong className="text-primary font-black text-orange-600">$80</strong> to unlock 140 credits and premium source links.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                           <a 
-                            href="https://pay.yoco.com/mergemega?amount=3040" 
+                            href="https://pay.yoco.com/mergemega?amount=1300" 
                             target="_blank" 
                             rel="noopener noreferrer"
                             referrerPolicy="no-referrer"
@@ -1111,86 +1125,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
             </div>
           </div>
 
-          {/* Section 2: Personal Outreach conversion ledger */}
-          <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
-            <div className="p-8 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-black text-[#111] tracking-tight">Active Conversion Leads</h2>
-                <p className="text-xs text-gray-500 font-medium">Verified demand signals captured by agent crawler nodes</p>
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-black bg-orange-50 text-primary border border-primary/20 px-3 py-1.5 rounded-xl uppercase">
-                  Scope state: {stateScope}
-                </span>
-                <span className="text-[10px] font-black bg-[#111] text-white px-3 py-1.5 rounded-xl uppercase">
-                  Scope keywords: {userKeywords.slice(0, 3).filter(k => k).join(', ') || "outreach, campaigns, growth"}
-                </span>
-              </div>
-            </div>
 
-            {/* Leads Listing */}
-            <div className="relative p-8 animate-in fade-in duration-300">
-              {!isAdmin && (
-                <div className="absolute inset-x-0 bottom-0 top-0 z-10 flex flex-col items-center justify-center p-6 bg-white/20 backdrop-blur-[6px] select-none rounded-[2.5rem] pointer-events-none">
-                  <div className="text-center max-w-md mx-auto bg-white border border-orange-100/80 shadow-2xl rounded-[2rem] p-8 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200 pointer-events-auto">
-                    <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center shadow-inner relative animate-pulse">
-                      <Lock className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-black text-[#111] tracking-tight">Active Conversion Leads Secured</h4>
-                      <p className="text-[11px] text-gray-500 font-semibold leading-relaxed">
-                        Verified demand signals captured by agent crawler nodes are restricted strictly to System Administrators. Please contact Pete Mkhize for authorized workspace credentials.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300 ${!isAdmin ? 'blur-md pointer-events-none select-none filter' : ''}`}>
-                {dynamicLeads.map((lead, idx) => (
-                  <div key={idx} className="bg-white border border-gray-100 hover:border-primary/40 rounded-[2rem] p-6 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden">
-                    <div className="absolute top-0 right-0 h-1.5 w-full bg-orange-50 px-3" />
-                    
-                    <div>
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-1.5">
-                          <div className="bg-primary/10 p-1 rounded-lg">
-                            <Zap className="w-3.5 h-3.5 text-primary" />
-                          </div>
-                          <span className="text-xs font-black text-[#111]">{lead.name}</span>
-                        </div>
-                        <span className="text-[10px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-lg uppercase tracking-wider">
-                          {lead.match} Match
-                        </span>
-                      </div>
-
-                      <p className="text-xs font-bold text-gray-700 leading-relaxed mb-4 min-h-[50px]">
-                        "{lead.content}"
-                      </p>
-                    </div>
-
-                    <div className="border-t border-gray-100 pt-4 mt-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-gray-400 font-bold">{lead.role || "Prospect"}</span>
-                        <span className="text-[10px] text-gray-400 font-mono block">{lead.date}</span>
-                      </div>
-                      <div className="flex items-center gap-1 mt-2">
-                        <PlatformIcon platform={lead.platform as any} />
-                        <span className="text-[9px] font-black text-gray-400 uppercase font-mono">{lead.platform}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="p-6 bg-gray-50 border-t border-gray-100 text-center">
-              <span className="text-[10px] font-black uppercase text-gray-400 tracking-[0.1em]">
-                Signalmerge Node Crawlers execute dynamic updates every 12 hours.
-              </span>
-            </div>
-          </div>
         </main>
       ) : (
         /* INTEL DATASET PAGE */
@@ -1314,10 +1249,21 @@ export default function Dashboard() {
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authStep, setAuthStep] = useState<'input' | 'sent' | 'loading'>('input');
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [signupCompanyName, setSignupCompanyName] = useState("");
+  const [signupLocation, setSignupLocation] = useState("");
   const authStepRef = React.useRef(authStep);
   useEffect(() => {
     authStepRef.current = authStep;
   }, [authStep]);
+
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      setAuthMode('login');
+      setAuthError(null);
+      setAuditError(null);
+    }
+  }, [isAuthModalOpen]);
   const [authError, setAuthError] = useState<string | null>(null);
   const [hasClickedYoco, setHasClickedYoco] = useState(false);
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
@@ -1346,6 +1292,16 @@ export default function Dashboard() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const action = searchParams.get("action");
+    if (action === "unlock" && !session) {
+      setIsUnlockChoiceModalOpen(true);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("action");
+      setSearchParams(newParams);
+    }
+  }, [searchParams, session, setSearchParams]);
 
   const handleLogin = () => {
     setIsAuthModalOpen(true);
@@ -1524,6 +1480,319 @@ export default function Dashboard() {
     }, 3500);
   };
 
+  const handleDownloadResults = () => {
+    const currentQuery = query || "All Signals";
+    const appOrigin = window.location.origin;
+    const exportDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const tableRows = filteredResults.map((result, idx) => {
+      const isBlurred = idx >= 15;
+      const displayContent = isBlurred 
+        ? "This high-intent 2026 demand source contains direct contact information and verified location channel logs."
+        : result.content;
+      
+      const hashtagsHtml = result.hashtags && result.hashtags.length > 0
+        ? result.hashtags.map(tag => `<span style="color:#f97316; margin-right:6px; font-weight:bold;">#${tag.replace('#', '')}</span>`).join('')
+        : '';
+
+      return `
+        <tr style="border-bottom: 1px solid #f3f4f6; transition: background-color 0.2s; ${isBlurred ? 'opacity: 0.5; user-select: none;' : ''}">
+          <td style="padding: 20px 24px; font-size: 14px;">
+            <span style="display: inline-block; padding: 4px 10px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 8px; background-color: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb;">
+              ${result.platform}
+            </span>
+          </td>
+          <td style="padding: 20px 24px; max-width: 500px; vertical-align: top;">
+            <div style="${isBlurred ? 'filter: blur(5px);' : ''}">
+              <p style="font-size: 14px; font-weight: 700; color: #111827; line-height: 1.6; margin-bottom: 6px;">
+                ${displayContent}
+              </p>
+              <div style="font-size: 10px; color: #9ca3af; font-weight: 700; display: flex; gap: 8px;">
+                <span>👁️ ${result.views}</span>
+                <span>❤️ ${result.likes}</span>
+                <span>${hashtagsHtml}</span>
+              </div>
+            </div>
+          </td>
+          <td style="padding: 20px 24px; font-size: 14px; color: #4b5563; font-weight: 700; vertical-align: top;">
+            <div style="display: flex; align-items: center; gap: 6px; ${isBlurred ? 'filter: blur(5px);' : ''}">
+              📍 ${result.location}
+            </div>
+          </td>
+          <td style="padding: 20px 24px; font-size: 12px; color: #9ca3af; font-weight: 600; vertical-align: top;">
+            ${result.time}
+          </td>
+          <td style="padding: 20px 24px; text-align: right; vertical-align: top;">
+            <button 
+              onclick="window.open('${appOrigin}/?action=unlock', '_blank')"
+              style="display: inline-flex; align-items: center; gap: 6px; border-radius: 12px; border: 1px solid #f97316; background-color: rgba(254, 243, 199, 0.5); color: #ea580c; font-size: 10px; font-weight: 900; text-transform: uppercase; padding: 10px 18px; transition: all 0.2s; cursor: pointer; box-shadow: 0 0 10px rgba(249,115,36,0.15);"
+              onmouseover="this.style.backgroundColor='#f97316'; this.style.color='#ffffff'; this.style.boxShadow='0 0 15px rgba(249,115,36,0.35)';"
+              onmouseout="this.style.backgroundColor='rgba(254, 243, 199, 0.5)'; this.style.color='#ea580c'; this.style.boxShadow='0 0 10px rgba(249,115,36,0.15)';"
+            >
+              Unlock Source ↗
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signalmerge Demand Results — ${currentQuery}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #fcfcfc;
+      margin: 0;
+      color: #374151;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 16px;
+    }
+    .header-banner {
+      background-color: #ffffff;
+      border: 1px solid #ffedd5;
+      border-radius: 32px;
+      padding: 32px 48px;
+      box-shadow: 0 10px 25px -5px rgba(249, 115, 36, 0.05);
+      margin-bottom: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    @media (min-width: 768px) {
+      .header-banner {
+        flex-direction: row;
+        text-align: left;
+      }
+    }
+    .header-banner::after {
+      content: "";
+      position: absolute;
+      right: -96px;
+      top: -96px;
+      width: 256px;
+      height: 256px;
+      background-color: #fff7ed;
+      border-radius: 9999px;
+      filter: blur(48px);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #ffedd5;
+      color: #c2410c;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 900;
+      color: #111827;
+      letter-spacing: -0.025em;
+      margin: 0 0 12px 0;
+    }
+    .subtitle {
+      font-size: 14px;
+      font-weight: 600;
+      color: #9ca3af;
+      margin: 0;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 56px;
+      padding: 0 32px;
+      background-color: #f97324;
+      color: #ffffff;
+      border: none;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: all 0.2s;
+      box-shadow: 0 10px 15px -3px rgba(249, 115, 36, 0.2);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-primary:hover {
+      background-color: #ea580c;
+      transform: translateY(-1px);
+    }
+    .table-card {
+      background-color: #ffffff;
+      border: 1px solid #f3f4f6;
+      border-radius: 32px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02);
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      min-width: 800px;
+    }
+    th {
+      border-bottom: 1px solid #f3f4f6;
+      background-color: rgba(249, 250, 251, 0.5);
+      padding: 16px 24px;
+      font-size: 11px;
+      font-weight: 900;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .footer-cta {
+      margin-top: 40px;
+      background-color: #111827;
+      color: #ffffff;
+      border-radius: 32px;
+      padding: 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .footer-cta-title {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      margin: 0 0 12px 0;
+    }
+    .footer-cta-desc {
+      font-size: 14px;
+      color: #9ca3af;
+      font-weight: 500;
+      line-height: 1.625;
+      max-width: 600px;
+      margin: 0 auto 24px auto;
+    }
+    .footer-actions {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+    }
+    @media (min-width: 640px) {
+      .footer-actions {
+        flex-direction: row;
+      }
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 56px;
+      padding: 0 32px;
+      background-color: transparent;
+      border: 1px solid #374151;
+      color: #d1d5db;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      border-color: #4b5563;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header-banner">
+      <div>
+        <div class="badge">⚡ Signalmerge Demand Export</div>
+        <h1 class="title">Demand signals for "${currentQuery}"</h1>
+        <p class="subtitle">Exported on ${exportDate} • Crawford Discovery Engine v4</p>
+      </div>
+      <div>
+        <button onclick="window.open('${appOrigin}/?action=unlock', '_blank')" class="btn-primary">
+          Unlock Workspace
+        </button>
+      </div>
+    </header>
+
+    <div class="table-card">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 15%;">Platform</th>
+              <th style="width: 50%;">Demand Content & Intent</th>
+              <th style="width: 15%;">Location</th>
+              <th style="width: 10%;">Time</th>
+              <th style="width: 10%; text-align: right;">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer-cta">
+      <h2 class="footer-cta-title">Want direct access to verified source channels?</h2>
+      <p class="footer-cta-desc">
+        Unlock usernames, real-time message links, and automatic follow-up workflows by logging in or building your own customized discovery engine workspace.
+      </p>
+      <div class="footer-actions">
+        <button onclick="window.open('${appOrigin}/?action=unlock', '_blank')" class="btn-primary">
+          Create Workspace & Unlock Feeds
+        </button>
+        <button onclick="window.open('${appOrigin}/?action=unlock', '_blank')" class="btn-secondary">
+          Sign In
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `signalmerge-demand-report-${currentQuery.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const [onboardingData, setOnboardingData] = useState({
     email: "",
     password: "",
@@ -1677,43 +1946,43 @@ export default function Dashboard() {
     checkProfile();
   }, [session]);
 
-  const handleAuditSubmit = async () => {
+  const handleDirectSignup = async (signupCompany: string, signupLocation: string, signupEmail: string, signupPw: string) => {
     setAuditError(null);
     setAuthError(null);
 
-    if (!onboardingData.email.trim()) {
+    const emailVal = signupEmail.trim();
+    const companyVal = signupCompany.trim();
+    const locationVal = signupLocation.trim();
+    const pwVal = signupPw.trim();
+
+    if (!companyVal) {
+      setAuditError("Company Name is required.");
+      return;
+    }
+    if (!locationVal) {
+      setAuditError("Location / Headquarters is required.");
+      return;
+    }
+    if (!emailVal) {
       setAuditError("Email Address is required.");
-      setAuditStepIdx(5);
       return;
     }
-    if (!onboardingData.password.trim()) {
+    if (!pwVal) {
       setAuditError("Secure Password is required.");
-      setAuditStepIdx(5);
       return;
     }
-    if (onboardingData.password.trim().length < 6) {
+    if (pwVal.length < 6) {
       setAuditError("Secure Password must be at least 6 characters.");
-      setAuditStepIdx(5);
       return;
     }
-    if (!onboardingData.sellingRegion.state.trim()) {
-      setAuditError("Sales State is required.");
-      setAuditStepIdx(5);
-      return;
-    }
-    if (!onboardingData.sellingRegion.county.trim()) {
-      setAuditError("Sales County / Area is required.");
-      setAuditStepIdx(5);
-      return;
-    }
-    
+
     setIsSigningUp(true);
-    
+
     try {
-      // 1. Create the Auth account
+      // 1. Create the Auth account in Supabase / Mock backend
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: onboardingData.email,
-        password: onboardingData.password,
+        email: emailVal,
+        password: pwVal,
         options: {
           emailRedirectTo: window.location.origin,
         }
@@ -1727,38 +1996,57 @@ export default function Dashboard() {
 
       const userId = authData.user?.id;
       if (userId) {
-        // 2. Save the discovery audit data immediately to profiles
+        // Use the searched keywords if any exist, or defaults
+        const defaultKeywords = query ? [query, 'saas', 'marketing', 'ai', 'leads'] : ['saas', 'marketing', 'ai', 'leads', 'clients'];
+        const defaultPhrases = ['looking for services', 'need recommendations', 'urgently hiring', 'anyone know of', 'looking for specialist'];
+        
+        // 2. Save the details directly to profiles
         const { error: upsertError } = await supabase
           .from('profiles')
           .upsert({
             id: userId,
-            email: onboardingData.email,
-            company_name: onboardingData.companyName,
-            location: onboardingData.location,
-            socials: onboardingData.socials,
-            customer_phrases: onboardingData.customerPhrases,
-            customer_keywords: onboardingData.customerKeywords,
-            usp: onboardingData.usp,
-            selling_region: onboardingData.sellingRegion,
+            email: emailVal,
+            company_name: companyVal,
+            location: locationVal,
+            socials: { instagram: "https://instagram.com", linkedin: "https://linkedin.com", facebook: "https://facebook.com", tiktok: "https://tiktok.com" },
+            customer_phrases: defaultPhrases,
+            customer_keywords: defaultKeywords,
+            usp: "Registered workspace client waiting for admin activation.",
+            selling_region: { state: "Global", county: "Worldwide", pricing: 1500, integrations: ["Zapier", "n8n"] },
             audit_completed: true,
-            is_approved: false, // Manual approval initially
+            is_approved: false, // Manual admin approval initially
             updated_at: new Date().toISOString(),
           });
 
-        if (upsertError) console.error("Error saving audit profiles:", upsertError);
+        if (upsertError) console.error("Error saving user profile:", upsertError);
+
+        // Update the onboardingData state so the UI reflects them
+        setOnboardingData(prev => ({
+          ...prev,
+          email: emailVal,
+          companyName: companyVal,
+          location: locationVal,
+          customerKeywords: defaultKeywords,
+          customerPhrases: defaultPhrases
+        }));
       }
 
-      // 3. Immediately log the user in to populate session and access the blurred analytics screen
+      // 3. Immediately log the user in to populate session and take them to the workspace
       try {
-        await supabase.auth.signInWithPassword({
-          email: onboardingData.email,
-          password: onboardingData.password
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: emailVal,
+          password: pwVal
         });
+        if (!signInError && signInData.session) {
+          setSession(signInData.session);
+        }
       } catch (logErr) {
         console.warn("Bypassed autologin trigger:", logErr);
       }
 
-      setAuditStepIdx(6); // Advance to the payment confirmation step!
+      setAuditCompleted(true);
+      setStartedSignup(false);
+      setIsAuthModalOpen(false); // Close auth modal if signing up from inside the modal
     } catch (err: any) {
       setAuthError(`An unexpected error occurred: ${err.message}`);
     } finally {
@@ -1846,6 +2134,164 @@ export default function Dashboard() {
   };
 
   if (startedSignup && !auditCompleted) {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-4 sm:p-6 pb-20 selection:bg-orange-100 selection:text-orange-600 animate-in fade-in duration-200">
+        <div className="max-w-md w-full">
+          {/* Back button */}
+          <div className="mb-6 w-full flex flex-col gap-4">
+            <button 
+              onClick={() => {
+                setStartedSignup(false);
+                setSearchParams({});
+              }}
+              className="self-start flex items-center gap-2 text-gray-500 hover:text-primary transition-colors font-black text-xs uppercase tracking-wider bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-primary" />
+              Back to Discovery Hub
+            </button>
+            <div className="flex items-center gap-3 mt-2">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0">
+                <Zap className="text-white w-5 h-5 fill-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-black text-[#111] tracking-tight">Create Workspace</h1>
+                <p className="text-gray-500 font-medium text-xs">Set up your customer intelligence workspace</p>
+              </div>
+            </div>
+          </div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white border border-gray-100 rounded-3xl p-8 md:p-10 shadow-2xl shadow-orange-500/5 relative overflow-hidden"
+          >
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-orange-50 rounded-lg">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="text-lg font-black text-[#111]">Workspace Setup</h3>
+              </div>
+
+              {authError && (
+                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl select-text">
+                  <p className="text-xs text-red-600 font-bold">{authError}</p>
+                </div>
+              )}
+
+              {auditError && (
+                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl select-text flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping inline-block shrink-0" />
+                  <p className="text-xs text-red-600 font-bold">{auditError}</p>
+                </div>
+              )}
+
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                handleDirectSignup(
+                  onboardingData.companyName,
+                  onboardingData.location,
+                  onboardingData.email,
+                  onboardingData.password
+                );
+              }} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Company Name</label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <Input 
+                      type="text"
+                      required
+                      value={onboardingData.companyName}
+                      onChange={e => setOnboardingData({...onboardingData, companyName: e.target.value})}
+                      placeholder="e.g. Doe Consulting Group"
+                      className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Headquarters / Location</label>
+                  <div className="relative">
+                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <Input 
+                      type="text"
+                      required
+                      value={onboardingData.location}
+                      onChange={e => setOnboardingData({...onboardingData, location: e.target.value})}
+                      placeholder="e.g. San Francisco, CA"
+                      className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <Input 
+                      type="email"
+                      required
+                      value={onboardingData.email}
+                      onChange={e => setOnboardingData({...onboardingData, email: e.target.value})}
+                      placeholder="e.g. name@company.com"
+                      className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Secure Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <Input 
+                      type="password"
+                      required
+                      value={onboardingData.password}
+                      onChange={e => setOnboardingData({...onboardingData, password: e.target.value})}
+                      placeholder="••••••••"
+                      className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit"
+                  disabled={isSigningUp}
+                  className="w-full h-14 mt-4 bg-primary hover:bg-orange-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isSigningUp ? (
+                    <>Creating Workspace <Loader2 className="w-5 h-5 ml-2 animate-spin" /></>
+                  ) : (
+                    <>Register & Build Workspace <ArrowRight className="w-4 h-4 ml-2" /></>
+                  )}
+                </Button>
+              </form>
+
+              <div className="pt-4 border-t border-gray-100 text-center">
+                <p className="text-xs text-gray-500 font-semibold">
+                  Already have a workspace?{" "}
+                  <button 
+                    onClick={() => {
+                      setStartedSignup(false);
+                      setIsAuthModalOpen(true);
+                      setAuthStep('input');
+                    }}
+                    className="text-primary font-bold hover:underline"
+                  >
+                    Log in here
+                  </button>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+        <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
+      </div>
+    );
+  }
+
+  const legacyBypassed = () => {
     const currentReachTotal = ['Instagram', 'TikTok', 'LinkedIn', 'YouTube', 'Twitter'].reduce(
       (acc, plat) => acc + getPlatformReach(onboardingData.customerKeywords, plat), 0
     );
@@ -2246,7 +2692,7 @@ export default function Dashboard() {
                 <div className="flex gap-4 pt-4">
                   <Button variant="outline" onClick={() => handlePrevStep(4)} className="flex-1 h-14 rounded-2xl border-gray-100 font-bold uppercase text-[10px]">Back</Button>
                   <Button 
-                    onClick={handleAuditSubmit} 
+                    onClick={() => {}} 
                     disabled={isSigningUp}
                     className="flex-[2] h-14 bg-[#111] hover:bg-black rounded-2xl text-white font-black uppercase tracking-widest shadow-xl disabled:opacity-50"
                   >
@@ -2278,13 +2724,13 @@ export default function Dashboard() {
                     Your custom intelligence workspace is fully configured for <strong>{onboardingData.companyName}</strong> using <strong>{onboardingData.customerKeywords.slice(0, 3).filter(k => k).join(', ') || 'AI'}</strong> tracking nodes.
                   </p>
                   <p className="text-xs text-gray-500 leading-relaxed font-semibold">
-                    To activate your 2026 Crawford crawling servers and connect full platform feeds without limitation, please authorize your recurring monthly subscription fee of <strong>R3,040 (Approx. $80 USD)</strong> using our South African secure gateway.
+                    To activate your 2026 Crawford crawling servers and connect full platform feeds without limitation, please authorize your recurring monthly subscription fee of <strong>$80 USD</strong> (which unlocks 100 lists of potential clients) using our secure payment gateway.
                   </p>
                 </div>
 
                 <div className="space-y-4 pt-2">
                   <a 
-                    href="https://pay.yoco.com/mergemega?amount=3040" 
+                    href="https://pay.yoco.com/mergemega?amount=1300" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     referrerPolicy="no-referrer"
@@ -2293,7 +2739,7 @@ export default function Dashboard() {
                     }}
                     className="w-full h-14 bg-primary hover:bg-orange-650 rounded-2xl text-white font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 text-xs transition-colors"
                   >
-                    Pay Setup Fee (R3,040) with Yoco <ExternalLink className="w-4 h-4" />
+                    Pay Setup Fee ($80 USD) with Yoco <ExternalLink className="w-4 h-4" />
                   </a>
 
                   {isVerifyingPayment ? (
@@ -2324,7 +2770,7 @@ export default function Dashboard() {
         <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
       </div>
     );
-  }
+  };
 
   if (isAuthLoading || isProfileLoading) {
     return (
@@ -2366,8 +2812,15 @@ export default function Dashboard() {
 
   const isUserOwner = session?.user?.email === 'petemkhize@gmail.com' || userProfile?.email === 'petemkhize@gmail.com' || userProfile?.role === 'admin';
 
-  if ((auditCompleted || isUserOwner) && session) {
-    return <BIDashboard profile={userProfile || { id: session.user.id, email: session.user.email, role: isUserOwner ? 'admin' : 'user' }} handleLogout={handleLogout} />;
+  if (session) {
+    const mergedProfile = {
+      ...(userProfile || {}),
+      id: session.user.id,
+      email: session.user.email,
+      role: isUserOwner ? 'admin' : (userProfile?.role || 'user'),
+      hasPaid80: session?.user?.hasPaid80 || userProfile?.has_paid_80 || isUserOwner
+    };
+    return <BIDashboard profile={mergedProfile} handleLogout={handleLogout} />;
   }
 
   return (
@@ -2479,6 +2932,14 @@ export default function Dashboard() {
                       Scanning 2026 Database...
                     </div>
                   )}
+                  <Button 
+                    onClick={handleDownloadResults}
+                    disabled={filteredResults.length === 0 || isScanning}
+                    variant="outline" 
+                    className="rounded-xl border-orange-200 text-primary hover:bg-orange-50 gap-2 text-xs font-bold px-4 hover:border-primary transition-all shadow-sm"
+                  >
+                    <Download className="w-3.5 h-3.5 text-primary" /> Download Results
+                  </Button>
                   <Button variant="outline" className="rounded-xl border-gray-200 text-gray-600 gap-2 text-xs font-bold px-4">
                     <Globe className="w-3 h-3" /> 2026 Global Scope
                   </Button>
@@ -2660,14 +3121,14 @@ export default function Dashboard() {
                 ) : (
                   <>
                     <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
-                      Unlock 15+ More Real-Time Leads
+                      Unlock 100 Lists of Potential Clients
                     </h3>
                     <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
-                      Subscribe for only <strong className="text-primary font-black text-orange-600">$80 a month</strong> to get unlimited leads or every time someone is looking for your services online.
+                      Pay <strong className="text-primary font-black text-orange-600">$80</strong> to unlock 100 lists of premium potential clients.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                       <a 
-                        href="https://pay.yoco.com/mergemega?amount=3040" 
+                        href="https://pay.yoco.com/mergemega?amount=1300" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         referrerPolicy="no-referrer"
@@ -2856,71 +3317,191 @@ export default function Dashboard() {
 
                 {authStep === 'input' || authStep === 'loading' ? (
                   <>
-                    <h2 className="text-2xl font-black text-[#111] tracking-tight mb-2">Access Intelligence</h2>
-                    <p className="text-gray-500 font-medium text-sm mb-8">
-                      Sign in using your administrator credentials to manage user workspaces.
-                    </p>
-
-                    {!isSupabaseConfigured && (
-                      <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl">
-                        <p className="text-[10px] font-black uppercase text-red-600 mb-1">Configuration Warning</p>
-                        <p className="text-xs text-red-700 font-bold leading-tight">
-                          Supabase keys not found. Please add <code className="bg-red-100 px-1 rounded">VITE_SUPABASE_URL</code> and <code className="bg-red-100 px-1 rounded">VITE_SUPABASE_ANON_KEY</code> to your Settings.
+                    {authMode === 'login' ? (
+                      <>
+                        <h2 className="text-2xl font-black text-[#111] tracking-tight mb-2">Access Intelligence</h2>
+                        <p className="text-gray-500 font-medium text-sm mb-8">
+                          Sign in using your administrator or client credentials to manage workspaces.
                         </p>
-                      </div>
-                    )}
 
-                    <form onSubmit={submitAuth} className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Email Address</label>
-                        <div className="relative">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                          <Input 
-                            type="email"
-                            required
-                            value={authEmail}
-                            onChange={(e) => setAuthEmail(e.target.value)}
-                            placeholder=""
-                            className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Security Password</label>
-                        <div className="relative">
-                          <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                          <Input 
-                            type="password"
-                            required
-                            value={authPassword}
-                            onChange={(e) => setAuthPassword(e.target.value)}
-                            placeholder="••••••••"
-                            className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
-                          />
-                        </div>
-                      </div>
-
-                      {authError && (
-                        <p className="text-xs font-bold text-red-500 ml-1 select-text">{authError}</p>
-                      )}
-
-                      <Button 
-                        type="submit"
-                        disabled={authStep === 'loading'}
-                        className="w-full h-14 bg-primary hover:bg-orange-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98]"
-                      >
-                        {authStep === 'loading' ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <>Verify Credentials <ArrowRight className="w-4 h-4 ml-2" /></>
+                        {!isSupabaseConfigured && (
+                          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl">
+                            <p className="text-[10px] font-black uppercase text-red-600 mb-1">Configuration Warning</p>
+                            <p className="text-xs text-red-700 font-bold leading-tight">
+                              Supabase keys not found. Please add <code className="bg-red-100 px-1 rounded">VITE_SUPABASE_URL</code> and <code className="bg-red-100 px-1 rounded">VITE_SUPABASE_ANON_KEY</code> to your Settings.
+                            </p>
+                          </div>
                         )}
-                      </Button>
-                    </form>
 
-                    <p className="mt-8 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                      Confidential access strictly monitored.
-                    </p>
+                        <form onSubmit={submitAuth} className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Email Address</label>
+                            <div className="relative">
+                              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                              <Input 
+                                type="email"
+                                required
+                                value={authEmail}
+                                onChange={(e) => setAuthEmail(e.target.value)}
+                                placeholder="name@company.com"
+                                className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Security Password</label>
+                            <div className="relative">
+                              <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                              <Input 
+                                type="password"
+                                required
+                                value={authPassword}
+                                onChange={(e) => setAuthPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
+                              />
+                            </div>
+                          </div>
+
+                          {authError && (
+                            <p className="text-xs font-bold text-red-500 ml-1 select-text">{authError}</p>
+                          )}
+
+                          <Button 
+                            type="submit"
+                            disabled={authStep === 'loading'}
+                            className="w-full h-14 bg-primary hover:bg-orange-650 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98]"
+                          >
+                            {authStep === 'loading' ? (
+                              <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                            ) : (
+                              <>Verify Credentials <ArrowRight className="w-4 h-4 ml-2" /></>
+                            )}
+                          </Button>
+                        </form>
+
+                        <p className="mt-8 text-center text-xs text-gray-500 font-semibold">
+                          Don't have a workspace?{" "}
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setAuthMode('signup');
+                              setAuthError(null);
+                            }}
+                            className="text-primary font-bold hover:underline"
+                          >
+                            Create one here
+                          </button>
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="text-2xl font-black text-[#111] tracking-tight mb-2">Create Workspace</h2>
+                        <p className="text-gray-500 font-medium text-sm mb-8">
+                          Register and set up your real-time customer discovery workspace.
+                        </p>
+
+                        <form onSubmit={(e) => {
+                          e.preventDefault();
+                          handleDirectSignup(signupCompanyName, signupLocation, authEmail, authPassword);
+                        }} className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Company Name</label>
+                            <div className="relative">
+                              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                              <Input 
+                                type="text"
+                                required
+                                value={signupCompanyName}
+                                onChange={(e) => setSignupCompanyName(e.target.value)}
+                                placeholder="e.g. Acme SaaS"
+                                className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Headquarters Location</label>
+                            <div className="relative">
+                              <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                              <Input 
+                                type="text"
+                                required
+                                value={signupLocation}
+                                onChange={(e) => setSignupLocation(e.target.value)}
+                                placeholder="e.g. San Francisco, CA"
+                                className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Email Address</label>
+                            <div className="relative">
+                              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                              <Input 
+                                type="email"
+                                required
+                                value={authEmail}
+                                onChange={(e) => setAuthEmail(e.target.value)}
+                                placeholder="name@company.com"
+                                className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 ml-1">Security Password</label>
+                            <div className="relative">
+                              <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                              <Input 
+                                type="password"
+                                required
+                                value={authPassword}
+                                onChange={(e) => setAuthPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50 focus:border-primary transition-all font-bold placeholder:font-medium placeholder:text-gray-400"
+                              />
+                            </div>
+                          </div>
+
+                          {authError && (
+                            <p className="text-xs font-bold text-red-500 ml-1 select-text">{authError}</p>
+                          )}
+
+                          {auditError && (
+                            <p className="text-xs font-bold text-red-500 ml-1 select-text">{auditError}</p>
+                          )}
+
+                          <Button 
+                            type="submit"
+                            disabled={isSigningUp}
+                            className="w-full h-14 bg-primary hover:bg-orange-650 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                          >
+                            {isSigningUp ? (
+                              <>Building Workspace <Loader2 className="w-5 h-5 animate-spin mx-auto" /></>
+                            ) : (
+                              <>Register & Build Workspace <ArrowRight className="w-4 h-4 ml-2" /></>
+                            )}
+                          </Button>
+                        </form>
+
+                        <p className="mt-8 text-center text-xs text-gray-500 font-semibold">
+                          Already have a workspace?{" "}
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setAuthMode('login');
+                              setAuthError(null);
+                            }}
+                            className="text-primary font-bold hover:underline"
+                          >
+                            Log in here
+                          </button>
+                        </p>
+                      </>
+                    )}
                   </>
                 ) : null}
               </div>

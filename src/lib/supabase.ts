@@ -19,7 +19,7 @@ const supabaseAnonKey = isSupabaseConfigured ? rawAnonKey : '';
 if (isSupabaseConfigured) {
   console.log('Supabase initialized with URL:', supabaseUrl.substring(0, 10) + '...');
 } else {
-  console.warn('Supabase configuration missing or invalid URL placeholders detected');
+  console.warn('Supabase configuration missing, invalid URL placeholders, or using fallback mock engine');
 }
 
 // Local Storage Mock Database Engine for Sandbox Preview
@@ -44,6 +44,19 @@ const getMockProfiles = () => {
       customer_phrases: ['looking for help with ai integrations', 'need n8n workflow specialist'],
       usp: 'Consolidated cognitive intelligence nodes for 2026 sales velocity.',
       selling_region: { state: 'Gauteng', county: 'Johannesburg', pricing: 1500, integrations: ['Zapier', 'n8n'] },
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'digital-consulting-pros-id',
+      email: 'digitalconsultingpros@gmail.com',
+      company_name: 'Digital Consulting Pros',
+      location: 'Malta',
+      is_approved: true,
+      role: 'client_audit',
+      customer_keywords: ['logistics', 'clothing', 'suppliers'],
+      customer_phrases: ['looking for reliable manufacturers in China', 'need shipping broker from Italy'],
+      usp: 'Secure and verified high-volume supply chain routes.',
+      selling_region: { state: 'Gauteng', county: 'Johannesburg', pricing: 1300, integrations: ['Zapier', 'n8n'] },
       created_at: new Date().toISOString()
     },
     {
@@ -249,13 +262,14 @@ export const supabase = {
     signInWithPassword: async ({ email, password }: { email: string, password?: string }) => {
       console.log('Hybrid signInWithPassword triggered for', email);
       const cleanEmail = email.trim().toLowerCase();
+      const cleanPw = password ? password.trim() : '';
 
-      // Secure Server-side authentications check (protects credentials from client-side bundles)
+      // 1. Secure Server-side authentications check (protects credentials from client-side bundles)
       try {
         const res = await fetch('/api/auth/verify-client-audit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: cleanEmail, password })
+          body: JSON.stringify({ email: cleanEmail, password: cleanPw })
         });
         if (res.ok) {
           const result = await res.json();
@@ -276,7 +290,38 @@ export const supabase = {
         console.warn('Backend verification check failed, attempting local fallback...', err);
       }
 
-      const cleanPw = password ? password.trim() : '';
+      // 2. Custom Login Endpoint check on the Express server (server_users.json)
+      try {
+        const res = await fetch('/api/auth/custom-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: cleanEmail, password: cleanPw })
+        });
+        if (res.ok) {
+          const result = await res.json();
+          if (result.success) {
+            const user = {
+              id: 'user-' + Math.random().toString(36).substring(2, 7),
+              email: result.user.email,
+              role: 'user',
+              hasPaid80: result.user.hasPaid80,
+              hasPaid20: result.user.hasPaid20
+            };
+            const session = { access_token: 'mock-token', user };
+            localStorage.setItem('mock_session', JSON.stringify(session));
+            window.dispatchEvent(new Event('mock-auth-change'));
+            return { data: { user, session }, error: null };
+          }
+        } else {
+          // If the custom-login API returned a structured error (e.g., Incorrect password)
+          const result = await res.json().catch(() => ({}));
+          if (result.message) {
+            return { data: { user: null, session: null }, error: new Error(result.message) };
+          }
+        }
+      } catch (err) {
+        console.warn('Backend custom login failed:', err);
+      }
 
       // Master Sandbox Bypass checks:
       if (cleanEmail === 'petemkhize@gmail.com' && cleanPw === 'LehakoeZakithi777') {
@@ -363,6 +408,44 @@ export const supabase = {
     signUp: async ({ email, password }: { email: string, password?: string }) => {
       console.log('Hybrid signUp triggered for', email);
       const cleanEmail = email.trim().toLowerCase();
+      const cleanPw = password ? password.trim() : '';
+
+      // 1. Call custom Express signup API
+      try {
+        const res = await fetch('/api/auth/custom-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: cleanEmail, password: cleanPw })
+        });
+        if (res.ok) {
+          const result = await res.json();
+          if (result.success) {
+            const userId = 'user-' + Math.random().toString(36).substring(2, 7);
+            const user = { id: userId, email: cleanEmail };
+            
+            // Ensure mock profile exists in LocalStorage so dashboard works
+            const all = getMockProfiles();
+            if (!all.some((p: any) => p.email === cleanEmail)) {
+              all.push({
+                id: userId,
+                email: cleanEmail,
+                created_at: new Date().toISOString(),
+                is_approved: false,
+                role: 'user'
+              });
+              saveMockProfiles(all);
+            }
+            return { data: { user }, error: null };
+          }
+        } else {
+          const result = await res.json().catch(() => ({}));
+          if (result.message) {
+            return { data: { user: null }, error: new Error(result.message) };
+          }
+        }
+      } catch (err) {
+        console.warn('Backend custom signup failed, falling back to local simulation:', err);
+      }
 
       let realUser: any = null;
       let signUpError: any = null;
@@ -413,15 +496,169 @@ export const supabase = {
 
   from: (tableName: string) => {
     const isMock = useMockEngine();
+    const mockBuilder = createQueryBuilder(tableName);
     
-    // If NOT in mock sandbox mode, query real Supabase directly
+    // If NOT in mock sandbox mode, try to query real Supabase but wrap it to fallback on any database/table errors
     if (!isMock && realClient) {
-      return realClient.from(tableName);
+      const wrapReal = (realQuery: any) => {
+        const wrapped: any = {
+          select: (columns?: string) => {
+            try {
+              const realSelect = realQuery.select(columns);
+              const wrapFilter = (filterQuery: any, filtersList: { col: string, val: any }[] = []) => {
+                const fWrapped: any = {
+                  eq: (col: string, val: any) => {
+                    const newFilters = [...filtersList, { col, val }];
+                    try {
+                      return wrapFilter(filterQuery.eq(col, val), newFilters);
+                    } catch (err) {
+                      console.warn(`[Supabase wrap] eq failed, falling back:`, err);
+                      let mb = mockBuilder;
+                      for (const f of newFilters) {
+                        mb = mb.eq(f.col, f.val);
+                      }
+                      return mb;
+                    }
+                  },
+                  order: (col: string, options?: any) => {
+                    try {
+                      return wrapFilter(filterQuery.order(col, options), filtersList);
+                    } catch (err) {
+                      let mb = mockBuilder;
+                      for (const f of filtersList) {
+                        mb = mb.eq(f.col, f.val);
+                      }
+                      return mb.order(col, options);
+                    }
+                  },
+                  maybeSingle: async () => {
+                    try {
+                      const res = await filterQuery.maybeSingle();
+                      if (res && res.error) {
+                        console.warn(`[Supabase wrap] maybeSingle returned error, falling back to mock:`, res.error.message);
+                        let mb = mockBuilder;
+                        for (const f of filtersList) {
+                          mb = mb.eq(f.col, f.val);
+                        }
+                        return mb.maybeSingle();
+                      }
+                      return res;
+                    } catch (err) {
+                      console.warn(`[Supabase wrap] maybeSingle threw error, falling back:`, err);
+                      let mb = mockBuilder;
+                      for (const f of filtersList) {
+                        mb = mb.eq(f.col, f.val);
+                      }
+                      return mb.maybeSingle();
+                    }
+                  },
+                  then: (resolve: any, reject: any) => {
+                    filterQuery.then((res: any) => {
+                      if (res && res.error) {
+                        console.warn(`[Supabase wrap] select then returned error, falling back:`, res.error.message);
+                        let mb = mockBuilder;
+                        for (const f of filtersList) {
+                          mb = mb.eq(f.col, f.val);
+                        }
+                        mb.then(resolve);
+                      } else {
+                        resolve(res);
+                      }
+                    }).catch((err: any) => {
+                      console.warn(`[Supabase wrap] select then threw error, falling back:`, err);
+                      let mb = mockBuilder;
+                      for (const f of filtersList) {
+                        mb = mb.eq(f.col, f.val);
+                      }
+                      mb.then(resolve);
+                    });
+                  }
+                };
+                return fWrapped;
+              };
+              return wrapFilter(realSelect);
+            } catch (err) {
+              console.warn(`[Supabase wrap] select failed, falling back:`, err);
+              return mockBuilder.select(columns);
+            }
+          },
+          upsert: (fields: any) => {
+            const runUpsert = async () => {
+              try {
+                // Dual-write to mock LocalStorage
+                await mockBuilder.upsert(fields);
+                const { error } = await realQuery.upsert(fields);
+                if (error) {
+                  console.warn(`[Supabase wrap] real upsert failed, fell back to LocalStorage:`, error.message);
+                  return { data: fields, error: null };
+                }
+                return { data: fields, error: null };
+              } catch (err: any) {
+                console.warn(`[Supabase wrap] real upsert exception, fell back to LocalStorage:`, err);
+                return { data: fields, error: null };
+              }
+            };
+            return {
+              then: (resolve: any) => {
+                runUpsert().then(resolve);
+              }
+            };
+          },
+          insert: (fields: any) => {
+            const runInsert = async () => {
+              try {
+                // Dual-write to mock LocalStorage
+                await mockBuilder.insert(fields);
+                const { error } = await realQuery.insert(fields);
+                if (error) {
+                  console.warn(`[Supabase wrap] real insert failed, fell back to LocalStorage:`, error.message);
+                  return { data: fields, error: null };
+                }
+                return { data: fields, error: null };
+              } catch (err: any) {
+                console.warn(`[Supabase wrap] real insert exception, fell back to LocalStorage:`, err);
+                return { data: fields, error: null };
+              }
+            };
+            return {
+              then: (resolve: any) => {
+                runInsert().then(resolve);
+              }
+            };
+          },
+          update: (fields: any) => {
+            return {
+              eq: (col: string, val: any) => {
+                const runUpdate = async () => {
+                  try {
+                    await mockBuilder.update(fields).eq(col, val);
+                    const { error } = await realQuery.update(fields).eq(col, val);
+                    if (error) {
+                      console.warn(`[Supabase wrap] real update failed, fell back to LocalStorage:`, error.message);
+                      return { error: null };
+                    }
+                    return { error: null };
+                  } catch (err: any) {
+                    console.warn(`[Supabase wrap] real update exception, fell back to LocalStorage:`, err);
+                    return { error: null };
+                  }
+                };
+                return {
+                  then: (resolve: any) => {
+                    runUpdate().then(resolve);
+                  }
+                };
+              }
+            };
+          }
+        };
+        return wrapped;
+      };
+      
+      return wrapReal(realClient.from(tableName));
     }
     
     // If in sandbox/mock session, return the mock builder
-    const mockBuilder = createQueryBuilder(tableName);
-    
     // BUT if realClient is ALSO configured (meaning it's active in the background),
     // replicate ALL write operations (inserts, updates, upserts) to the real database as well!
     if (realClient) {

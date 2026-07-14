@@ -537,6 +537,75 @@ async function startServer() {
     });
   });
 
+  // PAYMENT WEBHOOK ENDPOINT
+  app.post("/api/webhooks/payment", (req, res) => {
+    console.log("[Server Webhook] Received payment webhook body:", JSON.stringify(req.body));
+    
+    let email = "";
+    
+    // Check various common places for email in Yoco or generic webhooks
+    if (req.body) {
+      const b = req.body;
+      if (b.email) {
+        email = b.email;
+      } else if (b.payload) {
+        const p = b.payload;
+        if (p.email) {
+          email = p.email;
+        } else if (p.metadata && p.metadata.email) {
+          email = p.metadata.email;
+        } else if (p.customer && p.customer.email) {
+          email = p.customer.email;
+        }
+      } else if (b.data) {
+        const d = b.data;
+        if (d.email) {
+          email = d.email;
+        } else if (d.object) {
+          const o = d.object;
+          if (o.email) {
+            email = o.email;
+          } else if (o.customer_details && o.customer_details.email) {
+            email = o.customer_details.email;
+          } else if (o.metadata && o.metadata.email) {
+            email = o.metadata.email;
+          }
+        } else if (d.metadata && d.metadata.email) {
+          email = d.metadata.email;
+        } else if (d.customer && d.customer.email) {
+          email = d.customer.email;
+        }
+      } else if (b.metadata && b.metadata.email) {
+        email = b.metadata.email;
+      } else if (b.customer && b.customer.email) {
+        email = b.customer.email;
+      }
+    }
+
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
+
+    if (!cleanEmail) {
+      return res.status(400).json({ success: false, error: "No email address identified in webhook payload." });
+    }
+
+    const users = loadUsers();
+    const user = users.find(u => u.email === cleanEmail);
+    if (!user) {
+      console.warn(`[Server Webhook] Payment received for unregistered user: ${cleanEmail}`);
+      return res.status(404).json({ success: false, error: "User not found in system." });
+    }
+
+    user.hasPaid80 = true;
+    saveUsers(users);
+
+    console.log(`[Server Webhook] Subscription successfully verified via webhook for: ${cleanEmail}`);
+    return res.json({
+      success: true,
+      message: "Webhook processed. Account subscription unlocked successfully.",
+      email: cleanEmail
+    });
+  });
+
   // LOG LEADS USED & GET REMAINING LIMIT
   app.post("/api/auth/log-leads-used", (req, res) => {
     const { email, count } = req.body;
@@ -554,7 +623,7 @@ async function startServer() {
     }
 
     const resetHappened = checkAndResetLeads(user);
-    const maxLimit = user.hasPaid20 ? 100 : 33;
+    const maxLimit = (user.hasPaid80 || user.hasPaid20) ? 100 : 33;
     
     user.leadsUsedToday += addCount;
     if (user.leadsUsedToday > maxLimit) {
