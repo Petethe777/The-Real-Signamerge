@@ -483,11 +483,18 @@ export default function ConnectClaude() {
                 <tbody className="divide-y divide-gray-50">
                   <tr>
                     <td className="px-6 sm:px-8 py-5 sm:py-6 font-mono text-xs font-black text-primary">search_leads</td>
-                    <td className="px-6 sm:px-8 py-5 sm:py-6 text-xs text-gray-600 font-semibold leading-relaxed">
-                      Scrapes, filters, and searches social media platforms (Reddit, TikTok, X, LinkedIn) grounded with the <strong className="text-primary font-bold">Signalmerge Engine</strong> for active 2026 leads.
+                    <td className="px-6 sm:px-8 py-5 sm:py-6 text-xs text-gray-600 font-semibold leading-relaxed space-y-2">
+                      <p>Scrapes, filters, and searches social media platforms (Reddit, TikTok, X, LinkedIn) grounded with the <strong className="text-primary font-bold">Signalmerge Engine</strong> for active 2026 leads.</p>
+                      <p className="text-[11px] text-orange-650 bg-orange-50/50 p-2.5 rounded-lg border border-orange-100/40">
+                        🔒 <strong className="font-bold text-orange-700">Source Links Restriction:</strong> By default, lead source URLs are restricted. To unlock active direct source links on Claude, you must supply your registered premium Signalmerge subscription credentials in the optional parameters.
+                      </p>
                     </td>
-                    <td className="px-6 sm:px-8 py-5 sm:py-6 text-xs font-mono text-gray-500">
-                      {"{ query: \"string\" }"}
+                    <td className="px-6 sm:px-8 py-5 sm:py-6 text-xs font-mono text-gray-500 space-y-1">
+                      <div>{"{"}</div>
+                      <div className="pl-4">query: "string" <span className="text-[10px] text-gray-400 font-sans font-bold">(required)</span>,</div>
+                      <div className="pl-4">email?: "string" <span className="text-[10px] text-gray-400 font-sans font-bold">(optional)</span>,</div>
+                      <div className="pl-4">password?: "string" <span className="text-[10px] text-gray-400 font-sans font-bold">(optional)</span></div>
+                      <div>{"}"}</div>
                     </td>
                   </tr>
                   <tr>

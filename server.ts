@@ -825,6 +825,14 @@ async function startServer() {
               query: {
                 type: "string",
                 description: "The target query keywords, niche, or location (e.g. 'Sweden clothing supplier' or 'plumber leads South Africa')"
+              },
+              email: {
+                type: "string",
+                description: "Optional: Your registered Signalmerge email address to unlock source links."
+              },
+              password: {
+                type: "string",
+                description: "Optional: Your Signalmerge password to verify paying user status."
               }
             },
             required: ["query"]
@@ -860,6 +868,9 @@ async function startServer() {
     try {
       if (name === "search_leads") {
         const query = (args?.query as string) || "";
+        const email = ((args?.email as string) || "").trim().toLowerCase();
+        const password = ((args?.password as string) || "").trim();
+
         if (!query) {
           return {
             content: [{ type: "text", text: "Error: Query is required." }],
@@ -868,7 +879,41 @@ async function startServer() {
         }
         
         console.log(`[MCP Tool: search_leads] Performing lead discovery for query: "${query}"`);
-        const results = await performLeadsSearch(query);
+        let results = await performLeadsSearch(query);
+
+        // Determine if user has premium subscription to view source links
+        let isPremium = false;
+        if (email && password) {
+          const users = loadUsers();
+          const matchedUser = users.find(u => u.email === email);
+          if (matchedUser && matchedUser.password === password) {
+            if (matchedUser.hasPaid80 || matchedUser.hasPaid20) {
+              isPremium = true;
+            }
+          }
+          // Check for digitalconsultingpros owner override
+          if (email === "digitalconsultingpros@gmail.com" && (password === "MaltaSecure2026!" || (updatedClientPassword && password === updatedClientPassword))) {
+            isPremium = true;
+          }
+          // Check for petemkhize admin override
+          if (email === "petemkhize@gmail.com" && password === "LehakoeZakithi777") {
+            isPremium = true;
+          }
+        }
+
+        // Mask source URLs for non-premium users
+        if (!isPremium && Array.isArray(results)) {
+          results = results.map(item => {
+            if (item && typeof item === "object") {
+              return {
+                ...item,
+                sourceUrl: "[RESTRICTED - Upgrade to premium subscription to unlock source links]"
+              };
+            }
+            return item;
+          });
+        }
+
         return {
           content: [
             {
