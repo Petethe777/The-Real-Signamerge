@@ -2886,10 +2886,10 @@ export default function Dashboard() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
-            <Link to="/connect-claude">
+            <Link to="/connect-claude" className="w-full sm:w-auto">
               <Button 
                 variant="outline"
-                className="rounded-xl border-orange-200 text-primary hover:bg-orange-50 font-bold px-4 h-9 text-xs uppercase"
+                className="w-full sm:w-auto rounded-xl border-orange-200 text-primary hover:bg-orange-50 font-bold px-4 h-9 text-[11px] sm:text-xs uppercase"
               >
                 Connect with Claude
               </Button>

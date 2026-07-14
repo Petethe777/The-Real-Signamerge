@@ -77,17 +77,17 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-white text-[#1A1A1A] font-sans selection:bg-orange-100 selection:text-orange-600">
       {/* Navbar */}
-      <nav className="relative z-10 flex items-center justify-between px-12 py-8 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
+      <nav className="relative z-10 flex items-center justify-between px-4 sm:px-12 py-5 sm:py-8 max-w-7xl mx-auto gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
             <Zap className="text-white w-5 h-5 fill-white" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-[#111]">Signalmerge</span>
+          <span className="text-lg sm:text-xl font-bold tracking-tight text-[#111]">Signalmerge</span>
         </div>
 
         <div>
           <Link to="/connect-claude">
-            <Button className="rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-primary font-black text-xs uppercase px-5 py-5 transition-all shadow-sm">
+            <Button className="rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-primary font-black text-[10px] sm:text-xs uppercase px-3.5 py-3 sm:px-5 sm:py-5 transition-all shadow-sm">
               Connect with Claude
             </Button>
           </Link>
