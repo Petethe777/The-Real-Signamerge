@@ -1028,11 +1028,11 @@ async function startServer() {
     console.log("[MCP Server] New client requesting SSE connection...");
     
     // Construct dynamic absolute URL for the messages endpoint to prevent relative path resolution failures in web-based clients (like Claude.ai web connector)
-    const protocol = (req.headers["x-forwarded-proto"] as string) || (req.secure ? "https" : "http");
-    let host = (req.headers["x-forwarded-host"] as string) || req.get("host") || "ais-dev-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
+    let protocol = (req.headers["x-forwarded-proto"] as string) || (req.secure ? "https" : "http");
+    let host = (req.headers["x-forwarded-host"] as string) || req.get("host") || "";
     
-    // If we're inside the cloud environment but got a localhost host header because of proxy routing, fallback to our known cloud domain
-    if (host.includes("localhost") || host.includes("127.0.0.1") || host.includes("0.0.0.0")) {
+    // Fallback detection logic if proxy hides the host header with localhost
+    if (!host || host.includes("localhost") || host.includes("127.0.0.1") || host.includes("0.0.0.0")) {
       const referer = req.headers.referer;
       if (referer) {
         try {
@@ -1043,10 +1043,21 @@ async function startServer() {
         } catch (e) {}
       }
       
-      // If we are still on localhost, use the actual Cloud Run development URL
-      if (host.includes("localhost") || host.includes("127.0.0.1") || host.includes("0.0.0.0")) {
-        host = "ais-dev-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
+      // If we are still unable to find a valid external host, identify the current URL context
+      if (!host || host.includes("localhost") || host.includes("127.0.0.1") || host.includes("0.0.0.0")) {
+        // We are on a Cloud Run dev environment by default, unless referer or host is pre-release
+        const isPreRelease = req.originalUrl?.includes("pre-") || referer?.includes("ais-pre-");
+        if (isPreRelease) {
+          host = "ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
+        } else {
+          host = "ais-dev-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
+        }
       }
+    }
+
+    // Since Cloud Run hosts (ending in .run.app) are served strictly over HTTPS, force HTTPS for those hosts
+    if (host.includes("run.app")) {
+      protocol = "https";
     }
     
     const messagesUrl = `${protocol}://${host}/messages`;

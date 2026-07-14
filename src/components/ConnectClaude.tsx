@@ -152,22 +152,22 @@ export default function ConnectClaude() {
               <span className="text-[10px] font-black uppercase tracking-widest text-primary">Your Connection Endpoints</span>
               <h2 className="text-lg sm:text-xl font-black text-[#111] tracking-tight">Personalized Connection URLs</h2>
               <p className="text-xs text-gray-500 font-semibold leading-relaxed">
-                Configure your MCP client with either the production domain or your dynamic dev URL. Both establish a real-time Server-Sent Events (SSE) stream allowing Claude to call Signalmerge's lead retrieval tools.
+                Configure your MCP client with our URLs. Both establish a real-time Server-Sent Events (SSE) stream allowing Claude to call Signalmerge's lead retrieval tools.
               </p>
             </div>
             
             <div className="flex flex-col gap-3 w-full lg:w-auto shrink-0">
-              {/* Production URL */}
-              <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center bg-white border border-orange-100/80 p-2 rounded-xl sm:rounded-2xl gap-2 shadow-sm">
-                <div className="px-3 py-2 bg-gray-50 text-[11px] sm:text-xs text-gray-700 rounded-lg sm:rounded-xl font-mono truncate max-w-full sm:max-w-[280px] flex flex-col text-left">
-                  <span className="text-[8px] font-black text-primary uppercase">Production Endpoint</span>
-                  <span className="font-bold">https://signalmerge.co.za/sse</span>
+              {/* Public Shared URL */}
+              <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center bg-orange-50/20 border border-orange-200 p-2 rounded-xl sm:rounded-2xl gap-2 shadow-sm">
+                <div className="px-3 py-2 bg-white text-[11px] sm:text-xs text-gray-700 rounded-lg sm:rounded-xl font-mono truncate max-w-full sm:max-w-[280px] flex flex-col text-left">
+                  <span className="text-[8px] font-black text-orange-600 uppercase">Public Shared URL (Highly Recommended)</span>
+                  <span className="font-bold">https://ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app/sse</span>
                 </div>
                 <Button 
-                  onClick={() => handleCopy("https://signalmerge.co.za/sse", "prod_url")}
+                  onClick={() => handleCopy("https://ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app/sse", "pre_url")}
                   className="bg-primary hover:bg-orange-600 text-white font-bold rounded-lg sm:rounded-xl px-4 py-3 sm:py-5 text-xs uppercase shrink-0 gap-1.5 w-full sm:w-auto justify-center"
                 >
-                  {copiedText === "prod_url" ? (
+                  {copiedText === "pre_url" ? (
                     <><Check className="w-3.5 h-3.5" /> Copied!</>
                   ) : (
                     <><Copy className="w-3.5 h-3.5" /> Copy URL</>
@@ -176,16 +176,34 @@ export default function ConnectClaude() {
               </div>
 
               {/* Development URL */}
-              <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center bg-white border border-orange-100/80 p-2 rounded-xl sm:rounded-2xl gap-2 shadow-sm">
+              <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center bg-white border border-gray-100 p-2 rounded-xl sm:rounded-2xl gap-2 shadow-sm">
                 <div className="px-3 py-2 bg-gray-50 text-[11px] sm:text-xs text-gray-700 rounded-lg sm:rounded-xl font-mono truncate max-w-full sm:max-w-[280px] flex flex-col text-left">
                   <span className="text-[8px] font-black text-gray-400 uppercase">Active Sandbox Dev URL</span>
                   <span className="font-bold">{serverUrl || "https://signalmerge.co.za/sse"}</span>
                 </div>
                 <Button 
                   onClick={() => handleCopy(serverUrl, "url")}
-                  className="bg-primary hover:bg-orange-600 text-white font-bold rounded-lg sm:rounded-xl px-4 py-3 sm:py-5 text-xs uppercase shrink-0 gap-1.5 w-full sm:w-auto justify-center"
+                  className="bg-gray-150 hover:bg-gray-200 text-gray-750 font-bold rounded-lg sm:rounded-xl px-4 py-3 sm:py-5 text-xs uppercase shrink-0 gap-1.5 w-full sm:w-auto justify-center"
                 >
                   {copiedText === "url" ? (
+                    <><Check className="w-3.5 h-3.5" /> Copied!</>
+                  ) : (
+                    <><Copy className="w-3.5 h-3.5" /> Copy URL</>
+                  )}
+                </Button>
+              </div>
+
+              {/* Production URL */}
+              <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center bg-white border border-gray-100 p-2 rounded-xl sm:rounded-2xl gap-2 shadow-sm">
+                <div className="px-3 py-2 bg-gray-50 text-[11px] sm:text-xs text-gray-700 rounded-lg sm:rounded-xl font-mono truncate max-w-full sm:max-w-[280px] flex flex-col text-left">
+                  <span className="text-[8px] font-black text-gray-400 uppercase">Production Domain Endpoint</span>
+                  <span className="font-bold">https://signalmerge.co.za/sse</span>
+                </div>
+                <Button 
+                  onClick={() => handleCopy("https://signalmerge.co.za/sse", "prod_url")}
+                  className="bg-gray-150 hover:bg-gray-200 text-gray-750 font-bold rounded-lg sm:rounded-xl px-4 py-3 sm:py-5 text-xs uppercase shrink-0 gap-1.5 w-full sm:w-auto justify-center"
+                >
+                  {copiedText === "prod_url" ? (
                     <><Check className="w-3.5 h-3.5" /> Copied!</>
                   ) : (
                     <><Copy className="w-3.5 h-3.5" /> Copy URL</>
@@ -202,12 +220,17 @@ export default function ConnectClaude() {
             <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
             <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider font-sans">Getting a "Couldn't connect to server" error?</h3>
           </div>
-          <div className="text-xs text-amber-900 font-semibold leading-relaxed space-y-2 font-sans pl-1">
+          <div className="text-xs text-amber-900 font-semibold leading-relaxed space-y-3 font-sans pl-1">
             <p>
-              If Claude says <strong className="text-amber-950 font-black">"Couldn’t connect to the server. Check that the URL points to a valid MCP server"</strong> when using <code className="bg-amber-100 px-1 py-0.5 rounded text-amber-950 font-bold font-mono">https://signalmerge.co.za/sse</code>, this is normal! It happens because the domain <code className="font-mono">https://signalmerge.co.za</code> is an external website and is not currently pointed to this running application container.
+              When using Claude.ai's website connector, Claude's servers must connect to our backend over the public internet. 
+              The <strong className="text-amber-950 font-black">Active Sandbox Dev URL</strong> is tied to your active browser's development workspace in Google AI Studio, which means Claude's external servers may face friction or authentication checks when trying to access it from the outside.
             </p>
             <p className="text-amber-950">
-              👉 <strong className="font-black">The Solution:</strong> To connect Claude instantly right now in this testing/sandbox mode, please copy and use the <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-black">Active Sandbox Dev URL</span> shown above. It connects directly to this live container which has fully configured CORS and preflight mechanisms ready!
+              👉 <strong className="font-black">The Solution:</strong> Please copy and use the <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-black">Public Shared URL</span> shown above: 
+              <br />
+              <code className="bg-orange-100/50 px-1.5 py-0.5 rounded text-orange-950 font-bold font-mono">https://ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app/sse</code>
+              <br />
+              This URL targets the compiled, public container of the application. It is completely independent of the Google AI Studio active editor session, has CORS rules pre-configured, and is fully accessible to Claude.ai's servers without any developer session friction!
             </p>
           </div>
         </div>
