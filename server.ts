@@ -942,28 +942,50 @@ async function startServer() {
   // MCP SSE Transport connection pool
   const mcpTransports: Record<string, SSEServerTransport> = {};
 
+  // Helper to apply extremely robust CORS headers dynamically
+  const applyRobustCors = (req: any, res: any) => {
+    const origin = req.headers.origin || "*";
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    
+    const requestedHeaders = req.headers["access-control-request-headers"];
+    if (requestedHeaders) {
+      res.setHeader("Access-Control-Allow-Headers", requestedHeaders);
+    } else {
+      res.setHeader(
+        "Access-Control-Allow-Headers", 
+        "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version, x-mcp-sdk-name"
+      );
+    }
+    
+    if (origin !== "*") {
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    }
+  };
+
   // CORS Preflight handles
   app.options("/sse", (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version");
+    applyRobustCors(req, res);
     res.sendStatus(200);
   });
 
   app.options("/messages", (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version");
+    applyRobustCors(req, res);
     res.sendStatus(200);
   });
 
   app.get("/sse", async (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version");
+    applyRobustCors(req, res);
     
     console.log("[MCP Server] New client requesting SSE connection...");
-    const transport = new SSEServerTransport("/messages", res);
+    
+    // Construct dynamic absolute URL for the messages endpoint to prevent relative path resolution failures in web-based clients (like Claude.ai web connector)
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    const host = req.get("host") || "ais-dev-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
+    const messagesUrl = `${protocol}://${host}/messages`;
+    console.log(`[MCP Server] Registering SSE transport with absolute messages endpoint: ${messagesUrl}`);
+
+    const transport = new SSEServerTransport(messagesUrl, res);
     mcpTransports[transport.sessionId] = transport;
 
     res.on("close", () => {
@@ -976,9 +998,7 @@ async function startServer() {
   });
 
   app.post("/messages", async (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version");
+    applyRobustCors(req, res);
     
     const sessionId = req.query.sessionId as string;
     const transport = mcpTransports[sessionId];
