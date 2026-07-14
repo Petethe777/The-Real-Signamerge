@@ -10,6 +10,7 @@ import AboutPage from "@/app/about/page";
 import Dashboard from "@/components/Dashboard";
 import { TermsModal } from "@/components/TermsModal";
 import DigitalConsultingAudit from "@/components/DigitalConsultingAudit";
+import ConnectClaude from "@/components/ConnectClaude";
 
 const testimonials = [
   { name: "Chris B.", role: "Freelancer", text: "Went from struggling to find clients to having a waitlist. Unreal results.", initials: "CB" },
@@ -82,6 +83,14 @@ function HomePage() {
             <Zap className="text-white w-5 h-5 fill-white" />
           </div>
           <span className="text-xl font-bold tracking-tight text-[#111]">Signalmerge</span>
+        </div>
+
+        <div>
+          <Link to="/connect-claude">
+            <Button className="rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-primary font-black text-xs uppercase px-5 py-5 transition-all shadow-sm">
+              Connect with Claude
+            </Button>
+          </Link>
         </div>
       </nav>
 
@@ -223,6 +232,7 @@ export default function App() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/digital-consulting-pros" element={<DigitalConsultingAudit />} />
+        <Route path="/connect-claude" element={<ConnectClaude />} />
       </Routes>
     </Router>
   );

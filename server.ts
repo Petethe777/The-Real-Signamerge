@@ -8,6 +8,14 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { createClient } from "@supabase/supabase-js";
 import { searchDataset } from "./src/data/customerSearchDataset.js";
 
+// MCP Server SDK imports
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+
 dotenv.config();
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://sscuyhvkyfemrsmfxhkt.supabase.co";
@@ -212,6 +220,107 @@ function correctQuerySearch(query: string): { corrected: string; original: strin
     original: cleanQ,
     isDifferent: corrected.toLowerCase() !== cleanQ.toLowerCase()
   };
+}
+
+// Global Reusable Leads Discovery Search Engine
+async function performLeadsSearch(query: string): Promise<any> {
+  const correction = correctQuerySearch(query);
+  const searchTerm = correction.corrected;
+
+  const apiKey = process.env.GEMINI_API_KEY?.trim() || "";
+  const isPlaceholder = !apiKey || 
+    ["todo", "placeholder", "undefined", "null", "none", "your_api_key", "your_gemini_api_key"].includes(apiKey.toLowerCase()) ||
+    apiKey.startsWith("YOUR_");
+  
+  const isFormatValid = apiKey.startsWith("AIzaSy");
+
+  if (isPlaceholder || !isFormatValid) {
+    console.log("[Server Search Engine] GEMINI_API_KEY is not configured or format is invalid. Returning rate-limited query response.");
+    return { _rateLimited: true, reason: "invalid_key_format" };
+  }
+
+  const ai = new GoogleGenAI({ 
+    apiKey,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      }
+    }
+  });
+  
+  const prompt = `Act as a real-time social media discovery agent in the 2026 global trade and supply chain ecosystem. Search Google for authentic, high-intent leads and social signals strictly from the year 2026 related to: "${searchTerm}".
+  
+  CRITICAL COUNTRY FILTERING & GEOGRAPHY:
+  - If the search query explicitly names or implies a country/region (such as China/Chinese, Sweden, Switzerland, Italy, Philippines, Thailand, Vietnam, Hong Kong, Singapore, UK, USA, or South Africa / South African / SA), you MUST strictly and exclusively return leads, factory postings, logistics requests, or digital work orders originating from or targeting THAT specific country. Never mix irrelevant countries if one is explicitly requested.
+  - If no country is specified, return a highly diverse, non-predictable global mix of leads spanning Sweden, Switzerland, Italy, China, Philippines, Thailand, Vietnam, Hong Kong, Singapore, US, UK, and South Africa.
+  - Never use the same location for multiple entries. Cover a clean distribution of cities (e.g., if Sweden: Stockholm, Gothenburg, Malmö, Uppsala; if Switzerland: Zürich, Geneva, Basel, Lugano; if Italy: Milan, Prato, Bologna, Florence; if South Africa: Johannesburg, Cape Town, Durban, Pretoria, Sandton).
+  - IMPORTANT: Do not mention any location (cities, states, countries, or regions) in the "content" field of the results. The "content" field (representing the post text) must not include any geographical names or locations (e.g. say "our retail storefront" or "our local operations" instead of "our retail storefront in London" or "our local operations in Milan"). Keep location names exclusively in the "location" field.
+
+  CONTENT INTEGRITY, GRAMMAR, & AUTHENTICITY:
+  - Find ACTUAL, organic posts (TikTok, Instagram, Reddit, X/Twitter, LinkedIn, YouTube) where users are actively requesting supply chain help, manufacturers, bulk production, freelancers, SEO growth, or B2B sales development.
+  - Look for phrases like "Can anyone recommend...", "I need help with...", "Searching for...", "Is there a service that...".
+  - Avoid generic boilerplate or repetitive text. Words must feel organic, noisy, and like a real live feed.
+  - DYNAMIC REFRAMING & PLURAL AGREEMENT: Do NOT use incorrect grammar such as singular articles before plural keywords (do NOT say "a custom buyers" or "a talented buyers" or "using a certified buyers"). Make sure plural nouns are used naturally and logically.
+  - SELLER MODE / BUYER INTENT: If the search query indicates selling or finding buyers (e.g., "buyers for my shoes", "sell my clothes", "find customers"), understand that the user is the seller, and they want to find BUYERS. Therefore, the leads must represent potential customers, boutique owners, or retail managers who are actively looking to PURCHASE or stock those products (e.g., "Scouting independent clothing suppliers to stock our shop in Milan", "Looking to buy premium bulk shoes for our online storefront", "WTB high-quality clothes ready to ship to London").
+  - DYNAMIC REFRAMING: Do NOT repeat the search term or query string verbatim in every social post. Naturally rewrite, paraphrase, and split the query into realistic user intent fragments (e.g., if searching "China factory", discuss "sourcing custom packaging in Shenzhen", "negotiating direct with Yiwu manufacturer", "vetted logistics broker in Guangzhou", etc.).
+  
+  Return a JSON array of 16-20 highly accurate, non-repeating results. Each result must represent a unique social signal with fully random, authentic usernames, timestamps, likes, views, and hashtags.`;
+
+  const aiResponse = await ai.models.generateContent({
+    model: "gemini-3.5-flash",
+    contents: prompt,
+    config: {
+      tools: [{ googleSearch: {} }],
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            id: { type: Type.STRING },
+            platform: { 
+              type: Type.STRING,
+              description: "One of: Instagram, TikTok, Twitter, LinkedIn, Reddit, YouTube"
+            },
+            content: { type: Type.STRING },
+            views: { type: Type.STRING },
+            likes: { type: Type.STRING },
+            hashtags: { 
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            },
+            location: { type: Type.STRING },
+            contactStatus: { 
+              type: Type.STRING,
+              description: "One of: Verified Lead, Hot Prospect"
+            },
+            time: { type: Type.STRING },
+            sourceUrl: { type: Type.STRING }
+          },
+          required: ["platform", "content", "sourceUrl"]
+        }
+      }
+    },
+  });
+
+  const text = aiResponse.text || "[]";
+  let results = JSON.parse(text);
+  if (!Array.isArray(results)) {
+    results = [];
+  }
+
+  return results.map((r: any) => ({
+    id: r.id || `google-${Math.random().toString(36).substring(2, 11)}`,
+    platform: r.platform || 'Reddit',
+    content: r.content || 'No content found',
+    views: r.views || 'Verified',
+    likes: r.likes || 'Signal',
+    hashtags: r.hashtags || [],
+    location: r.location || 'Global',
+    contactStatus: r.contactStatus || 'Verified Lead',
+    time: r.time || '2026',
+    sourceUrl: r.sourceUrl || '#'
+  }));
 }
 
 // In-memory variable to support custom-updated partner passwords dynamically
@@ -681,105 +790,179 @@ async function startServer() {
     }
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY?.trim() || "";
-      const isPlaceholder = !apiKey || 
-        ["todo", "placeholder", "undefined", "null", "none", "your_api_key", "your_gemini_api_key"].includes(apiKey.toLowerCase()) ||
-        apiKey.startsWith("YOUR_");
-      
-      const isFormatValid = apiKey.startsWith("AIzaSy");
-
-      if (isPlaceholder || !isFormatValid) {
-        console.log("[Server] GEMINI_API_KEY is not configured or format is invalid. Falling back gracefully to simulated 2026 leads engine.");
-        return res.json({ _rateLimited: true, reason: "invalid_key_format" });
-      }
-
-      const ai = new GoogleGenAI({ 
-        apiKey,
-        httpOptions: {
-          headers: {
-            'User-Agent': 'aistudio-build',
-          }
-        }
-      });
-      
-      const prompt = `Act as a real-time social media discovery agent in the 2026 global trade and supply chain ecosystem. Search Google for authentic, high-intent leads and social signals strictly from the year 2026 related to: "${searchTerm}".
-      
-      CRITICAL COUNTRY FILTERING & GEOGRAPHY:
-      - If the search query explicitly names or implies a country/region (such as China/Chinese, Sweden, Switzerland, Italy, Philippines, Thailand, Vietnam, Hong Kong, Singapore, UK, USA, or South Africa / South African / SA), you MUST strictly and exclusively return leads, factory postings, logistics requests, or digital work orders originating from or targeting THAT specific country. Never mix irrelevant countries if one is explicitly requested.
-      - If no country is specified, return a highly diverse, non-predictable global mix of leads spanning Sweden, Switzerland, Italy, China, Philippines, Thailand, Vietnam, Hong Kong, Singapore, US, UK, and South Africa.
-      - Never use the same location for multiple entries. Cover a clean distribution of cities (e.g., if Sweden: Stockholm, Gothenburg, Malmö, Uppsala; if Switzerland: Zürich, Geneva, Basel, Lugano; if Italy: Milan, Prato, Bologna, Florence; if South Africa: Johannesburg, Cape Town, Durban, Pretoria, Sandton).
-      - IMPORTANT: Do not mention any location (cities, states, countries, or regions) in the "content" field of the results. The "content" field (representing the post text) must not include any geographical names or locations (e.g. say "our retail storefront" or "our local operations" instead of "our retail storefront in London" or "our local operations in Milan"). Keep location names exclusively in the "location" field.
- 
-      CONTENT INTEGRITY, GRAMMAR, & AUTHENTICITY:
-      - Find ACTUAL, organic posts (TikTok, Instagram, Reddit, X/Twitter, LinkedIn, YouTube) where users are actively requesting supply chain help, manufacturers, bulk production, freelancers, SEO growth, or B2B sales development.
-      - Look for phrases like "Can anyone recommend...", "I need help with...", "Searching for...", "Is there a service that...".
-      - Avoid generic boilerplate or repetitive text. Words must feel organic, noisy, and like a real live feed.
-      - DYNAMIC REFRAMING & PLURAL AGREEMENT: Do NOT use incorrect grammar such as singular articles before plural keywords (do NOT say "a custom buyers" or "a talented buyers" or "using a certified buyers"). Make sure plural nouns are used naturally and logically.
-      - SELLER MODE / BUYER INTENT: If the search query indicates selling or finding buyers (e.g., "buyers for my shoes", "sell my clothes", "find customers"), understand that the user is the seller, and they want to find BUYERS. Therefore, the leads must represent potential customers, boutique owners, or retail managers who are actively looking to PURCHASE or stock those products (e.g., "Scouting independent clothing suppliers to stock our shop in Milan", "Looking to buy premium bulk shoes for our online storefront", "WTB high-quality clothes ready to ship to London").
-      - DYNAMIC REFRAMING: Do NOT repeat the search term or query string verbatim in every social post. Naturally rewrite, paraphrase, and split the query into realistic user intent fragments (e.g., if searching "China factory", discuss "sourcing custom packaging in Shenzhen", "negotiating direct with Yiwu manufacturer", "vetted logistics broker in Guangzhou", etc.).
-      
-      Return a JSON array of 16-20 highly accurate, non-repeating results. Each result must represent a unique social signal with fully random, authentic usernames, timestamps, likes, views, and hashtags.`;
-
-      const aiResponse = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: prompt,
-        config: {
-          tools: [{ googleSearch: {} }],
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                id: { type: Type.STRING },
-                platform: { 
-                  type: Type.STRING,
-                  description: "One of: Instagram, TikTok, Twitter, LinkedIn, Reddit, YouTube"
-                },
-                content: { type: Type.STRING },
-                views: { type: Type.STRING },
-                likes: { type: Type.STRING },
-                hashtags: { 
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING }
-                },
-                location: { type: Type.STRING },
-                contactStatus: { 
-                  type: Type.STRING,
-                  description: "One of: Verified Lead, Hot Prospect"
-                },
-                time: { type: Type.STRING },
-                sourceUrl: { type: Type.STRING }
-              },
-              required: ["platform", "content", "sourceUrl"]
-            }
-          }
-        },
-      });
-
-      const text = aiResponse.text || "[]";
-      let results = JSON.parse(text);
-      if (!Array.isArray(results)) {
-        results = [];
-      }
-
-      const formatted = results.map((r: any) => ({
-        id: r.id || `google-${Math.random().toString(36).substring(2, 11)}`,
-        platform: r.platform || 'Reddit',
-        content: r.content || 'No content found',
-        views: r.views || 'Verified',
-        likes: r.likes || 'Signal',
-        hashtags: r.hashtags || [],
-        location: r.location || 'Global',
-        contactStatus: r.contactStatus || 'Verified Lead',
-        time: r.time || '2026',
-        sourceUrl: r.sourceUrl || '#'
-      }));
-
+      const formatted = await performLeadsSearch(query);
       return res.json(formatted);
     } catch (error: any) {
-      console.warn("[Server] Gemini API search error (likely invalid/missing API key or quota limit). Falling back to simulated leads database. Error:", error.message || error);
+      console.warn("[Server] Leads search error:", error.message || error);
       return res.json({ _rateLimited: true, errorType: "api_key_or_quota" });
+    }
+  });
+
+  //=============================================================================
+  // MCP (MODEL CONTEXT PROTOCOL) SERVER - OPTION A INTEGRATED BUILD
+  //=============================================================================
+  const mcpServer = new Server(
+    {
+      name: "signalmerge-discovery-server",
+      version: "2.0.0",
+    },
+    {
+      capabilities: {
+        tools: {},
+      },
+    }
+  );
+
+  mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
+    return {
+      tools: [
+        {
+          name: "search_leads",
+          description: "Scrape, verify, and crawl active high-intent social signals and trade leads from the live 2026 global trade database using Google-Search-grounded Gemini.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              query: {
+                type: "string",
+                description: "The target query keywords, niche, or location (e.g. 'Sweden clothing supplier' or 'plumber leads South Africa')"
+              }
+            },
+            required: ["query"]
+          }
+        },
+        {
+          name: "get_search_logs",
+          description: "Retrieve recently logged high-intent search queries from the core database/fallback storage.",
+          inputSchema: {
+            type: "object",
+            properties: {}
+          }
+        },
+        {
+          name: "verify_audit",
+          description: "Verify credentials for authorized client workspaces in Digital Consulting Pros.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              email: { type: "string" },
+              password: { type: "string" }
+            },
+            required: ["email", "password"]
+          }
+        }
+      ]
+    };
+  });
+
+  mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args } = request.params;
+
+    try {
+      if (name === "search_leads") {
+        const query = (args?.query as string) || "";
+        if (!query) {
+          return {
+            content: [{ type: "text", text: "Error: Query is required." }],
+            isError: true,
+          };
+        }
+        
+        console.log(`[MCP Tool: search_leads] Performing lead discovery for query: "${query}"`);
+        const results = await performLeadsSearch(query);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      }
+
+      if (name === "get_search_logs") {
+        console.log(`[MCP Tool: get_search_logs] Retrieving recently logged queries.`);
+        let list: any[] = [...fallbackQueriesMemory];
+        try {
+          if (fs.existsSync(fallbackLogPath)) {
+            list = JSON.parse(fs.readFileSync(fallbackLogPath, "utf-8"));
+          }
+        } catch (err) {}
+        
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(list.slice(-20), null, 2), // Return last 20 logged searches
+            },
+          ],
+        };
+      }
+
+      if (name === "verify_audit") {
+        const email = (args?.email as string || "").trim().toLowerCase();
+        const password = (args?.password as string || "").trim();
+        console.log(`[MCP Tool: verify_audit] Verifying audit credentials for: ${email}`);
+
+        const targetEmail = "digitalconsultingpros@gmail.com";
+        const targetPassword = "MaltaSecure2026!";
+        
+        const isEmailCorrect = email === targetEmail || (process.env.DIGITAL_CONSULTING_EMAIL && email === process.env.DIGITAL_CONSULTING_EMAIL.trim().toLowerCase());
+        const isPasswordCorrect = password === targetPassword || (process.env.DIGITAL_CONSULTING_PASSWORD && password === process.env.DIGITAL_CONSULTING_PASSWORD.trim());
+
+        if (isEmailCorrect && isPasswordCorrect) {
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify({ success: true, user: { email: targetEmail, company: "Digital Consulting Pros", approved: true } }, null, 2)
+            }]
+          };
+        }
+
+        return {
+          content: [{ type: "text", text: "Authentication failed: Invalid credentials." }],
+          isError: true
+        };
+      }
+
+      throw new Error(`Tool not found: ${name}`);
+    } catch (error: any) {
+      console.error(`[MCP Tool Error] Failure in tool execution:`, error);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error executing tool ${name}: ${error.message || error}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  });
+
+  // MCP SSE Transport connection pool
+  const mcpTransports: Record<string, SSEServerTransport> = {};
+
+  app.get("/sse", async (req, res) => {
+    console.log("[MCP Server] New client requesting SSE connection...");
+    const transport = new SSEServerTransport("/messages", res);
+    mcpTransports[transport.sessionId] = transport;
+
+    res.on("close", () => {
+      console.log(`[MCP Server] Connection closed for session ${transport.sessionId}`);
+      delete mcpTransports[transport.sessionId];
+    });
+
+    await mcpServer.connect(transport);
+    console.log(`[MCP Server] Session ${transport.sessionId} successfully connected over SSE.`);
+  });
+
+  app.post("/messages", async (req, res) => {
+    const sessionId = req.query.sessionId as string;
+    const transport = mcpTransports[sessionId];
+    if (transport) {
+      await transport.handlePostMessage(req, res, req.body);
+    } else {
+      res.status(400).send("No transport found for sessionId");
     }
   });
 

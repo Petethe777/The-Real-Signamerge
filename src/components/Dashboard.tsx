@@ -148,7 +148,17 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   // Each workspace is loaded from either the current user pool or active profile.
   const [activeWorkspace, setActiveWorkspace] = useState<any>(profile);
   useEffect(() => {
-    setActiveWorkspace(profile);
+    if (profile) {
+      setActiveWorkspace(prev => {
+        if (prev?.id === profile.id && 
+            JSON.stringify(prev?.customer_keywords) === JSON.stringify(profile.customer_keywords) &&
+            prev?.role === profile.role &&
+            prev?.hasPaid80 === profile.hasPaid80) {
+          return prev;
+        }
+        return profile;
+      });
+    }
   }, [profile]);
   const [activeTab, setActiveTab] = useState<'discovery' | 'analytics' | 'dataset'>('discovery');
 
@@ -172,7 +182,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
     if (isOwner) {
       fetchProfiles();
     }
-  }, [isAdminView, profile]);
+  }, [isAdminView, isOwner]);
 
   const fetchProfiles = async () => {
     setLoadingProfiles(true);
@@ -223,9 +233,10 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   );
   
   // Real-time keyword fetching inside BIDashboard
+  const userKeywordsStr = userKeywords.join(",");
   useEffect(() => {
     async function fetchSearch() {
-      const q = activeQuery || userKeywords[0] || 'leads';
+      const q = activeQuery || userKeywordsStr.split(",")[0] || 'leads';
       setIsLoadingResults(true);
       setSearchFeedback(null);
       setCorrectedQuery(null);
@@ -250,7 +261,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
       }
     }
     fetchSearch();
-  }, [activeQuery, userKeywords]);
+  }, [activeQuery, userKeywordsStr]);
 
   // Predict monthly earnings scaled-down to make it about $20,000 USD max.
   const minEarnings = Math.min(Math.round(totalReachNum * 0.005 * servicePricing), 8500) || 1200;
@@ -2772,6 +2783,19 @@ export default function Dashboard() {
     );
   };
 
+  const isUserOwner = session?.user?.email === 'petemkhize@gmail.com' || userProfile?.email === 'petemkhize@gmail.com' || userProfile?.role === 'admin';
+
+  const mergedProfile = useMemo(() => {
+    if (!session) return null;
+    return {
+      ...(userProfile || {}),
+      id: session.user.id,
+      email: session.user.email,
+      role: isUserOwner ? 'admin' : (userProfile?.role || 'user'),
+      hasPaid80: session?.user?.hasPaid80 || userProfile?.has_paid_80 || isUserOwner
+    };
+  }, [session, userProfile, isUserOwner]);
+
   if (isAuthLoading || isProfileLoading) {
     return (
       <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6 text-center">
@@ -2810,16 +2834,7 @@ export default function Dashboard() {
     );
   }
 
-  const isUserOwner = session?.user?.email === 'petemkhize@gmail.com' || userProfile?.email === 'petemkhize@gmail.com' || userProfile?.role === 'admin';
-
-  if (session) {
-    const mergedProfile = {
-      ...(userProfile || {}),
-      id: session.user.id,
-      email: session.user.email,
-      role: isUserOwner ? 'admin' : (userProfile?.role || 'user'),
-      hasPaid80: session?.user?.hasPaid80 || userProfile?.has_paid_80 || isUserOwner
-    };
+  if (session && mergedProfile) {
     return <BIDashboard profile={mergedProfile} handleLogout={handleLogout} />;
   }
 
@@ -2871,6 +2886,15 @@ export default function Dashboard() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
+            <Link to="/connect-claude">
+              <Button 
+                variant="outline"
+                className="rounded-xl border-orange-200 text-primary hover:bg-orange-50 font-bold px-4 h-9 text-xs uppercase"
+              >
+                Connect with Claude
+              </Button>
+            </Link>
+
             {!session && (
               <Button 
                 onClick={() => setIsAuthModalOpen(true)}
@@ -3171,27 +3195,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-[#111] rounded-[2rem] p-8 text-white relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl -mr-16 -mt-16 group-hover:bg-primary/40 transition-all"></div>
-            <Zap className="w-8 h-8 text-primary mb-6 fill-primary" />
-            <h3 className="text-xl font-black tracking-tight mb-2 text-white">Discovery Mode</h3>
-            <p className="text-gray-400 text-xs font-medium leading-relaxed mb-6">
-              Looking for a specific niche? Our agents can scrape private communities and forums for high-intent signals.
-            </p>
-            {!session && (
-              <Button 
-                onClick={() => setStartedSignup(true)}
-                className="w-full bg-primary hover:bg-orange-600 font-bold rounded-xl border-none uppercase text-[10px] tracking-widest py-6 shadow-xl shadow-orange-500/20"
-              >
-                Get Full Access Audit
-              </Button>
-            )}
-            {session && (
-              <Button className="w-full bg-primary hover:bg-orange-600 font-bold rounded-xl border-none">
-                Upgrade Engine
-              </Button>
-            )}
-          </div>
+
         </aside>
       </div>
     </main>
