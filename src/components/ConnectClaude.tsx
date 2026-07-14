@@ -196,6 +196,22 @@ export default function ConnectClaude() {
           </CardContent>
         </Card>
 
+        {/* Connection Troubleshooting Alert */}
+        <div className="bg-amber-50/70 border border-amber-200/80 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] space-y-3 shadow-sm shadow-amber-500/5">
+          <div className="flex items-center gap-2 text-amber-800">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider font-sans">Getting a "Couldn't connect to server" error?</h3>
+          </div>
+          <div className="text-xs text-amber-900 font-semibold leading-relaxed space-y-2 font-sans pl-1">
+            <p>
+              If Claude says <strong className="text-amber-950 font-black">"Couldn’t connect to the server. Check that the URL points to a valid MCP server"</strong> when using <code className="bg-amber-100 px-1 py-0.5 rounded text-amber-950 font-bold font-mono">https://signalmerge.co.za/sse</code>, this is normal! It happens because the domain <code className="font-mono">https://signalmerge.co.za</code> is an external website and is not currently pointed to this running application container.
+            </p>
+            <p className="text-amber-950">
+              👉 <strong className="font-black">The Solution:</strong> To connect Claude instantly right now in this testing/sandbox mode, please copy and use the <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-black">Active Sandbox Dev URL</span> shown above. It connects directly to this live container which has fully configured CORS and preflight mechanisms ready!
+            </p>
+          </div>
+        </div>
+
         {/* Clear Engine Capability Banner */}
         <section className="bg-orange-50/40 border border-orange-100/60 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] space-y-3">
           <div className="flex items-center gap-2 text-primary">

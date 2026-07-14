@@ -942,7 +942,26 @@ async function startServer() {
   // MCP SSE Transport connection pool
   const mcpTransports: Record<string, SSEServerTransport> = {};
 
+  // CORS Preflight handles
+  app.options("/sse", (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version");
+    res.sendStatus(200);
+  });
+
+  app.options("/messages", (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version");
+    res.sendStatus(200);
+  });
+
   app.get("/sse", async (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version");
+    
     console.log("[MCP Server] New client requesting SSE connection...");
     const transport = new SSEServerTransport("/messages", res);
     mcpTransports[transport.sessionId] = transport;
@@ -957,6 +976,10 @@ async function startServer() {
   });
 
   app.post("/messages", async (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version");
+    
     const sessionId = req.query.sessionId as string;
     const transport = mcpTransports[sessionId];
     if (transport) {
