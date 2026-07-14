@@ -400,6 +400,9 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Trust upstream reverse proxy (Cloud Run load balancer)
+  app.set("trust proxy", true);
+
   app.use(express.json());
 
   // Endpoint to let authorized partner session update user password in server memory
@@ -1025,8 +1028,27 @@ async function startServer() {
     console.log("[MCP Server] New client requesting SSE connection...");
     
     // Construct dynamic absolute URL for the messages endpoint to prevent relative path resolution failures in web-based clients (like Claude.ai web connector)
-    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
-    const host = req.get("host") || "ais-dev-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
+    const protocol = (req.headers["x-forwarded-proto"] as string) || (req.secure ? "https" : "http");
+    let host = (req.headers["x-forwarded-host"] as string) || req.get("host") || "ais-dev-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
+    
+    // If we're inside the cloud environment but got a localhost host header because of proxy routing, fallback to our known cloud domain
+    if (host.includes("localhost") || host.includes("127.0.0.1") || host.includes("0.0.0.0")) {
+      const referer = req.headers.referer;
+      if (referer) {
+        try {
+          const refUrl = new URL(referer);
+          if (!refUrl.hostname.includes("localhost") && !refUrl.hostname.includes("127.0.0.1")) {
+            host = refUrl.host;
+          }
+        } catch (e) {}
+      }
+      
+      // If we are still on localhost, use the actual Cloud Run development URL
+      if (host.includes("localhost") || host.includes("127.0.0.1") || host.includes("0.0.0.0")) {
+        host = "ais-dev-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
+      }
+    }
+    
     const messagesUrl = `${protocol}://${host}/messages`;
     console.log(`[MCP Server] Registering SSE transport with absolute messages endpoint: ${messagesUrl}`);
 
