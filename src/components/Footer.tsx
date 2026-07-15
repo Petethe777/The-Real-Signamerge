@@ -15,6 +15,9 @@ export function Footer({ onTermsClick }: FooterProps) {
         <Link to="/about" className="hover:text-black transition-colors font-medium">
           About
         </Link>
+        <Link to="/consulting" className="hover:text-primary font-bold text-primary transition-colors">
+          Consulting
+        </Link>
         <button 
           onClick={onTermsClick}
           className="hover:text-black transition-colors focus:outline-none font-medium cursor-pointer"

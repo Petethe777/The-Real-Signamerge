@@ -703,6 +703,7 @@ export default function ConnectClaude() {
           <a href="https://signalmerge.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Official Website</a>
           <Link to="/" className="hover:text-primary transition-colors">Home</Link>
           <Link to="/about" className="hover:text-primary transition-colors">About</Link>
+          <Link to="/consulting" className="hover:text-primary transition-colors text-primary font-black">Consulting</Link>
         </div>
       </footer>
     </div>

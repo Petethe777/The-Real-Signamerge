@@ -11,6 +11,7 @@ import Dashboard from "@/components/Dashboard";
 import { TermsModal } from "@/components/TermsModal";
 import DigitalConsultingAudit from "@/components/DigitalConsultingAudit";
 import ConnectClaude from "@/components/ConnectClaude";
+import Consulting from "@/components/Consulting";
 
 const testimonials = [
   { name: "Chris B.", role: "Freelancer", text: "Went from struggling to find clients to having a waitlist. Unreal results.", initials: "CB" },
@@ -208,6 +209,9 @@ function HomePage() {
           <Link to="/about" className="hover:text-primary transition-colors uppercase">
             About
           </Link>
+          <Link to="/consulting" className="hover:text-primary transition-colors uppercase font-bold text-primary">
+            Consulting
+          </Link>
           <button 
             type="button" 
             onClick={() => setIsTermsModalOpen(true)}
@@ -233,6 +237,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/digital-consulting-pros" element={<DigitalConsultingAudit />} />
         <Route path="/connect-claude" element={<ConnectClaude />} />
+        <Route path="/consulting" element={<Consulting />} />
       </Routes>
     </Router>
   );

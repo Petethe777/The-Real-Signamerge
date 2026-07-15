@@ -3210,6 +3210,9 @@ export default function Dashboard() {
           <Link to="/about" className="hover:text-primary cursor-pointer transition-colors font-bold text-[10px] uppercase tracking-[0.2em]">
             About
           </Link>
+          <Link to="/consulting" className="hover:text-primary cursor-pointer transition-colors font-bold text-[10px] uppercase tracking-[0.2em] text-primary">
+            Consulting
+          </Link>
           <span className="text-primary flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" /> System Online
           </span>

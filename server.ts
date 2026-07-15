@@ -10,7 +10,7 @@ import { searchDataset } from "./src/data/customerSearchDataset.js";
 
 // MCP Server SDK imports
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { SSEServerTransport } from "./src/services/sseServerTransport.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -447,6 +447,75 @@ async function startServer() {
     } catch (err: any) {
       saveQueryToLocalFallback(cleanQuery, email || 'anonymous');
       return res.json({ success: true, message: "Stored safely in local repository (fallback)" });
+    }
+  });
+
+  // Google Form entry extractor proxy to help map Form Questions automatically
+  app.get("/api/forms/extract-entries", async (req, res) => {
+    const { formId } = req.query;
+    if (!formId || typeof formId !== "string") {
+      return res.status(400).json({ error: "formId is required" });
+    }
+
+    try {
+      const url = `https://docs.google.com/forms/d/e/${formId}/viewform`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch form. Status: ${response.status}`);
+      }
+      const html = await response.text();
+
+      // Find FB_PUBLIC_LOAD_DATA matching block
+      const loadDataMatch = html.match(/FB_PUBLIC_LOAD_DATA\s*=\s*(\[[\s\S]*?\])\s*;/);
+      if (loadDataMatch) {
+        try {
+          const rawData = JSON.parse(loadDataMatch[1]);
+          const questionsList = rawData[1][1] || [];
+          const entries: { title: string; entryId: string }[] = [];
+
+          for (const q of questionsList) {
+            if (!q) continue;
+            const title = q[1];
+            const qDetails = q[4] && q[4][0];
+            const entryId = qDetails && qDetails[0];
+            if (title && entryId) {
+              entries.push({ title, entryId: String(entryId) });
+            }
+          }
+
+          if (entries.length > 0) {
+            return res.json({ success: true, source: "FB_PUBLIC_LOAD_DATA", entries });
+          }
+        } catch (parseErr) {
+          console.warn("[Form Extract] FB_PUBLIC_LOAD_DATA JSON parsing failed, using regex fallback:", parseErr);
+        }
+      }
+
+      // Regex Fallback if structured data block isn't present/parsable
+      const regex = /entry\.(\d+)/g;
+      let match;
+      const foundIds: string[] = [];
+      while ((match = regex.exec(html)) !== null) {
+        if (!foundIds.includes(match[1])) {
+          foundIds.push(match[1]);
+        }
+      }
+
+      if (foundIds.length > 0) {
+        return res.json({
+          success: true,
+          source: "regex_fallback",
+          entries: foundIds.map((id, index) => ({
+            title: `Field ${index + 1}`,
+            entryId: id
+          }))
+        });
+      }
+
+      return res.status(404).json({ error: "No entry IDs found in Google Form HTML." });
+    } catch (err: any) {
+      console.error("Error extracting Google Form entry IDs:", err);
+      return res.status(500).json({ error: err.message || "Failed to parse Google Form entries." });
     }
   });
 
