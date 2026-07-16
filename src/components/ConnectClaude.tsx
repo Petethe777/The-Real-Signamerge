@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 
 export default function ConnectClaude() {
-  const [activeTab, setActiveTab] = useState<"desktop" | "web_native" | "web_extension">("web_native");
+  const [activeTab, setActiveTab] = useState<"desktop" | "web_native">("web_native");
   const [serverUrl, setServerUrl] = useState("");
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [serverStatus, setServerStatus] = useState<"checking" | "online" | "offline">("checking");
@@ -252,11 +252,11 @@ export default function ConnectClaude() {
           <div className="flex flex-col items-center justify-center gap-4 text-center">
             <h2 className="text-xl sm:text-2xl font-black text-[#111] tracking-tight">Choose Your Setup Method</h2>
             <p className="text-xs sm:text-sm text-gray-500 font-medium px-4">
-              Select whether you want to connect Claude natively on the Claude website, via a browser extension, or on your desktop.
+              Select whether you want to connect Claude natively on the Claude website, or on your desktop.
             </p>
             
             {/* Responsive Interactive Switch */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 bg-gray-100 p-1 rounded-xl sm:rounded-2xl border border-gray-200/50 mt-2 w-full max-w-2xl gap-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 bg-gray-100 p-1 rounded-xl sm:rounded-2xl border border-gray-200/50 mt-2 w-full max-w-xl gap-1">
               <button
                 onClick={() => setActiveTab("web_native")}
                 className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all ${
@@ -268,18 +268,6 @@ export default function ConnectClaude() {
                 <Globe className="w-3.5 h-3.5 shrink-0" />
                 <span className="truncate">Claude Web (Native)</span>
                 <span className="bg-orange-100/80 text-orange-800 text-[8px] px-1.5 py-0.5 rounded-full font-black ml-1.5 shrink-0">Paid</span>
-              </button>
-              <button
-                onClick={() => setActiveTab("web_extension")}
-                className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all ${
-                  activeTab === "web_extension"
-                    ? "bg-white text-primary shadow-md"
-                    : "text-gray-500 hover:text-[#111]"
-                }`}
-              >
-                <Globe className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Claude Web (Extension)</span>
-                <span className="bg-green-100 text-green-800 text-[8px] px-1.5 py-0.5 rounded-full font-black ml-1.5 shrink-0">Free/Pro</span>
               </button>
               <button
                 onClick={() => setActiveTab("desktop")}
@@ -313,7 +301,7 @@ export default function ConnectClaude() {
                     <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-bold block text-amber-950 mb-0.5">⚠️ Native Integration Requires Claude Pro, Team, or Enterprise</span>
-                      Anthropic currently restricts native MCP integrations to paid workspace accounts with access to the Admin Console. If you have a free or personal Claude account, please use the <strong className="cursor-pointer underline text-amber-950 font-bold hover:text-primary" onClick={() => setActiveTab("web_extension")}>Website (Extension)</strong> or <strong className="cursor-pointer underline text-amber-950 font-bold hover:text-primary" onClick={() => setActiveTab("desktop")}>Claude Desktop</strong> options above instead!
+                      Anthropic currently restricts native MCP integrations to paid workspace accounts with access to the Admin Console. If you have a free or personal Claude account, please use the <strong className="cursor-pointer underline text-amber-950 font-bold hover:text-primary" onClick={() => setActiveTab("desktop")}>Claude Desktop</strong> option above instead!
                     </div>
                   </div>
 
@@ -404,119 +392,6 @@ export default function ConnectClaude() {
                       <div className="flex items-center gap-3 text-left">
                         <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
                         <span className="text-[11px] font-bold text-gray-600 font-sans">Zero downloads or browser extensions required</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === "web_extension" && (
-              <motion.div
-                key="web-extension-tab"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-start"
-              >
-                {/* Left side steps */}
-                <div className="md:col-span-7 space-y-4 sm:space-y-6">
-                  {/* Info banner for free accounts */}
-                  <div className="bg-green-50/70 border border-green-200/60 p-4 rounded-xl flex items-start gap-3 text-xs text-green-900 font-semibold">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold block text-green-950 mb-0.5">🚀 Recommended for Free / Personal Claude Accounts</span>
-                      This method is 100% free-account friendly! By using a helper browser extension, Claude.ai can securely communicate with our MCP server right inside your default free chat window, bypassing the paid Workspace requirement.
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">1</div>
-                      <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Install a browser extension</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
-                      Since browser sandboxes prevent websites from direct access to custom endpoints on individual free/personal accounts, you can install a lightweight browser connector extension like <strong>MCP Client</strong>.
-                    </p>
-                    <div className="pl-10 pt-2">
-                      <a 
-                        href="https://chromewebstore.google.com/search/MCP%20Client" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        referrerPolicy="no-referrer"
-                        className="inline-flex w-full sm:w-auto justify-center items-center gap-2 rounded-xl bg-gray-100 hover:bg-gray-255 text-gray-700 hover:text-[#111] px-5 py-3 text-xs font-black uppercase tracking-wider transition-all border border-gray-200"
-                      >
-                        Search Chrome Web Store <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">2</div>
-                      <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Add Your Server Connection</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
-                      Click the extension's icon in your browser toolbar, select <strong>Add Server</strong>, and fill in these values:
-                    </p>
-                    <div className="pl-0 sm:pl-10 space-y-3">
-                      <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-semibold text-gray-600">
-                        <div className="sm:col-span-1 text-gray-400 font-bold uppercase text-[9px] tracking-wider self-center">Server Name:</div>
-                        <div className="sm:col-span-2 font-black text-gray-800">Signalmerge</div>
-                      </div>
-                      <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-semibold text-gray-600">
-                        <div className="sm:col-span-1 text-gray-400 font-bold uppercase text-[9px] tracking-wider self-center">Connection Type:</div>
-                        <div className="sm:col-span-2 font-black text-gray-800">SSE (Server-Sent Events)</div>
-                      </div>
-                      <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-semibold text-gray-600">
-                        <div className="sm:col-span-1 text-gray-400 font-bold uppercase text-[9px] tracking-wider self-center font-mono">SSE URL:</div>
-                        <div className="sm:col-span-2 flex justify-between items-center gap-2">
-                          <code className="text-gray-800 font-bold truncate max-w-[180px] text-[10px] sm:text-xs">{serverUrl}</code>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => handleCopy(serverUrl, "sse_web_extension")}>
-                            {copiedText === "sse_web_extension" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3 h-3" />}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">3</div>
-                      <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Open Claude.ai & Converse</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
-                      Open Claude's website in a new tab. The extension automatically embeds our custom search tools. You can ask Claude: <em className="text-primary font-bold">"Use Signalmerge to search for high-intent shoe buyer leads in Sweden"</em> and it will execute the scraping live!
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right side help illustration */}
-                <div className="md:col-span-5 space-y-6 w-full">
-                  <div className="bg-white border border-gray-100 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] shadow-sm text-center space-y-6">
-                    <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-                      <Globe className="w-8 h-8 text-primary" />
-                    </div>
-                    <div className="space-y-2">
-                      <h4 className="font-black text-[#111] uppercase tracking-tight text-sm">How Website Integration Works</h4>
-                      <p className="text-xs text-gray-500 font-semibold leading-relaxed">
-                        The browser extension bridges the gap by listening to Claude's responses and calling our cloud search APIs securely inside the webpage interface. No command-line scripting required!
-                      </p>
-                    </div>
-                    
-                    <div className="border-t border-gray-100 pt-6 flex flex-col gap-3">
-                      <div className="flex items-center gap-3 text-left">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                        <span className="text-[11px] font-bold text-gray-600 font-sans">Works on Chrome, Brave, and Edge</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-left">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                        <span className="text-[11px] font-bold text-gray-600 font-sans">Zero Command Line or Terminal Required</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-left">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                        <span className="text-[11px] font-bold text-gray-600 font-sans">Connect in less than 2 minutes</span>
                       </div>
                     </div>
                   </div>

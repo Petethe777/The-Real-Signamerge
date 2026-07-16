@@ -18,8 +18,8 @@ import {
 
 dotenv.config();
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://sscuyhvkyfemrsmfxhkt.supabase.co";
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3V5aHZreWZlbXJzbWZ4aGt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzQ5MzAsImV4cCI6MjA5NDMxMDkzMH0.qoURHMmKre8uGLem4b6GBrqtt4yHaUlE9LI9PYxW-c4";
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "https://sscuyhvkyfemrsmfxhkt.supabase.co";
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3V5aHZreWZlbXJzbWZ4aGt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzQ5MzAsImV4cCI6MjA5NDMxMDkzMH0.qoURHMmKre8uGLem4b6GBrqtt4yHaUlE9LI9PYxW-c4";
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -1625,28 +1625,51 @@ async function startServer() {
   // Subclass official SSEServerTransport to inject CORS and keep-alive buffering bypass
   class RobustSSEServerTransport extends SSEServerTransport {
     private localRes: any;
+    private localEndpoint: string;
 
     constructor(endpoint: string, res: any) {
       super(endpoint, res);
       this.localRes = res;
+      this.localEndpoint = endpoint;
     }
 
     override async start(): Promise<void> {
+      if ((this as any)._sseResponse) {
+        throw new Error("RobustSSEServerTransport already started!");
+      }
+
       const req = this.localRes.req;
       const origin = req?.headers.origin || "*";
-      
-      this.localRes.setHeader("Content-Type", "text/event-stream");
-      this.localRes.setHeader("Cache-Control", "no-cache, no-transform");
-      this.localRes.setHeader("Connection", "keep-alive");
-      this.localRes.setHeader("X-Accel-Buffering", "no");
-      this.localRes.setHeader("Access-Control-Allow-Origin", origin);
-      this.localRes.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-      this.localRes.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version, x-mcp-sdk-name, *");
+
+      this.localRes.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform, private",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version, x-mcp-sdk-name, *",
+        "Access-Control-Expose-Headers": "*"
+      });
+
       if (origin !== "*") {
         this.localRes.setHeader("Access-Control-Allow-Credentials", "true");
       }
 
-      await super.start();
+      // Reconstruct the absolute URL with sessionId
+      const endpointUrl = new URL(this.localEndpoint);
+      endpointUrl.searchParams.set("sessionId", (this as any)._sessionId);
+      const absoluteUrlWithSession = endpointUrl.toString();
+
+      console.log(`[RobustSSEServerTransport] Writing absolute endpoint event: ${absoluteUrlWithSession}`);
+      this.localRes.write(`event: endpoint\ndata: ${absoluteUrlWithSession}\n\n`);
+
+      (this as any)._sseResponse = this.localRes;
+
+      this.localRes.on("close", () => {
+        (this as any)._sseResponse = undefined;
+        this.onclose?.();
+      });
 
       if (typeof this.localRes.flush === "function") {
         this.localRes.flush();
