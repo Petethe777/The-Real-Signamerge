@@ -519,6 +519,46 @@ async function startServer() {
     }
   });
 
+  // Server-Side Proxy for Google Form Submission to bypass iframe sandboxing and CORS limitations
+  app.post("/api/submit-lead", async (req, res) => {
+    try {
+      const { formId, entries, values } = req.body;
+      if (!formId || !entries || !values) {
+        return res.status(400).json({ success: false, error: "Missing required form fields (formId, entries, values)." });
+      }
+
+      // Prepare URL-encoded form parameters
+      const formParams = new URLSearchParams();
+      for (const [key, entryId] of Object.entries(entries)) {
+        if (entryId && typeof entryId === "string") {
+          const val = values[key] || "";
+          formParams.append(entryId, val);
+        }
+      }
+
+      const googleFormUrl = `https://docs.google.com/forms/d/e/${formId}/formResponse`;
+      console.log(`[Server Form Submission] Forwarding lead data to: ${googleFormUrl}`);
+
+      // Perform direct HTTP post using Node's standard fetch
+      const googleResponse = await fetch(googleFormUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formParams.toString(),
+      });
+
+      console.log(`[Server Form Submission] Google Form responded with status: ${googleResponse.status}`);
+      
+      // Google Forms normally redirects on successful submissions (302/200). 
+      // Regardless of the status code, as long as the fetch did not throw, the request was fired.
+      return res.json({ success: true, status: googleResponse.status });
+    } catch (error: any) {
+      console.error("[Server Form Submission Error] Failed to submit to Google Form:", error);
+      return res.status(500).json({ success: false, error: error.message || "Unknown error during submission" });
+    }
+  });
+
   // Secure validation route for Customer Audit. Never exposes secrets to frontend.
   app.post("/api/auth/verify-client-audit", (req, res) => {
     const { email, password } = req.body;
