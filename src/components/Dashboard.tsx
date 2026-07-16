@@ -29,7 +29,11 @@ import {
   Sparkles,
   TrendingUp,
   Users,
-  Lock
+  Lock,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  Phone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -177,10 +181,30 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   const [isSearchingTransition, setIsSearchingTransition] = useState(false);
   const [correctedQuery, setCorrectedQuery] = useState<string | null>(null);
 
+  // Consulting Intake Leads backup states
+  const [consultingLeads, setConsultingLeads] = useState<any[]>([]);
+  const [loadingConsultingLeads, setLoadingConsultingLeads] = useState(false);
+  const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
+
   useEffect(() => {
-    // If Admin accesses, fetch registered accounts to allow approvals and dashboard switching
+    // If Admin accesses, fetch registered accounts and backup consulting leads
     if (isOwner) {
       fetchProfiles();
+      
+      // Fetch backup consulting leads from server fallback database
+      setLoadingConsultingLeads(true);
+      fetch("/api/consulting-leads")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.leads) {
+            setConsultingLeads(data.leads);
+          }
+          setLoadingConsultingLeads(false);
+        })
+        .catch(err => {
+          console.error("Error fetching backup consulting leads:", err);
+          setLoadingConsultingLeads(false);
+        });
     }
   }, [isAdminView, isOwner]);
 
@@ -653,6 +677,214 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Consulting Intake Leads Backup Section */}
+            <div className="bg-white rounded-[2rem] border border-orange-100 shadow-xl overflow-hidden mt-10 animate-in fade-in-50 duration-300">
+              <div className="p-8 border-b border-gray-100 bg-orange-50/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-black text-[#111] flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    Consulting Intake Leads (Backup Repository)
+                  </h2>
+                  <p className="text-xs text-gray-500 font-medium">
+                    100% durable local server backup of all consulting intakes. Prevents any data loss due to Google Forms setting restrictions.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-gray-200 w-fit">
+                  <Clock className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-[10px] font-black uppercase text-gray-400">{consultingLeads.length} Intakes Saved</span>
+                </div>
+              </div>
+
+              {loadingConsultingLeads ? (
+                <div className="p-12 text-center text-xs text-gray-400 flex flex-col items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <span>Loading local server database records...</span>
+                </div>
+              ) : consultingLeads.length === 0 ? (
+                <div className="p-16 text-center text-xs text-gray-400">
+                  <div className="bg-gray-50 max-w-sm mx-auto p-6 rounded-2xl border border-dashed border-gray-200">
+                    <p className="font-bold text-gray-700 mb-1">No local leads found yet</p>
+                    <p className="text-[11px] text-gray-500">When users submit the Consulting Intake form, their full profile and answers will be permanently archived and displayed here.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-gray-100 bg-gray-50/50">
+                        <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-wider">Client & Contact Details</th>
+                        <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-wider">Business & Target Audience</th>
+                        <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-wider">Primary Service Interest</th>
+                        <th className="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {consultingLeads.map((lead) => {
+                        const isExpanded = expandedLeadId === lead.id;
+                        
+                        // Parse timestamp
+                        const formattedTime = lead.timestamp 
+                          ? new Date(lead.timestamp).toLocaleString()
+                          : "Unknown time";
+
+                        // Check primary service to style badge
+                        const serviceStr = lead.primaryService || lead.primaryServiceInterest || "Not specified";
+                        const isSoftware = serviceStr.includes("Software");
+                        const isSocial = serviceStr.includes("Social");
+                        const isAI = serviceStr.includes("AI");
+                        const isMCP = serviceStr.includes("MCP");
+                        
+                        let badgeBg = "bg-gray-50 text-gray-600";
+                        if (isSoftware) badgeBg = "bg-blue-50 text-blue-600";
+                        else if (isSocial) badgeBg = "bg-pink-50 text-pink-600";
+                        else if (isAI) badgeBg = "bg-purple-50 text-purple-600";
+                        else if (isMCP) badgeBg = "bg-orange-50 text-orange-600";
+
+                        return (
+                          <React.Fragment key={lead.id}>
+                            <tr className="hover:bg-gray-50/50 transition-colors">
+                              <td className="px-8 py-5">
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-black text-[#111]">{lead.name || "Anonymous Client"}</span>
+                                  <span className="text-xs text-gray-500 font-medium flex items-center gap-1 mt-0.5">
+                                    <Mail className="w-3 h-3 text-gray-400" /> {lead.email || "No email"}
+                                  </span>
+                                  {lead.whatsapp && (
+                                    <span className="text-xs text-gray-500 font-medium flex items-center gap-1 mt-0.5">
+                                      <Phone className="w-3 h-3 text-gray-400" /> {lead.whatsapp}
+                                    </span>
+                                  )}
+                                  <span className="text-[9px] text-gray-400 flex items-center gap-1 mt-1.5 font-bold uppercase tracking-wider">
+                                    <Calendar className="w-3 h-3" /> {formattedTime}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-8 py-5">
+                                <div className="text-xs space-y-1">
+                                  <span className="font-bold text-[#222] block">{lead.businessName || "No Business Name"}</span>
+                                  <span className="text-[10px] text-gray-500 block line-clamp-1 max-w-[200px]" title={lead.businessDescription}>
+                                    {lead.businessDescription || "No description provided"}
+                                  </span>
+                                  {lead.businessLocation && (
+                                    <span className="text-[9px] font-black text-gray-400 block uppercase">
+                                      Loc: {lead.businessLocation}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-8 py-5">
+                                <div className="flex flex-col gap-1.5 items-start">
+                                  <span className={`inline-flex px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${badgeBg}`}>
+                                    {serviceStr}
+                                  </span>
+                                  {lead.urgency && (
+                                    <span className="text-[9px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded uppercase">
+                                      Urgency: {lead.urgency}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-8 py-5 text-right">
+                                <Button
+                                  onClick={() => setExpandedLeadId(isExpanded ? null : lead.id)}
+                                  className="bg-gray-100 hover:bg-gray-200 text-[#111] rounded-xl text-[10px] font-black uppercase tracking-wider px-3.5 h-9 inline-flex items-center gap-1.5"
+                                >
+                                  {isExpanded ? (
+                                    <>Collapse <ChevronUp className="w-3.5 h-3.5" /></>
+                                  ) : (
+                                    <>Expand Intake <ChevronDown className="w-3.5 h-3.5" /></>
+                                  )}
+                                </Button>
+                              </td>
+                            </tr>
+                            
+                            {/* Expanded details row */}
+                            {isExpanded && (
+                              <tr>
+                                <td colSpan={4} className="px-8 py-6 bg-gray-50/60 border-y border-gray-100">
+                                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-inner grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-200 text-left">
+                                    <div className="md:col-span-2 border-b border-gray-100 pb-3 flex items-center justify-between">
+                                      <h4 className="text-xs font-black text-[#111] uppercase tracking-wider flex items-center gap-1.5">
+                                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                                        Full Client Intake Assessment Form Answers
+                                      </h4>
+                                      <span className="text-[9px] text-gray-400 font-mono font-bold uppercase">ID: {lead.id}</span>
+                                    </div>
+                                    
+                                    <div className="space-y-3">
+                                      <div>
+                                        <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Business Challenge / Bottleneck</label>
+                                        <p className="text-xs text-gray-750 font-medium bg-gray-55 p-2.5 rounded-xl border border-gray-100 mt-1 whitespace-pre-wrap">
+                                          {lead.biggestChallenge || lead.businessDescription || "N/A"}
+                                        </p>
+                                      </div>
+                                      
+                                      <div>
+                                        <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Target Audience / Customer Base</label>
+                                        <p className="text-xs text-gray-755 font-semibold mt-0.5">{lead.targetAudience || "N/A"}</p>
+                                      </div>
+
+                                      <div>
+                                        <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Platform Features & Scope Needed</label>
+                                        <p className="text-xs text-gray-750 font-medium bg-gray-55 p-2.5 rounded-xl border border-gray-100 mt-1 whitespace-pre-wrap">
+                                          {lead.features || lead.softwareFeatures || "N/A"}
+                                        </p>
+                                      </div>
+
+                                      {lead.socialLinks && lead.socialLinks !== "N/A" && (
+                                        <div>
+                                          <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Social Media Links</label>
+                                          <p className="text-xs text-gray-750 font-medium mt-0.5 font-mono">{lead.socialLinks}</p>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="space-y-3">
+                                      <div>
+                                        <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Branding & Visual Assets</label>
+                                        <p className="text-xs text-gray-750 font-medium bg-gray-55 p-2.5 rounded-xl border border-gray-100 mt-1 whitespace-pre-wrap">
+                                          {lead.businessBranding || "N/A"}
+                                        </p>
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Has Domain?</label>
+                                          <p className="text-xs text-gray-755 font-bold mt-0.5">{lead.hasDomain || "N/A"}</p>
+                                        </div>
+                                        <div>
+                                          <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Hosting Platform</label>
+                                          <p className="text-xs text-gray-755 font-bold mt-0.5">{lead.hostingPlatform || "N/A"}</p>
+                                        </div>
+                                      </div>
+
+                                      {lead.examples && lead.examples !== "None provided" && (
+                                        <div>
+                                          <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Inspiration or Examples</label>
+                                          <p className="text-xs text-gray-755 font-semibold mt-0.5">{lead.examples}</p>
+                                        </div>
+                                      )}
+
+                                      <div>
+                                        <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Contact Preference & Intake Source</label>
+                                        <p className="text-xs text-gray-750 font-medium bg-gray-55 p-2.5 rounded-xl border border-gray-100 mt-1 whitespace-pre-wrap">
+                                          {lead.questions || "N/A"}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </main>
