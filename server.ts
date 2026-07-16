@@ -452,8 +452,8 @@ function checkAndResetLeads(user: ServerUser): boolean {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
-
+  const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+  
   // Trust upstream reverse proxy (Cloud Run load balancer)
   app.set("trust proxy", true);
 
