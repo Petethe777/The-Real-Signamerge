@@ -351,6 +351,35 @@ async function performLeadsSearch(query: string): Promise<any> {
 // In-memory variable to support custom-updated partner passwords dynamically
 let updatedClientPassword = "";
 
+// Simple in-memory OAuth tables
+interface OAuthClient {
+  clientId: string;
+  clientSecret: string;
+  clientName: string;
+  redirectUris: string[];
+}
+
+interface AuthCode {
+  code: string;
+  clientId: string;
+  redirectUri: string;
+  userId: string;
+  expiresAt: number;
+}
+
+interface AccessToken {
+  token: string;
+  clientId: string;
+  userId: string;
+  expiresAt: number;
+}
+
+const oauthClients: Record<string, OAuthClient> = {};
+const authCodes: Record<string, AuthCode> = {};
+const accessTokens: Record<string, AccessToken> = {};
+
+let currentRequestContextUser: string | null = null;
+
 interface ServerUser {
   email: string;
   password?: string;
@@ -1063,6 +1092,20 @@ async function startServer() {
 
         // Determine if user has premium subscription to view source links
         let isPremium = false;
+
+        // 1. Check if there is an authenticated OAuth context
+        if (currentRequestContextUser) {
+          const users = loadUsers();
+          const matchedUser = users.find(u => u.email === currentRequestContextUser);
+          if (matchedUser && (matchedUser.hasPaid80 || matchedUser.hasPaid20)) {
+            isPremium = true;
+          }
+          if (currentRequestContextUser === "digitalconsultingpros@gmail.com" || currentRequestContextUser === "petemkhize@gmail.com") {
+            isPremium = true; // Admin overrides
+          }
+        }
+
+        // 2. Check if explicit email/password arguments are passed to override/direct auth
         if (email && password) {
           const users = loadUsers();
           const matchedUser = users.find(u => u.email === email);
@@ -1199,10 +1242,378 @@ async function startServer() {
     res.sendStatus(200);
   });
 
+  app.options("/.well-known/oauth-authorization-server", (req, res) => {
+    applyRobustCors(req, res);
+    res.sendStatus(200);
+  });
+
+  app.options("/.well-known/openid-configuration", (req, res) => {
+    applyRobustCors(req, res);
+    res.sendStatus(200);
+  });
+
+  app.options("/oauth/register", (req, res) => {
+    applyRobustCors(req, res);
+    res.sendStatus(200);
+  });
+
+  app.options("/oauth/token", (req, res) => {
+    applyRobustCors(req, res);
+    res.sendStatus(200);
+  });
+
+  // 1. Discovery Endpoints
+  const handleDiscovery = (req: any, res: any) => {
+    applyRobustCors(req, res);
+    let protocol = (req.headers["x-forwarded-proto"] as string) || (req.secure ? "https" : "http");
+    let host = (req.headers["x-forwarded-host"] as string) || req.get("host") || "";
+    if (host.includes("run.app")) protocol = "https";
+    
+    const baseUrl = `${protocol}://${host}`;
+    const discovery = {
+      issuer: baseUrl,
+      authorization_endpoint: `${baseUrl}/oauth/authorize`,
+      token_endpoint: `${baseUrl}/oauth/token`,
+      registration_endpoint: `${baseUrl}/oauth/register`,
+      scopes_supported: ["mcp"],
+      response_types_supported: ["code"],
+      grant_types_supported: ["authorization_code"]
+    };
+    res.json(discovery);
+  };
+
+  app.get("/.well-known/oauth-authorization-server", handleDiscovery);
+  app.get("/.well-known/openid-configuration", handleDiscovery);
+
+  // 2. Dynamic Client Registration (DCR)
+  app.post("/oauth/register", (req, res) => {
+    applyRobustCors(req, res);
+    try {
+      const { client_name, redirect_uris, grant_types, response_types } = req.body || {};
+      
+      const clientId = `client_${Math.random().toString(36).substring(2, 15)}`;
+      const clientSecret = `secret_${Math.random().toString(36).substring(2, 15)}`;
+      
+      oauthClients[clientId] = {
+        clientId,
+        clientSecret,
+        clientName: client_name || "Claude Client",
+        redirectUris: redirect_uris || []
+      };
+      
+      console.log(`[OAuth] Registered client: ${clientId} (${client_name})`);
+      
+      res.json({
+        client_id: clientId,
+        client_secret: clientSecret,
+        client_id_issued_at: Math.floor(Date.now() / 1000),
+        client_name: client_name || "Claude Client",
+        redirect_uris: redirect_uris || [],
+        grant_types: grant_types || ["authorization_code"],
+        response_types: response_types || ["code"]
+      });
+    } catch (err: any) {
+      console.error("[OAuth Register Error]", err);
+      res.status(500).json({ error: "server_error", error_description: err.message });
+    }
+  });
+
+  // 3. Authorization Code Request Form (GET)
+  app.get("/oauth/authorize", (req, res) => {
+    applyRobustCors(req, res);
+    const { client_id, redirect_uri, response_type, state, scope } = req.query;
+    
+    if (!client_id || !redirect_uri) {
+      return res.status(400).send("Missing client_id or redirect_uri parameters");
+    }
+
+    const client = oauthClients[client_id as string] || { clientName: "Claude Client" };
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Signalmerge to Claude</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2 { font-family: 'Space Grotesk', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col justify-center items-center p-4">
+  <div class="w-full max-w-md bg-white border border-orange-100 rounded-[2rem] shadow-xl shadow-orange-500/5 p-8 space-y-6 relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+
+    <div class="text-center space-y-3">
+      <div class="w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-orange-500/20">
+        <svg class="w-7 h-7 text-white fill-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+      </div>
+      <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Connect with Claude</h2>
+      <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Signalmerge OAuth Gateway</p>
+    </div>
+
+    <div class="bg-orange-50/50 border border-orange-100/50 rounded-2xl p-4 text-center">
+      <p class="text-xs text-gray-600 font-semibold leading-relaxed">
+        <strong>${client.clientName}</strong> is requesting permission to access your Signalmerge active lead hunting & trade signal tools.
+      </p>
+    </div>
+
+    <form method="POST" action="/oauth/authorize" class="space-y-4">
+      <input type="hidden" name="client_id" value="${client_id}">
+      <input type="hidden" name="redirect_uri" value="${redirect_uri}">
+      <input type="hidden" name="state" value="${state || ""}">
+      <input type="hidden" name="scope" value="${scope || ""}">
+
+      <div class="space-y-1">
+        <label class="block text-[10px] font-black uppercase tracking-wider text-gray-400">Signalmerge Email Address</label>
+        <input 
+          type="email" 
+          name="email" 
+          required 
+          placeholder="yourname@domain.com"
+          class="w-full bg-gray-50 border border-gray-100 focus:border-orange-500 focus:bg-white rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none transition-all"
+        >
+      </div>
+
+      <div class="space-y-1">
+        <label class="block text-[10px] font-black uppercase tracking-wider text-gray-400">Account Password</label>
+        <input 
+          type="password" 
+          name="password" 
+          required 
+          placeholder="••••••••"
+          class="w-full bg-gray-50 border border-gray-100 focus:border-orange-500 focus:bg-white rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none transition-all"
+        >
+      </div>
+
+      <button 
+        type="submit" 
+        class="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-extrabold text-xs uppercase tracking-wider py-4 rounded-xl shadow-lg shadow-orange-500/10 transition-all hover:-translate-y-0.5 active:translate-y-0"
+      >
+        Approve & Connect
+      </button>
+    </form>
+
+    <div class="text-center pt-2 border-t border-gray-100">
+      <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Secure connection. Your credentials are never shared.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+    res.send(html);
+  });
+
+  // 4. Authorization Code Submit (POST)
+  app.post("/oauth/authorize", express.urlencoded({ extended: true }), (req, res) => {
+    applyRobustCors(req, res);
+    const { client_id, redirect_uri, state, scope, email, password } = req.body;
+
+    if (!client_id || !redirect_uri) {
+      return res.status(400).send("Missing client_id or redirect_uri parameters");
+    }
+
+    const client = oauthClients[client_id as string] || { clientName: "Claude Client" };
+    
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
+    const cleanPassword = password ? password.trim() : "";
+
+    const users = loadUsers();
+    const user = users.find(u => u.email === cleanEmail);
+
+    const isClientAdmin = cleanEmail === "digitalconsultingpros@gmail.com" && (cleanPassword === "MaltaSecure2026!" || (updatedClientPassword && cleanPassword === updatedClientPassword));
+    const isPeteAdmin = cleanEmail === "petemkhize@gmail.com" && cleanPassword === "LehakoeZakithi777";
+    
+    const isValid = (user && user.password === cleanPassword) || isClientAdmin || isPeteAdmin;
+
+    if (!isValid) {
+      const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Signalmerge to Claude</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2 { font-family: 'Space Grotesk', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col justify-center items-center p-4">
+  <div class="w-full max-w-md bg-white border border-orange-100 rounded-[2rem] shadow-xl shadow-orange-500/5 p-8 space-y-6 relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+
+    <div class="text-center space-y-3">
+      <div class="w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-orange-500/20">
+        <svg class="w-7 h-7 text-white fill-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+      </div>
+      <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Connect with Claude</h2>
+      <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Signalmerge OAuth Gateway</p>
+    </div>
+
+    <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 flex items-start gap-2.5 text-xs font-semibold">
+      <svg class="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <div>
+        <span class="font-bold block text-red-950 mb-0.5">Authorization Failed</span>
+        Invalid email address or account password. Please try again or connect using your premium details.
+      </div>
+    </div>
+
+    <form method="POST" action="/oauth/authorize" class="space-y-4">
+      <input type="hidden" name="client_id" value="${client_id}">
+      <input type="hidden" name="redirect_uri" value="${redirect_uri}">
+      <input type="hidden" name="state" value="${state || ""}">
+      <input type="hidden" name="scope" value="${scope || ""}">
+
+      <div class="space-y-1">
+        <label class="block text-[10px] font-black uppercase tracking-wider text-gray-400">Signalmerge Email Address</label>
+        <input 
+          type="email" 
+          name="email" 
+          value="${email || ""}"
+          required 
+          placeholder="yourname@domain.com"
+          class="w-full bg-gray-50 border border-gray-100 focus:border-orange-500 focus:bg-white rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none transition-all"
+        >
+      </div>
+
+      <div class="space-y-1">
+        <label class="block text-[10px] font-black uppercase tracking-wider text-gray-400">Account Password</label>
+        <input 
+          type="password" 
+          name="password" 
+          required 
+          placeholder="••••••••"
+          class="w-full bg-gray-50 border border-gray-100 focus:border-orange-500 focus:bg-white rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none transition-all"
+        >
+      </div>
+
+      <button 
+        type="submit" 
+        class="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-extrabold text-xs uppercase tracking-wider py-4 rounded-xl shadow-lg shadow-orange-500/10 transition-all hover:-translate-y-0.5 active:translate-y-0"
+      >
+        Approve & Connect
+      </button>
+    </form>
+
+    <div class="text-center pt-2 border-t border-gray-100">
+      <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Secure connection. Your credentials are never shared.</p>
+    </div>
+  </div>
+</body>
+</html>
+      `;
+      return res.send(html);
+    }
+
+    const code = "code_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    authCodes[code] = {
+      code,
+      clientId: client_id as string,
+      redirectUri: redirect_uri as string,
+      userId: cleanEmail,
+      expiresAt: Date.now() + 5 * 60 * 1000
+    };
+
+    console.log(`[OAuth] Generated authorization code for: ${cleanEmail}`);
+
+    const redirectUrl = new URL(redirect_uri as string);
+    redirectUrl.searchParams.set("code", code);
+    if (state) {
+      redirectUrl.searchParams.set("state", state as string);
+    }
+
+    res.redirect(redirectUrl.toString());
+  });
+
+  // 5. Token Exchange (POST)
+  app.post("/oauth/token", (req, res) => {
+    applyRobustCors(req, res);
+    
+    const { grant_type, code, redirect_uri, client_id, client_secret } = req.body || {};
+    
+    let reqClientId = client_id;
+    let reqClientSecret = client_secret;
+
+    if (req.headers.authorization && req.headers.authorization.startsWith("Basic ")) {
+      try {
+        const credentials = Buffer.from(req.headers.authorization.substring(6), "base64").toString("ascii");
+        const parts = credentials.split(":");
+        reqClientId = parts[0];
+        reqClientSecret = parts[1];
+      } catch (e) {}
+    }
+
+    if (grant_type !== "authorization_code") {
+      return res.status(400).json({ error: "unsupported_grant_type", error_description: "Only authorization_code grant type is supported." });
+    }
+
+    if (!code) {
+      return res.status(400).json({ error: "invalid_request", error_description: "Missing code parameter." });
+    }
+
+    const authSession = authCodes[code];
+    if (!authSession) {
+      return res.status(400).json({ error: "invalid_grant", error_description: "Authorization code not found or invalid." });
+    }
+
+    if (Date.now() > authSession.expiresAt) {
+      delete authCodes[code];
+      return res.status(400).json({ error: "invalid_grant", error_description: "Authorization code has expired." });
+    }
+
+    delete authCodes[code];
+
+    const token = "token_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    accessTokens[token] = {
+      token,
+      clientId: authSession.clientId,
+      userId: authSession.userId,
+      expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000
+    };
+
+    console.log(`[OAuth] Issued access token for user: ${authSession.userId}`);
+
+    res.json({
+      access_token: token,
+      token_type: "Bearer",
+      expires_in: 31536000
+    });
+  });
+
   app.get("/sse", async (req, res) => {
     applyRobustCors(req, res);
     
     console.log("[MCP Server] New client requesting SSE connection...");
+
+    // Token checking for SSE stream request
+    let token = "";
+    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+      token = req.headers.authorization.substring(7);
+    } else if (req.query.access_token) {
+      token = req.query.access_token as string;
+    } else if (req.query.token) {
+      token = req.query.token as string;
+    }
+
+    let authUser = "";
+    if (token) {
+      const session = accessTokens[token];
+      if (session && Date.now() <= session.expiresAt) {
+        authUser = session.userId;
+      }
+    }
     
     // Construct dynamic absolute URL for the messages endpoint to prevent relative path resolution failures in web-based clients (like Claude.ai web connector)
     let protocol = (req.headers["x-forwarded-proto"] as string) || (req.secure ? "https" : "http");
@@ -1241,6 +1652,11 @@ async function startServer() {
     console.log(`[MCP Server] Registering SSE transport with absolute messages endpoint: ${messagesUrl}`);
 
     const transport = new SSEServerTransport(messagesUrl, res);
+    if (authUser) {
+      (transport as any).userEmail = authUser;
+      console.log(`[MCP Server] Session ${transport.sessionId} authorized for user: ${authUser}`);
+    }
+    
     mcpTransports[transport.sessionId] = transport;
 
     res.on("close", () => {
@@ -1258,7 +1674,31 @@ async function startServer() {
     const sessionId = req.query.sessionId as string;
     const transport = mcpTransports[sessionId];
     if (transport) {
-      await transport.handlePostMessage(req, res, req.body);
+      let token = "";
+      if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+        token = req.headers.authorization.substring(7);
+      } else if (req.query.access_token) {
+        token = req.query.access_token as string;
+      } else if (req.query.token) {
+        token = req.query.token as string;
+      }
+      
+      let userEmail = "";
+      if (token) {
+        const session = accessTokens[token];
+        if (session && Date.now() <= session.expiresAt) {
+          userEmail = session.userId;
+        }
+      }
+      
+      // Bind to synchronous execution context
+      currentRequestContextUser = userEmail || (transport as any).userEmail || null;
+      
+      try {
+        await transport.handlePostMessage(req, res, req.body);
+      } finally {
+        currentRequestContextUser = null;
+      }
     } else {
       res.status(400).send("No transport found for sessionId");
     }
@@ -1274,7 +1714,18 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
+    app.get("*", (req, res, next) => {
+      // Guard to prevent unhandled API, OAuth, or .well-known routes from falling back to index.html HTML
+      const urlPath = req.path;
+      if (
+        urlPath.startsWith("/api/") || 
+        urlPath.startsWith("/oauth/") || 
+        urlPath.startsWith("/.well-known/") || 
+        urlPath === "/sse" || 
+        urlPath === "/messages"
+      ) {
+        return res.status(404).json({ error: "Not Found", message: `The endpoint ${urlPath} does not exist on this server.` });
+      }
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
