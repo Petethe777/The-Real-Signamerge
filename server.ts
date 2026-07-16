@@ -10,7 +10,7 @@ import { searchDataset } from "./src/data/customerSearchDataset.js";
 
 // MCP Server SDK imports
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { SSEServerTransport } from "./src/services/sseServerTransport.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -1231,6 +1231,40 @@ async function startServer() {
     }
   };
 
+  // Helper to resolve the correct external public base URL dynamically
+  const getPublicBaseUrl = (req: any): string => {
+    let protocol = (req.headers["x-forwarded-proto"] as string) || (req.secure ? "https" : "http");
+    let host = (req.headers["x-forwarded-host"] as string) || req.get("host") || "";
+    
+    if (!host || host.includes("localhost") || host.includes("127.0.0.1") || host.includes("0.0.0.0")) {
+      const referer = req.headers.referer;
+      if (referer) {
+        try {
+          const refUrl = new URL(referer);
+          if (!refUrl.hostname.includes("localhost") && !refUrl.hostname.includes("127.0.0.1")) {
+            host = refUrl.host;
+          }
+        } catch (e) {}
+      }
+      
+      if (!host || host.includes("localhost") || host.includes("127.0.0.1") || host.includes("0.0.0.0")) {
+        const hostHeader = (req.headers["x-forwarded-host"] as string) || (req.headers.host as string) || "";
+        const isPreRelease = hostHeader.includes("pre-") || req.originalUrl?.includes("pre-") || referer?.includes("ais-pre-");
+        if (isPreRelease) {
+          host = "ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
+        } else {
+          host = "ais-dev-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
+        }
+      }
+    }
+
+    if (host.includes("run.app") || host.includes("signalmerge.co.za")) {
+      protocol = "https";
+    }
+    
+    return `${protocol}://${host}`;
+  };
+
   // CORS Preflight handles
   app.options("/sse", (req, res) => {
     applyRobustCors(req, res);
@@ -1265,11 +1299,7 @@ async function startServer() {
   // 1. Discovery Endpoints
   const handleDiscovery = (req: any, res: any) => {
     applyRobustCors(req, res);
-    let protocol = (req.headers["x-forwarded-proto"] as string) || (req.secure ? "https" : "http");
-    let host = (req.headers["x-forwarded-host"] as string) || req.get("host") || "";
-    if (host.includes("run.app")) protocol = "https";
-    
-    const baseUrl = `${protocol}://${host}`;
+    const baseUrl = getPublicBaseUrl(req);
     const discovery = {
       issuer: baseUrl,
       authorization_endpoint: `${baseUrl}/oauth/authorize`,
@@ -1592,6 +1622,41 @@ async function startServer() {
     });
   });
 
+  // Subclass official SSEServerTransport to inject CORS and keep-alive buffering bypass
+  class RobustSSEServerTransport extends SSEServerTransport {
+    private localRes: any;
+
+    constructor(endpoint: string, res: any) {
+      super(endpoint, res);
+      this.localRes = res;
+    }
+
+    override async start(): Promise<void> {
+      const req = this.localRes.req;
+      const origin = req?.headers.origin || "*";
+      
+      this.localRes.setHeader("Content-Type", "text/event-stream");
+      this.localRes.setHeader("Cache-Control", "no-cache, no-transform");
+      this.localRes.setHeader("Connection", "keep-alive");
+      this.localRes.setHeader("X-Accel-Buffering", "no");
+      this.localRes.setHeader("Access-Control-Allow-Origin", origin);
+      this.localRes.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      this.localRes.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version, x-mcp-sdk-name, *");
+      if (origin !== "*") {
+        this.localRes.setHeader("Access-Control-Allow-Credentials", "true");
+      }
+
+      await super.start();
+
+      if (typeof this.localRes.flush === "function") {
+        this.localRes.flush();
+      }
+      if (typeof this.localRes.flushHeaders === "function") {
+        this.localRes.flushHeaders();
+      }
+    }
+  }
+
   app.get("/sse", async (req, res) => {
     applyRobustCors(req, res);
     
@@ -1615,43 +1680,10 @@ async function startServer() {
       }
     }
     
-    // Construct dynamic absolute URL for the messages endpoint to prevent relative path resolution failures in web-based clients (like Claude.ai web connector)
-    let protocol = (req.headers["x-forwarded-proto"] as string) || (req.secure ? "https" : "http");
-    let host = (req.headers["x-forwarded-host"] as string) || req.get("host") || "";
-    
-    // Fallback detection logic if proxy hides the host header with localhost
-    if (!host || host.includes("localhost") || host.includes("127.0.0.1") || host.includes("0.0.0.0")) {
-      const referer = req.headers.referer;
-      if (referer) {
-        try {
-          const refUrl = new URL(referer);
-          if (!refUrl.hostname.includes("localhost") && !refUrl.hostname.includes("127.0.0.1")) {
-            host = refUrl.host;
-          }
-        } catch (e) {}
-      }
-      
-      // If we are still unable to find a valid external host, identify the current URL context
-      if (!host || host.includes("localhost") || host.includes("127.0.0.1") || host.includes("0.0.0.0")) {
-        // We are on a Cloud Run dev environment by default, unless referer or host is pre-release
-        const isPreRelease = req.originalUrl?.includes("pre-") || referer?.includes("ais-pre-");
-        if (isPreRelease) {
-          host = "ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
-        } else {
-          host = "ais-dev-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app";
-        }
-      }
-    }
-
-    // Since Cloud Run hosts (ending in .run.app) are served strictly over HTTPS, force HTTPS for those hosts
-    if (host.includes("run.app")) {
-      protocol = "https";
-    }
-    
-    const messagesUrl = `${protocol}://${host}/messages`;
+    const messagesUrl = `${getPublicBaseUrl(req)}/messages`;
     console.log(`[MCP Server] Registering SSE transport with absolute messages endpoint: ${messagesUrl}`);
 
-    const transport = new SSEServerTransport(messagesUrl, res);
+    const transport = new RobustSSEServerTransport(messagesUrl, res);
     if (authUser) {
       (transport as any).userEmail = authUser;
       console.log(`[MCP Server] Session ${transport.sessionId} authorized for user: ${authUser}`);

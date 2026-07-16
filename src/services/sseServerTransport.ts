@@ -24,11 +24,19 @@ export class SSEServerTransport implements Transport {
   }
 
   async start(): Promise<void> {
-    // Set headers for SSE stream
+    // Set headers for SSE stream with buffering disabled for Cloud Run / reverse proxies
+    // Also explicitly set CORS headers to prevent browser-based EventSource or fetch failures
+    const origin = (this._res as any).req?.headers.origin || "*";
+    
     this._res.writeHead(200, {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
+      "Cache-Control": "no-cache, no-transform",
       "Connection": "keep-alive",
+      "X-Accel-Buffering": "no",
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, x-mcp-protocol-version, x-mcp-sdk-version, x-mcp-sdk-name, *",
+      "Access-Control-Allow-Credentials": origin !== "*" ? "true" : "false"
     });
 
     // Send the endpoint event to tell client where to post messages
