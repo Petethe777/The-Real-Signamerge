@@ -299,9 +299,10 @@ export default function Consulting() {
     }
 
     setIsSubmitting(true);
+    const mappedValues = getMappedFormValues();
 
     try {
-      console.log("Submitting to Google Form via server-side proxy...");
+      console.log("Submitting to Google Form via server-side proxy...", mappedValues);
 
       // Call our robust server-side proxy endpoint
       const response = await fetch("/api/submit-lead", {
