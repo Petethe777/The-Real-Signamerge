@@ -73,8 +73,6 @@ function saveConsultingLead(leadData: any) {
   }
 }
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 function getLevenshteinDistance(a: string, b: string): number {
   const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
@@ -452,8 +450,8 @@ function checkAndResetLeads(user: ServerUser): boolean {
 
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-  
+  const PORT = 3000;
+
   // Trust upstream reverse proxy (Cloud Run load balancer)
   app.set("trust proxy", true);
 
@@ -1714,7 +1712,18 @@ async function startServer() {
     
     mcpTransports[transport.sessionId] = transport;
 
+    // Standard SSE 15-second keepalive interval to prevent Cloud Run/proxy idling timeouts
+    const keepAliveInterval = setInterval(() => {
+      if (!res.destroyed) {
+        res.write(": keep-alive\n\n");
+        if (typeof (res as any).flush === "function") {
+          (res as any).flush();
+        }
+      }
+    }, 15000);
+
     res.on("close", () => {
+      clearInterval(keepAliveInterval);
       console.log(`[MCP Server] Connection closed for session ${transport.sessionId}`);
       delete mcpTransports[transport.sessionId];
     });
