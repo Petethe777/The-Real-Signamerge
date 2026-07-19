@@ -1021,7 +1021,8 @@ async function startServer() {
     }
   );
 
-  mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
+  mcpServer.setRequestHandler(ListToolsRequestSchema, async () => { 
+    return {
       tools: [
         {
           name: "search_leads",
