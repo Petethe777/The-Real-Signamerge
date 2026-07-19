@@ -1008,6 +1008,7 @@ async function startServer() {
   //=============================================================================
   // MCP (MODEL CONTEXT PROTOCOL) SERVER - OPTION A INTEGRATED BUILD
   //=============================================================================
+  function createMcpServer() {
   const mcpServer = new Server(
     {
       name: "signalmerge-discovery-server",
@@ -1021,7 +1022,6 @@ async function startServer() {
   );
 
   mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
-    return {
       tools: [
         {
           name: "search_leads",
