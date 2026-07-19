@@ -1728,6 +1728,7 @@ async function startServer() {
       delete mcpTransports[transport.sessionId];
     });
 
+    const mcpServer = createMcpServer();
     await mcpServer.connect(transport);
     console.log(`[MCP Server] Session ${transport.sessionId} successfully connected over SSE.`);
   });
