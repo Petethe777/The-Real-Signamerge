@@ -1205,6 +1205,8 @@ async function startServer() {
       };
     }
   });
+  return mcpServer;
+  }
 
   // MCP SSE Transport connection pool
   const mcpTransports: Record<string, SSEServerTransport> = {};
