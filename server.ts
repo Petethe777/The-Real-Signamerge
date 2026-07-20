@@ -858,7 +858,6 @@ async function startServer() {
     });
   });
 
-  // PAYMENT WEBHOOK ENDPOINT
 // Verifies a Yoco webhook using the Standard Webhooks scheme Yoco signs
   // with: HMAC-SHA256 over "{webhookId}.{timestamp}.{rawBody}", base64-encoded,
   // compared using a constant-time check to avoid timing attacks.
