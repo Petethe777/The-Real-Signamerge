@@ -455,7 +455,7 @@ async function startServer() {
 
   // Trust upstream reverse proxy (Cloud Run load balancer)
   app.set("trust proxy", true);
-
+  
   app.use(express.json({
     verify: (req: any, _res, buf) => {
       req.rawBody = buf.toString("utf8");
@@ -859,72 +859,143 @@ async function startServer() {
   });
 
   // PAYMENT WEBHOOK ENDPOINT
-  app.post("/api/webhooks/payment", (req, res) => {
-    console.log("[Server Webhook] Received payment webhook body:", JSON.stringify(req.body));
-    
-    let email = "";
-    
-    // Check various common places for email in Yoco or generic webhooks
-    if (req.body) {
-      const b = req.body;
-      if (b.email) {
-        email = b.email;
-      } else if (b.payload) {
-        const p = b.payload;
-        if (p.email) {
-          email = p.email;
-        } else if (p.metadata && p.metadata.email) {
-          email = p.metadata.email;
-        } else if (p.customer && p.customer.email) {
-          email = p.customer.email;
-        }
-      } else if (b.data) {
-        const d = b.data;
-        if (d.email) {
-          email = d.email;
-        } else if (d.object) {
-          const o = d.object;
-          if (o.email) {
-            email = o.email;
-          } else if (o.customer_details && o.customer_details.email) {
-            email = o.customer_details.email;
-          } else if (o.metadata && o.metadata.email) {
-            email = o.metadata.email;
-          }
-        } else if (d.metadata && d.metadata.email) {
-          email = d.metadata.email;
-        } else if (d.customer && d.customer.email) {
-          email = d.customer.email;
-        }
-      } else if (b.metadata && b.metadata.email) {
-        email = b.metadata.email;
-      } else if (b.customer && b.customer.email) {
-        email = b.customer.email;
+// Verifies a Yoco webhook using the Standard Webhooks scheme Yoco signs
+  // with: HMAC-SHA256 over "{webhookId}.{timestamp}.{rawBody}", base64-encoded,
+  // compared using a constant-time check to avoid timing attacks.
+  function verifyYocoWebhookSignature(req: any): boolean {
+    const secret = process.env.YOCO_WEBHOOK_SECRET || "";
+    if (!secret) {
+      console.error("[Yoco Webhook] YOCO_WEBHOOK_SECRET is not set — refusing to process unverifiable webhook.");
+      return false;
+    }
+ 
+    const webhookId = req.headers["webhook-id"];
+    const webhookTimestamp = req.headers["webhook-timestamp"];
+    const webhookSignatureHeader = req.headers["webhook-signature"];
+ 
+    if (!webhookId || !webhookTimestamp || !webhookSignatureHeader || !req.rawBody) {
+      console.error("[Yoco Webhook] Missing required signature headers or raw body.");
+      return false;
+    }
+ 
+    // Reject events older than 3 minutes to prevent replay attacks
+    const ageSeconds = Math.abs(Date.now() / 1000 - parseInt(webhookTimestamp, 10));
+    if (isNaN(ageSeconds) || ageSeconds > 180) {
+      console.error("[Yoco Webhook] Timestamp outside acceptable window — possible replay.");
+      return false;
+    }
+ 
+    const secretBytes = Buffer.from(secret.replace(/^whsec_/, ""), "base64");
+    const signedContent = `${webhookId}.${webhookTimestamp}.${req.rawBody}`;
+    const expectedSignature = crypto.createHmac("sha256", secretBytes).update(signedContent).digest("base64");
+ 
+    // webhook-signature header may contain multiple space-separated "v1,<sig>" entries
+    const providedSignatures = String(webhookSignatureHeader)
+      .split(" ")
+      .map((entry) => entry.split(",")[1])
+      .filter(Boolean);
+ 
+    return providedSignatures.some((sig) => {
+      try {
+        return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSignature));
+      } catch {
+        return false; // length mismatch etc. — not a match
       }
+    });
+  }
+ 
+  // CREATE CHECKOUT — call this from your frontend when a user clicks
+  // "Upgrade". It creates a Yoco-hosted checkout session with the user's
+  // email embedded in metadata, so the webhook below can identify who paid.
+  app.post("/api/create-checkout", async (req: any, res) => {
+    try {
+      const { email, amountCents, tier } = req.body || {};
+      const cleanEmail = (email || "").trim().toLowerCase();
+ 
+      if (!cleanEmail || !amountCents) {
+        return res.status(400).json({ success: false, error: "email and amountCents are required." });
+      }
+ 
+      const secretKey = process.env.YOCO_SECRET_KEY;
+      if (!secretKey) {
+        return res.status(500).json({ success: false, error: "Server is not configured with a Yoco secret key." });
+      }
+ 
+      const baseUrl = getPublicBaseUrl(req);
+      const yocoResponse = await fetch("https://payments.yoco.com/api/checkouts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${secretKey}`,
+        },
+        body: JSON.stringify({
+          amount: amountCents, // Yoco requires this in cents, e.g. R125.00 = 12500
+          currency: "ZAR",
+          successUrl: `${baseUrl}/payment-success`,
+          cancelUrl: `${baseUrl}/payment-cancelled`,
+          failureUrl: `${baseUrl}/payment-failed`,
+          metadata: { email: cleanEmail, tier: tier || "premium" },
+        }),
+      });
+ 
+      const data = await yocoResponse.json();
+      if (!yocoResponse.ok) {
+        console.error("[Yoco Create Checkout] Failed:", data);
+        return res.status(502).json({ success: false, error: "Failed to create Yoco checkout.", details: data });
+      }
+ 
+      console.log(`[Yoco Create Checkout] Created ${data.id} for ${cleanEmail}`);
+      return res.json({ success: true, checkoutId: data.id, redirectUrl: data.redirectUrl });
+    } catch (err: any) {
+      console.error("[Yoco Create Checkout Error]", err);
+      return res.status(500).json({ success: false, error: err.message || String(err) });
     }
-
-    const cleanEmail = email ? email.trim().toLowerCase() : "";
-
+  });
+ 
+  // PAYMENT WEBHOOK ENDPOINT — Yoco calls this automatically when a
+  // Checkout API session completes. Signature-verified, so it can't be
+  // spoofed by an outside request pretending to be a successful payment.
+  app.post("/api/webhooks/payment", (req: any, res) => {
+    console.log("[Server Webhook] Received Yoco webhook event.");
+ 
+    if (!verifyYocoWebhookSignature(req)) {
+      console.warn("[Server Webhook] Rejected webhook — signature verification failed.");
+      return res.status(401).json({ success: false, error: "Invalid or unverifiable signature." });
+    }
+ 
+    const event = req.body;
+ 
+    if (event?.type !== "payment.succeeded") {
+      // Not an error — just an event type we don't act on (e.g. payment.failed)
+      console.log(`[Server Webhook] Ignoring event type: ${event?.type}`);
+      return res.status(200).json({ success: true, ignored: true });
+    }
+ 
+    const metadata = event.payload?.metadata || {};
+    const cleanEmail = (metadata.email || "").trim().toLowerCase();
+    const tier = metadata.tier || "premium";
+ 
     if (!cleanEmail) {
-      return res.status(400).json({ success: false, error: "No email address identified in webhook payload." });
+      console.error("[Server Webhook] payment.succeeded event had no email in metadata.");
+      return res.status(400).json({ success: false, error: "No email found in payment metadata." });
     }
-
+ 
     const users = loadUsers();
     const user = users.find(u => u.email === cleanEmail);
     if (!user) {
       console.warn(`[Server Webhook] Payment received for unregistered user: ${cleanEmail}`);
       return res.status(404).json({ success: false, error: "User not found in system." });
     }
-
-    user.hasPaid80 = true;
+ 
+    if (tier === "standard") {
+      user.hasPaid20 = true;
+    } else {
+      user.hasPaid80 = true;
+    }
     saveUsers(users);
-
-    console.log(`[Server Webhook] Subscription successfully verified via webhook for: ${cleanEmail}`);
-    return res.json({
-      success: true,
-      message: "Webhook processed. Account subscription unlocked successfully.",
-      email: cleanEmail
-    });
+ 
+    console.log(`[Server Webhook] Subscription unlocked for ${cleanEmail} (tier: ${tier})`);
+    return res.status(200).json({ success: true, email: cleanEmail, tier });
   });
 
   // LOG LEADS USED & GET REMAINING LIMIT
