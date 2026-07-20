@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { 
-  Zap, Copy, Check, ArrowLeft, Laptop, Globe, Server, 
+  Zap, Copy, Check, ArrowLeft, Globe, 
   Play, Code, FileText, Sparkles, CheckCircle2, ShieldCheck,
   ExternalLink, ArrowRight, Terminal, RefreshCw, AlertCircle
 } from "lucide-react";
@@ -11,8 +11,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 
 export default function ConnectClaude() {
-  const [activeTab, setActiveTab] = useState<"desktop" | "web_native">("web_native");
-  const [serverUrl, setServerUrl] = useState("");
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [serverStatus, setServerStatus] = useState<"checking" | "online" | "offline">("checking");
   
@@ -25,10 +23,6 @@ export default function ConnectClaude() {
   const [simResult, setSimResult] = useState<any>(null);
 
   useEffect(() => {
-    // Determine dynamic server SSE URL
-    const origin = window.location.origin;
-    setServerUrl(`${origin}/sse`);
-
     // Ping server health to check status
     fetch("/api/health")
       .then((res) => {
@@ -86,19 +80,6 @@ export default function ConnectClaude() {
     }
   };
 
-  const desktopConfigText = `{
-  "mcpServers": {
-    "signalmerge-discovery": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/inspector",
-        "${serverUrl}"
-      ]
-    }
-  }
-}`;
-
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-[#1A1A1A] font-sans selection:bg-orange-100 selection:text-orange-600">
       {/* Top Banner / Navigation */}
@@ -149,22 +130,22 @@ export default function ConnectClaude() {
         <Card className="border-orange-100 shadow-xl shadow-orange-500/5 bg-gradient-to-br from-white to-orange-50/20 overflow-hidden rounded-[1.5rem] sm:rounded-[2.5rem]">
           <CardContent className="p-6 sm:p-12 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 sm:gap-8">
             <div className="space-y-3 max-w-lg">
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Your Connection Endpoints</span>
-              <h2 className="text-lg sm:text-xl font-black text-[#111] tracking-tight">Personalized Connection URLs</h2>
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Your Connection Endpoint</span>
+              <h2 className="text-lg sm:text-xl font-black text-[#111] tracking-tight">Production Connector URL</h2>
               <p className="text-xs text-gray-500 font-semibold leading-relaxed">
-                Configure your MCP client with our URLs. Both establish a real-time Server-Sent Events (SSE) stream allowing Claude to call Signalmerge's lead retrieval tools.
+                Configure your custom connector in Claude. This URL establishes a real-time Server-Sent Events (SSE) stream allowing Claude to call Signalmerge's lead retrieval tools.
               </p>
             </div>
             
-            <div className="flex flex-col gap-3 w-full lg:w-auto shrink-0">
-              {/* Public Shared URL */}
+            <div className="flex flex-col gap-3 w-full lg:w-auto shrink-0 justify-center">
+              {/* Production Connector URL */}
               <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center bg-orange-50/20 border border-orange-200 p-2 rounded-xl sm:rounded-2xl gap-2 shadow-sm">
                 <div className="px-3 py-2 bg-white text-[11px] sm:text-xs text-gray-700 rounded-lg sm:rounded-xl font-mono truncate max-w-full sm:max-w-[280px] flex flex-col text-left">
-                  <span className="text-[8px] font-black text-orange-600 uppercase">Public Shared URL (Highly Recommended)</span>
-                  <span className="font-bold">https://ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app/sse</span>
+                  <span className="text-[8px] font-black text-orange-600 uppercase">Production Connector URL</span>
+                  <span className="font-bold">https://the-real-signamerge.onrender.com/sse</span>
                 </div>
                 <Button 
-                  onClick={() => handleCopy("https://ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app/sse", "pre_url")}
+                  onClick={() => handleCopy("https://the-real-signamerge.onrender.com/sse", "pre_url")}
                   className="bg-primary hover:bg-orange-600 text-white font-bold rounded-lg sm:rounded-xl px-4 py-3 sm:py-5 text-xs uppercase shrink-0 gap-1.5 w-full sm:w-auto justify-center"
                 >
                   {copiedText === "pre_url" ? (
@@ -174,66 +155,9 @@ export default function ConnectClaude() {
                   )}
                 </Button>
               </div>
-
-              {/* Development URL */}
-              <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center bg-white border border-gray-100 p-2 rounded-xl sm:rounded-2xl gap-2 shadow-sm">
-                <div className="px-3 py-2 bg-gray-50 text-[11px] sm:text-xs text-gray-700 rounded-lg sm:rounded-xl font-mono truncate max-w-full sm:max-w-[280px] flex flex-col text-left">
-                  <span className="text-[8px] font-black text-gray-400 uppercase">Active Sandbox Dev URL</span>
-                  <span className="font-bold">{serverUrl || "https://signalmerge.co.za/sse"}</span>
-                </div>
-                <Button 
-                  onClick={() => handleCopy(serverUrl, "url")}
-                  className="bg-gray-150 hover:bg-gray-200 text-gray-750 font-bold rounded-lg sm:rounded-xl px-4 py-3 sm:py-5 text-xs uppercase shrink-0 gap-1.5 w-full sm:w-auto justify-center"
-                >
-                  {copiedText === "url" ? (
-                    <><Check className="w-3.5 h-3.5" /> Copied!</>
-                  ) : (
-                    <><Copy className="w-3.5 h-3.5" /> Copy URL</>
-                  )}
-                </Button>
-              </div>
-
-              {/* Production URL */}
-              <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center bg-white border border-gray-100 p-2 rounded-xl sm:rounded-2xl gap-2 shadow-sm">
-                <div className="px-3 py-2 bg-gray-50 text-[11px] sm:text-xs text-gray-700 rounded-lg sm:rounded-xl font-mono truncate max-w-full sm:max-w-[280px] flex flex-col text-left">
-                  <span className="text-[8px] font-black text-gray-400 uppercase">Production Domain Endpoint</span>
-                  <span className="font-bold">https://signalmerge.co.za/sse</span>
-                </div>
-                <Button 
-                  onClick={() => handleCopy("https://signalmerge.co.za/sse", "prod_url")}
-                  className="bg-gray-150 hover:bg-gray-200 text-gray-750 font-bold rounded-lg sm:rounded-xl px-4 py-3 sm:py-5 text-xs uppercase shrink-0 gap-1.5 w-full sm:w-auto justify-center"
-                >
-                  {copiedText === "prod_url" ? (
-                    <><Check className="w-3.5 h-3.5" /> Copied!</>
-                  ) : (
-                    <><Copy className="w-3.5 h-3.5" /> Copy URL</>
-                  )}
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* Connection Troubleshooting Alert */}
-        <div className="bg-amber-50/70 border border-amber-200/80 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] space-y-3 shadow-sm shadow-amber-500/5">
-          <div className="flex items-center gap-2 text-amber-800">
-            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider font-sans">Getting a "Couldn't connect to server" error?</h3>
-          </div>
-          <div className="text-xs text-amber-900 font-semibold leading-relaxed space-y-3 font-sans pl-1">
-            <p>
-              When using Claude.ai's website connector, Claude's servers must connect to our backend over the public internet. 
-              The <strong className="text-amber-950 font-black">Active Sandbox Dev URL</strong> is tied to your active browser's development workspace in Google AI Studio, which means Claude's external servers may face friction or authentication checks when trying to access it from the outside.
-            </p>
-            <p className="text-amber-950">
-              👉 <strong className="font-black">The Solution:</strong> Please copy and use the <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-black">Public Shared URL</span> shown above: 
-              <br />
-              <code className="bg-orange-100/50 px-1.5 py-0.5 rounded text-orange-950 font-bold font-mono">https://ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app/sse</code>
-              <br />
-              This URL targets the compiled, public container of the application. It is completely independent of the Google AI Studio active editor session, has CORS rules pre-configured, and is fully accessible to Claude.ai's servers without any developer session friction!
-            </p>
-          </div>
-        </div>
 
         {/* Clear Engine Capability Banner */}
         <section className="bg-orange-50/40 border border-orange-100/60 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] space-y-3">
@@ -247,266 +171,128 @@ export default function ConnectClaude() {
           </p>
         </section>
 
-        {/* Setup Options Toggles (Desktop vs Web) */}
+        {/* Setup Guide */}
         <section className="space-y-8">
           <div className="flex flex-col items-center justify-center gap-4 text-center">
-            <h2 className="text-xl sm:text-2xl font-black text-[#111] tracking-tight">Choose Your Setup Method</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-[#111] tracking-tight">How to Connect to Claude.ai</h2>
             <p className="text-xs sm:text-sm text-gray-500 font-medium px-4">
-              Select whether you want to connect Claude natively on the Claude website, or on your desktop.
+              Integrate Signalmerge directly on the Claude.ai web platform.
             </p>
-            
-            {/* Responsive Interactive Switch */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 bg-gray-100 p-1 rounded-xl sm:rounded-2xl border border-gray-200/50 mt-2 w-full max-w-xl gap-1">
-              <button
-                onClick={() => setActiveTab("web_native")}
-                className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all ${
-                  activeTab === "web_native"
-                    ? "bg-white text-primary shadow-md"
-                    : "text-gray-500 hover:text-[#111]"
-                }`}
-              >
-                <Globe className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Claude Web (Native)</span>
-                <span className="bg-orange-100/80 text-orange-800 text-[8px] px-1.5 py-0.5 rounded-full font-black ml-1.5 shrink-0">Paid</span>
-              </button>
-              <button
-                onClick={() => setActiveTab("desktop")}
-                className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all ${
-                  activeTab === "desktop"
-                    ? "bg-white text-primary shadow-md"
-                    : "text-gray-500 hover:text-[#111]"
-                }`}
-              >
-                <Laptop className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Claude Desktop</span>
-                <span className="bg-green-100 text-green-800 text-[8px] px-1.5 py-0.5 rounded-full font-black ml-1.5 shrink-0">Free/Pro</span>
-              </button>
-            </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            {activeTab === "web_native" && (
-              <motion.div
-                key="web-native-tab"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-start"
-              >
-                {/* Left side steps */}
-                <div className="md:col-span-7 space-y-4 sm:space-y-6">
-                  {/* Info banner for native connector options */}
-                  <div className="bg-amber-50/70 border border-amber-200/60 p-4 rounded-xl flex items-start gap-3 text-xs text-amber-900 font-semibold">
-                    <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold block text-amber-950 mb-0.5">⚠️ Native Integration Requires Claude Pro, Team, or Enterprise</span>
-                      Anthropic currently restricts native MCP integrations to paid workspace accounts with access to the Admin Console. If you have a free or personal Claude account, please use the <strong className="cursor-pointer underline text-amber-950 font-bold hover:text-primary" onClick={() => setActiveTab("desktop")}>Claude Desktop</strong> option above instead!
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">1</div>
-                      <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Open Workspace Settings</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
-                      Sign in to your account at <strong className="text-[#111]">Claude.ai</strong>. If you are using a Claude Pro, Team, or Enterprise plan, click your profile in the bottom-left and select <strong className="text-primary font-bold">Admin Console</strong> or <strong className="text-primary font-bold">Workspace Settings</strong>.
-                    </p>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">2</div>
-                      <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Add Custom MCP SSE Server</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
-                      Navigate to the <strong className="text-[#111]">Integrations</strong> or <strong className="text-[#111]">Developer Tools</strong> tab. Click <strong className="text-primary font-black">Add Custom Integration</strong> or <strong className="text-primary font-black">Add MCP Server</strong>. Choose <strong className="font-black">SSE (Server-Sent Events)</strong> as the Transport type, and enter the connection details:
-                    </p>
-                    <div className="pl-0 sm:pl-10 space-y-3">
-                      <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-semibold text-gray-600">
-                        <div className="sm:col-span-1 text-gray-400 font-bold uppercase text-[9px] tracking-wider self-center">Server Name:</div>
-                        <div className="sm:col-span-2 font-black text-gray-800">Signalmerge</div>
-                      </div>
-                      <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-semibold text-gray-600">
-                        <div className="sm:col-span-1 text-gray-400 font-bold uppercase text-[9px] tracking-wider self-center">Connection Type:</div>
-                        <div className="sm:col-span-2 font-black text-gray-800">SSE (Server-Sent Events)</div>
-                      </div>
-                      <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-semibold text-gray-600">
-                        <div className="sm:col-span-1 text-gray-400 font-bold uppercase text-[9px] tracking-wider self-center font-mono">SSE URL:</div>
-                        <div className="sm:col-span-2 flex justify-between items-center gap-2">
-                          <code className="text-gray-800 font-bold truncate max-w-[180px] text-[10px] sm:text-xs">https://ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app/sse</code>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => handleCopy("https://ais-pre-ggasfc3wsu2uesiznxcj64-497666873808.europe-west2.run.app/sse", "sse_native_url")}>
-                            {copiedText === "sse_native_url" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3 h-3" />}
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-orange-50 border border-orange-150 rounded-xl p-3 text-xs font-semibold text-orange-950">
-                        <div className="sm:col-span-1 text-orange-600 font-bold uppercase text-[9px] tracking-wider self-center">Authentication:</div>
-                        <div className="sm:col-span-2 font-black">
-                          <span className="text-orange-900 block font-black">Choose either OAuth 2.0 (Recommended) OR None</span>
-                          <p className="font-medium text-[11px] text-orange-850 mt-1.5 leading-relaxed">
-                            🔒 <strong className="font-extrabold text-orange-950">Option A: OAuth 2.0 (Premium Sign-In)</strong> - Select OAuth 2.0 in Claude's prompt. It will securely redirect you to our hosted auth page to verify your Signalmerge credentials, automatically unlocking high-intent source links on all search results natively!
-                          </p>
-                          <p className="font-medium text-[11px] text-orange-850 mt-1.5 leading-relaxed">
-                            🌍 <strong className="font-extrabold text-orange-950">Option B: None (No Auth)</strong> - If your Claude account blocks dynamic registration, select 'None'. You can still connect instantly and manually unlock source links by passing your Signalmerge email/password arguments in the prompt.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">3</div>
-                      <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Start Conversing with the tools</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
-                      Click <strong className="font-black">Enable</strong> or <strong className="font-black">Add Server</strong>. Once approved, Claude website will natively communicate with our secure SSE backend endpoint. You and your team can immediately query the leads registry by asking Claude: <em className="text-primary font-bold">"Use Signalmerge to find high-intent trade leads in Sweden"</em>.
-                    </p>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-start">
+            {/* Left side steps */}
+            <div className="md:col-span-7 space-y-4 sm:space-y-6">
+              {/* Info banner for free connector options */}
+              <div className="bg-green-50/70 border border-green-200/60 p-4 rounded-xl flex items-start gap-3 text-xs text-green-900 font-semibold">
+                <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold block text-green-950 mb-0.5">💡 Support for Free Accounts on Claude.ai</span>
+                  Anthropic now allows users on the <strong className="text-green-950">Free Plan</strong> to use Custom Connectors (limited to one custom connector)! This means you can add and use the Signalmerge Custom Connector completely free of charge.
                 </div>
+              </div>
 
-                {/* Right side help illustration */}
-                <div className="md:col-span-5 space-y-6 w-full">
-                  <div className="bg-white border border-gray-100 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] shadow-sm text-center space-y-6">
-                    <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-                      <Globe className="w-8 h-8 text-primary" />
-                    </div>
-                    <div className="space-y-2">
-                      <h4 className="font-black text-[#111] uppercase tracking-tight text-sm">Why NATIVE SSE is best</h4>
-                      <p className="text-xs text-gray-500 font-semibold leading-relaxed">
-                        Native integrations connect Anthropic's secure servers directly to our cloud APIs. This means any workspace member can use the tool on any device, with no extensions or local setups required!
-                      </p>
-                    </div>
-                    
-                    <div className="border-t border-gray-100 pt-6 flex flex-col gap-3">
-                      <div className="flex items-center gap-3 text-left">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                        <span className="text-[11px] font-bold text-gray-600 font-sans">Natively Supported by Claude.ai website</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-left">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                        <span className="text-[11px] font-bold text-gray-600 font-sans">Available to all members in your Workspace</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-left">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                        <span className="text-[11px] font-bold text-gray-600 font-sans">Zero downloads or browser extensions required</span>
-                      </div>
-                    </div>
-                  </div>
+              {/* Warning about Desktop App */}
+              <div className="bg-amber-50/70 border border-amber-200/60 p-4 rounded-xl flex items-start gap-3 text-xs text-amber-900 font-semibold">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold block text-amber-950 mb-0.5">⚠️ Supported on Claude.ai Website Only</span>
+                  This Custom Connector is strictly optimized for the <strong className="text-amber-950">Claude.ai website</strong>. It is not supported as a local MCP server configuration on the Claude Desktop application. Please only install it via the Claude.ai website settings.
                 </div>
-              </motion.div>
-            )}
+              </div>
 
-            {activeTab === "desktop" && (
-              <motion.div
-                key="desktop-tab"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-start"
-              >
-                {/* Left side steps */}
-                <div className="md:col-span-7 space-y-4 sm:space-y-6">
-                  {/* Info banner for free accounts */}
-                  <div className="bg-green-50/70 border border-green-200/60 p-4 rounded-xl flex items-start gap-3 text-xs text-green-900 font-semibold">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold block text-green-950 mb-0.5">💻 100% Free Desktop App Support</span>
-                      Claude Desktop is completely free to download and use with a standard, free Claude account. Because the server configuration runs locally on your machine, you can connect our MCP server to your Claude app without any paid subscriptions!
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">1</div>
-                      <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Open configuration folder</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
-                      Navigate to the directory where Claude Desktop looks for servers. Copy the path matching your operating system:
-                    </p>
-                    <div className="pl-0 sm:pl-10 space-y-3">
-                      <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs flex justify-between items-center gap-2">
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <span className="text-[8px] font-black uppercase text-gray-400">Windows File Path</span>
-                          <code className="block font-mono text-gray-700 select-all break-all text-[10px] sm:text-xs">%APPDATA%\\Claude\\claude_desktop_config.json</code>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100 text-gray-400 hover:text-primary shrink-0" onClick={() => handleCopy("%APPDATA%\\Claude\\claude_desktop_config.json", "win_path")}>
-                          {copiedText === "win_path" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                        </Button>
-                      </div>
-
-                      <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs flex justify-between items-center gap-2">
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <span className="text-[8px] font-black uppercase text-gray-400">Mac File Path</span>
-                          <code className="block font-mono text-gray-700 select-all break-all text-[10px] sm:text-xs">~/Library/Application Support/Claude/claude_desktop_config.json</code>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100 text-gray-400 hover:text-primary shrink-0" onClick={() => handleCopy("~/Library/Application Support/Claude/claude_desktop_config.json", "mac_path")}>
-                          {copiedText === "mac_path" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">2</div>
-                      <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Paste the Configuration</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
-                      Open the file with any simple text editor (like Notepad or TextEdit) and paste the exact JSON block shown on the right. This tells Claude Desktop to establish a secure link to your Signalmerge workspace.
-                    </p>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">3</div>
-                      <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Relaunch Claude App</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
-                      Quit Claude Desktop completely and open it again. You will see a new <strong>Hammer Icon <Sparkles className="inline w-3.5 h-3.5 text-primary ml-0.5" /></strong> appear in your chat bar representing our trade discovery tools!
-                    </p>
-                  </div>
+              <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">1</div>
+                  <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Open Settings</h3>
                 </div>
+                <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
+                  Sign in to your account at <strong className="text-[#111]">Claude.ai</strong>. Click your profile picture/icon in the bottom-left corner of the screen, and select <strong className="text-primary font-bold">Settings</strong> from the menu.
+                </p>
+              </div>
 
-                {/* Right side config block */}
-                <div className="md:col-span-5 space-y-4 w-full">
-                  <div className="bg-[#111] text-white p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-lg relative overflow-hidden group">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                        <Terminal className="w-3.5 h-3.5 text-primary" /> config JSON
-                      </span>
-                      <Button 
-                        onClick={() => handleCopy(desktopConfigText, "config")}
-                        variant="secondary"
-                        className="bg-white/10 hover:bg-white/20 text-white border-none rounded-xl text-[10px] font-bold px-3 py-1 uppercase"
-                      >
-                        {copiedText === "config" ? (
-                          <><Check className="w-3 h-3 text-green-400" /> Copied</>
-                        ) : (
-                          <><Copy className="w-3 h-3" /> Copy</>
-                        )}
+              <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">2</div>
+                  <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Add Custom Connector</h3>
+                </div>
+                <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
+                  Navigate to the <strong className="text-[#111]">Connectors</strong> tab on the left sidebar. Click the <strong className="text-primary font-black">Add custom connector</strong> button, select <strong className="font-black">SSE (Server-Sent Events)</strong> as the Transport type, and enter the connection details:
+                </p>
+                <div className="pl-0 sm:pl-10 space-y-3">
+                  <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-semibold text-gray-600">
+                    <div className="sm:col-span-1 text-gray-400 font-bold uppercase text-[9px] tracking-wider self-center">Connector Name:</div>
+                    <div className="sm:col-span-2 font-black text-gray-800">Signalmerge</div>
+                  </div>
+                  <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-semibold text-gray-600">
+                    <div className="sm:col-span-1 text-gray-400 font-bold uppercase text-[9px] tracking-wider self-center">Connection Type:</div>
+                    <div className="sm:col-span-2 font-black text-gray-800">SSE (Server-Sent Events)</div>
+                  </div>
+                  <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-semibold text-gray-600">
+                    <div className="sm:col-span-1 text-gray-400 font-bold uppercase text-[9px] tracking-wider self-center font-mono">SSE URL:</div>
+                    <div className="sm:col-span-2 flex justify-between items-center gap-2">
+                      <code className="text-gray-800 font-bold truncate max-w-[180px] text-[10px] sm:text-xs">https://the-real-signamerge.onrender.com/sse</code>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => handleCopy("https://the-real-signamerge.onrender.com/sse", "sse_native_url")}>
+                        {copiedText === "sse_native_url" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3 h-3" />}
                       </Button>
                     </div>
-                    <pre className="font-mono text-[10px] sm:text-xs text-gray-300 overflow-x-auto whitespace-pre leading-relaxed p-2 bg-black/40 rounded-xl">
-                      {desktopConfigText}
-                    </pre>
                   </div>
-
-                  <div className="bg-orange-50/50 border border-orange-100/60 p-5 rounded-[1.5rem] sm:rounded-[2rem] text-xs font-semibold text-gray-650 leading-relaxed space-y-2">
-                    <p className="font-black text-primary uppercase text-[9px] tracking-wider flex items-center gap-1">
-                      <ShieldCheck className="w-4 h-4 text-primary" /> Developer Note:
-                    </p>
-                    <p>
-                      We use the official <code>@modelcontextprotocol/inspector</code> package which ships natively with Node.js to bridge local Claude commands securely to our sandboxed Cloud environment. No extra global npm packages are required.
-                    </p>
+                  <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1.5 sm:gap-2 bg-orange-50 border border-orange-150 rounded-xl p-3 text-xs font-semibold text-orange-950">
+                    <div className="sm:col-span-1 text-orange-600 font-bold uppercase text-[9px] tracking-wider self-center">Authentication:</div>
+                    <div className="sm:col-span-2 font-black">
+                      <span className="text-orange-900 block font-black">Choose either OAuth 2.0 (Recommended) OR None</span>
+                      <p className="font-medium text-[11px] text-orange-850 mt-1.5 leading-relaxed">
+                        🔒 <strong className="font-extrabold text-orange-950">Option A: OAuth 2.0 (Premium Sign-In)</strong> - Select OAuth 2.0 in Claude's prompt. It will securely redirect you to our hosted auth page to verify your Signalmerge credentials, automatically unlocking high-intent source links on all search results natively!
+                      </p>
+                      <p className="font-medium text-[11px] text-orange-850 mt-1.5 leading-relaxed">
+                        🌍 <strong className="font-extrabold text-orange-950">Option B: None (No Auth)</strong> - If your Claude account blocks dynamic registration, select 'None'. You can still connect instantly and manually unlock source links by passing your Signalmerge email/password arguments in the prompt.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+
+              <div className="bg-white border border-gray-100 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center font-black text-xs text-primary shrink-0">3</div>
+                  <h3 className="font-black text-sm sm:text-base text-[#111] uppercase tracking-tight">Start Conversing with the tools</h3>
+                </div>
+                <p className="text-xs text-gray-500 font-medium leading-relaxed pl-10">
+                  Click <strong className="font-black">Enable</strong> or <strong className="font-black">Add Connector</strong>. Once approved, the Claude website will natively communicate with our secure SSE backend endpoint. You and your team can immediately query the leads registry by asking Claude: <em className="text-primary font-bold">"Use Signalmerge to find high-intent trade leads in Sweden"</em>.
+                </p>
+              </div>
+            </div>
+
+            {/* Right side help illustration */}
+            <div className="md:col-span-5 space-y-6 w-full">
+              <div className="bg-white border border-gray-100 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] shadow-sm text-center space-y-6">
+                <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+                  <Globe className="w-8 h-8 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-black text-[#111] uppercase tracking-tight text-sm">Why Custom Connectors Are Best</h4>
+                  <p className="text-xs text-gray-500 font-semibold leading-relaxed">
+                    Custom connectors integrate Anthropic's secure servers directly with our live SSE streaming APIs. This means you can use the tool on any device, completely on the web, with no extensions, downloads, or local setups required!
+                  </p>
+                </div>
+                
+                <div className="border-t border-gray-150 pt-6 flex flex-col gap-3">
+                  <div className="flex items-center gap-3 text-left">
+                    <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                    <span className="text-[11px] font-bold text-gray-600 font-sans">Natively Supported on Claude.ai website</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-left">
+                    <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                    <span className="text-[11px] font-bold text-gray-600 font-sans">Now Available for Free Claude Accounts</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-left">
+                    <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                    <span className="text-[11px] font-bold text-gray-600 font-sans">Zero downloads or browser extensions required</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* API / Tool Documentation */}
