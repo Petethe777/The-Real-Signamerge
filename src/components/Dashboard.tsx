@@ -127,6 +127,31 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   const isAdmin = isOwner || profile?.role === 'admin';
   const hasPaid = profile?.hasPaid80 === true || profile?.email === 'petemkhize@gmail.com' || profile?.email === 'digitalconsultingpros@gmail.com';
 
+  const startYocoCheckout = async (amountCents: number, tier: 'premium' | 'standard') => {
+    const email = profile?.email;
+    if (!email) {
+      alert("Please log in first, then try upgrading again.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, amountCents, tier }),
+      });
+      const data = await res.json();
+      if (data.success && data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+      } else {
+        alert("Couldn't start checkout right now. Please try again in a moment.");
+        console.error("[startYocoCheckout] Failed:", data);
+      }
+    } catch (err) {
+      alert("Couldn't start checkout right now. Please try again in a moment.");
+      console.error("[startYocoCheckout] Error:", err);
+    }
+  };
+
   const [credits, setCredits] = useState(() => {
     if (!hasPaid) {
       return { daily: 0, total: 0, maxDaily: 0, maxTotal: 140 };
@@ -1344,15 +1369,12 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                           Pay <strong className="text-primary font-black text-orange-600">$80</strong> to unlock 140 credits and premium source links.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                          <a 
-                            href="https://pay.yoco.com/mergemega?amount=1300" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            referrerPolicy="no-referrer"
+                          <button 
+                            onClick={() => startYocoCheckout(130000, 'premium')}
                             className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
                           >
                             Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
-                          </a>
+                          </button>
                           <Link 
                             to="/digital-consulting-pros#payment-section"
                             className="w-full sm:w-auto text-center rounded-xl bg-gray-50 hover:bg-gray-150 text-gray-550 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border border-gray-200"
@@ -1496,6 +1518,31 @@ export default function Dashboard() {
   const [signupCompanyName, setSignupCompanyName] = useState("");
   const [signupLocation, setSignupLocation] = useState("");
   const authStepRef = React.useRef(authStep);
+
+  const startYocoCheckout = async (amountCents: number, tier: 'premium' | 'standard') => {
+    const email = session?.user?.email;
+    if (!email) {
+      alert("Please log in first, then try upgrading again.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, amountCents, tier }),
+      });
+      const data = await res.json();
+      if (data.success && data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+      } else {
+        alert("Couldn't start checkout right now. Please try again in a moment.");
+        console.error("[startYocoCheckout] Failed:", data);
+      }
+    } catch (err) {
+      alert("Couldn't start checkout right now. Please try again in a moment.");
+      console.error("[startYocoCheckout] Error:", err);
+    }
+  };
   useEffect(() => {
     authStepRef.current = authStep;
   }, [authStep]);
@@ -2972,18 +3019,15 @@ export default function Dashboard() {
                 </div>
 
                 <div className="space-y-4 pt-2">
-                  <a 
-                    href="https://pay.yoco.com/mergemega?amount=1300" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    referrerPolicy="no-referrer"
+                  <button 
                     onClick={() => {
                       setHasClickedYoco(true);
+                      startYocoCheckout(130000, 'premium');
                     }}
                     className="w-full h-14 bg-primary hover:bg-orange-650 rounded-2xl text-white font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 text-xs transition-colors"
                   >
                     Pay Setup Fee ($80 USD) with Yoco <ExternalLink className="w-4 h-4" />
-                  </a>
+                  </button>
 
                   {isVerifyingPayment ? (
                     <div className="w-full p-5 border border-orange-200 bg-orange-50/20 rounded-2xl text-center space-y-3 animate-pulse">
@@ -3383,15 +3427,12 @@ export default function Dashboard() {
                       Pay <strong className="text-primary font-black text-orange-600">$80</strong> to unlock 100 lists of premium potential clients.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                      <a 
-                        href="https://pay.yoco.com/mergemega?amount=1300" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        referrerPolicy="no-referrer"
+                      <button 
+                        onClick={() => startYocoCheckout(130000, 'premium')}
                         className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
                       >
                         Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
-                      </a>
+                      </button>
                       <Link 
                         to="/digital-consulting-pros#payment-section"
                         className="w-full sm:w-auto text-center rounded-xl bg-gray-50 hover:bg-gray-150 text-gray-550 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border border-gray-200"
