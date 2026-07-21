@@ -403,6 +403,30 @@ export default function DigitalConsultingAudit() {
   const [hasPaid20, setHasPaid20] = useState<boolean>(false);
   const [leadsUsedToday, setLeadsUsedToday] = useState<number>(0);
 
+  const startYocoCheckout = async (amountCents: number, tier: 'premium' | 'standard') => {
+    if (!currentUserEmail) {
+      alert("Please log in first, then try upgrading again.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: currentUserEmail, amountCents, tier }),
+      });
+      const data = await res.json();
+      if (data.success && data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+      } else {
+        alert("Couldn't start checkout right now. Please try again in a moment.");
+        console.error("[startYocoCheckout] Failed:", data);
+      }
+    } catch (err) {
+      alert("Couldn't start checkout right now. Please try again in a moment.");
+      console.error("[startYocoCheckout] Error:", err);
+    }
+  };
+
   // Password change states
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState<boolean>(false);
   const [newPassword, setNewPassword] = useState<string>("");
@@ -1053,14 +1077,12 @@ export default function DigitalConsultingAudit() {
             </div>
 
             <div className="space-y-3 pt-2">
-              <a 
-                href="https://pay.yoco.com/mergemega?amount=1295" 
-                target="_blank" 
-                rel="referrer noopener"
+              <button 
+                onClick={() => startYocoCheckout(129500, 'premium')}
                 className="w-full py-4 text-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg shadow-orange-600/25 flex items-center justify-center gap-2"
               >
                 Sign Up & Subscribe Now ($80) <ArrowUpRight className="w-4 h-4" />
-              </a>
+              </button>
 
               <Button
                 onClick={confirmSubscriptionFee}
@@ -1379,14 +1401,12 @@ export default function DigitalConsultingAudit() {
 
             {!hasPaid20 ? (
               <div className="flex items-center gap-2 shrink-0">
-                <a 
-                  href="https://pay.yoco.com/mergemega?amount=339" 
-                  target="_blank" 
-                  rel="referrer noopener"
+                <button 
+                  onClick={() => startYocoCheckout(33900, 'standard')}
                   className="bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-orange-600/15 gap-1.5 inline-flex items-center transition-all"
                 >
                   Get 100 Leads ($20) <ArrowUpRight className="w-3.5 h-3.5" />
-                </a>
+                </button>
                 <Button
                   onClick={confirmLimitUpgrade}
                   variant="outline"
@@ -1557,14 +1577,12 @@ export default function DigitalConsultingAudit() {
                   You can have a maximum of 33 leads a day. If you want more than 33 leads, you can pay an extra <strong className="text-orange-600">$20 USD</strong> to get a max of 100 leads today!
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                  <a 
-                    href="https://pay.yoco.com/mergemega?amount=339"
-                    target="_blank"
-                    rel="referrer noopener"
+                  <button 
+                    onClick={() => startYocoCheckout(33900, 'standard')}
                     className="w-full sm:w-auto text-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
                   >
                     Upgrade Now ($20) <ArrowUpRight className="w-3.5 h-3.5" />
-                  </a>
+                  </button>
                   <Button 
                     onClick={confirmLimitUpgrade}
                     className="w-full sm:w-auto text-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border border-slate-200"
