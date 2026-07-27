@@ -15,7 +15,7 @@ export default function ConnectClaude() {
   const [serverStatus, setServerStatus] = useState<"checking" | "online" | "offline">("checking");
   
   // Interactive Simulator state
-  const [selectedTool, setSelectedTool] = useState<"search_leads" | "get_search_logs" | "verify_audit">("search_leads");
+  const [selectedTool, setSelectedTool] = useState<"search_leads" | "get_search_logs" | "verify_audit" | "checkout_subscription" | "confirm_subscription">("search_leads");
   const [simQuery, setSimQuery] = useState("Sweden clothing manufacturer");
   const [simEmail, setSimEmail] = useState("digitalconsultingpros@gmail.com");
   const [simPassword, setSimPassword] = useState("MaltaSecure2026!");
@@ -54,6 +54,22 @@ export default function ConnectClaude() {
           { query: "Switzerland watches importer", timestamp: "2026-07-14T02:44:10Z" },
           { query: "Sourcing broker in Shenzhen", timestamp: "2026-07-14T01:05:59Z" }
         ]);
+      } else if (selectedTool === "checkout_subscription") {
+        const response = await fetch("/api/payments/create-yoco-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: simEmail, amount: 80 })
+        });
+        const data = await response.json();
+        setSimResult(data);
+      } else if (selectedTool === "confirm_subscription") {
+        const response = await fetch("/api/auth/confirm-subscription", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: simEmail })
+        });
+        const data = await response.json();
+        setSimResult(data);
       } else if (selectedTool === "verify_audit") {
         // Mock auth verify
         if (simEmail === "digitalconsultingpros@gmail.com" && simPassword === "MaltaSecure2026!") {
@@ -348,6 +364,24 @@ export default function ConnectClaude() {
                       {"{ email: \"string\", password: \"string\" }"}
                     </td>
                   </tr>
+                  <tr>
+                    <td className="px-6 sm:px-8 py-5 sm:py-6 font-mono text-xs font-black text-primary">checkout_subscription</td>
+                    <td className="px-6 sm:px-8 py-5 sm:py-6 text-xs text-gray-600 font-semibold leading-relaxed">
+                      Generates an official Yoco $80 USD subscription checkout link directly in Claude chat so users can pay and activate their workspace.
+                    </td>
+                    <td className="px-6 sm:px-8 py-5 sm:py-6 text-xs font-mono text-gray-500">
+                      {"{ email: \"string\" }"}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 sm:px-8 py-5 sm:py-6 font-mono text-xs font-black text-primary">confirm_subscription</td>
+                    <td className="px-6 sm:px-8 py-5 sm:py-6 text-xs text-gray-600 font-semibold leading-relaxed">
+                      Confirms or verifies that a user has paid the $80 subscription fee and immediately unlocks restricted source links across Signalmerge and Claude MCP.
+                    </td>
+                    <td className="px-6 sm:px-8 py-5 sm:py-6 text-xs font-mono text-gray-500">
+                      {"{ email: \"string\" }"}
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -370,7 +404,9 @@ export default function ConnectClaude() {
               {[
                 { id: "search_leads", label: "search_leads" },
                 { id: "get_search_logs", label: "get_search_logs" },
-                { id: "verify_audit", label: "verify_audit" }
+                { id: "verify_audit", label: "verify_audit" },
+                { id: "checkout_subscription", label: "checkout_subscription" },
+                { id: "confirm_subscription", label: "confirm_subscription" }
               ].map((tool) => (
                 <button
                   key={tool.id}
