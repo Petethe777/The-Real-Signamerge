@@ -932,72 +932,63 @@ async function startServer() {
   });
 
   // PAYMENT WEBHOOK ENDPOINT
-  app.post("/api/webhooks/payment", (req, res) => {
-    console.log("[Server Webhook] Received payment webhook body:", JSON.stringify(req.body));
-    
-    let email = "";
-    
-    // Check various common places for email in Yoco or generic webhooks
-    if (req.body) {
-      const b = req.body;
-      if (b.email) {
-        email = b.email;
-      } else if (b.payload) {
-        const p = b.payload;
-        if (p.email) {
-          email = p.email;
-        } else if (p.metadata && p.metadata.email) {
-          email = p.metadata.email;
-        } else if (p.customer && p.customer.email) {
-          email = p.customer.email;
-        }
-      } else if (b.data) {
-        const d = b.data;
-        if (d.email) {
-          email = d.email;
-        } else if (d.object) {
-          const o = d.object;
-          if (o.email) {
-            email = o.email;
-          } else if (o.customer_details && o.customer_details.email) {
-            email = o.customer_details.email;
-          } else if (o.metadata && o.metadata.email) {
-            email = o.metadata.email;
-          }
-        } else if (d.metadata && d.metadata.email) {
-          email = d.metadata.email;
-        } else if (d.customer && d.customer.email) {
-          email = d.customer.email;
-        }
-      } else if (b.metadata && b.metadata.email) {
-        email = b.metadata.email;
-      } else if (b.customer && b.customer.email) {
-        email = b.customer.email;
-      }
-    }
+import crypto from "crypto";
 
-    const cleanEmail = email ? email.trim().toLowerCase() : "";
+// PAYMENT WEBHOOK ENDPOINT (signature-verified)
+app.post("/api/webhooks/payment", (req: any, res) => {
+  const webhookSecret = process.env.YOCO_WEBHOOK_SECRET;
+  const svixId = req.headers["webhook-id"] as string;
+  const svixTimestamp = req.headers["webhook-timestamp"] as string;
+  const svixSignature = req.headers["webhook-signature"] as string;
 
-    if (!cleanEmail) {
-      return res.status(400).json({ success: false, error: "No email address identified in webhook payload." });
-    }
+  if (!webhookSecret || !svixId || !svixTimestamp || !svixSignature || !req.rawBody) {
+    console.warn("[Webhook] Missing signature headers or secret — rejecting.");
+    return res.status(400).json({ success: false, error: "Missing signature." });
+  }
 
-    const users = loadUsers();
-    const user = users.find(u => u.email === cleanEmail);
-    if (!user) {
-      console.warn(`[Server Webhook] Payment received for unregistered user: ${cleanEmail}`);
-      return res.status(404).json({ success: false, error: "User not found in system." });
-    }
+  // Reject anything older than 3 minutes to stop replay attacks
+  const age = Math.abs(Date.now() / 1000 - Number(svixTimestamp));
+  if (age > 180) {
+    return res.status(400).json({ success: false, error: "Timestamp too old." });
+  }
 
-    user.hasPaid80 = true;
-    saveUsers(users);
+  const signedContent = `${svixId}.${svixTimestamp}.${req.rawBody.toString("utf8")}`;
+  const secretBytes = Buffer.from(webhookSecret.split("_")[1], "base64");
+  const expectedSig = crypto.createHmac("sha256", secretBytes).update(signedContent).digest("base64");
 
-    console.log(`[Server Webhook] Subscription successfully verified via webhook for: ${cleanEmail}`);
-    return res.json({
-      success: true,
-      message: "Webhook processed. Account subscription unlocked successfully.",
-      email: cleanEmail
-    });
+  const validSig = svixSignature
+    .split(" ")
+    .some(sig => sig.split(",")[1] === expectedSig);
+
+  if (!validSig) {
+    console.warn("[Webhook] Signature mismatch — rejecting.");
+    return res.status(401).json({ success: false, error: "Invalid signature." });
+  }
+
+  const event = req.body;
+  if (event.type !== "payment.succeeded") {
+    return res.json({ success: true, ignored: true });
+  }
+
+  const email = event.payload?.metadata?.email;
+  const cleanEmail = email ? email.trim().toLowerCase() : "";
+  if (!cleanEmail) {
+    console.warn("[Webhook] No email in metadata for", event.payload?.id);
+    return res.status(200).json({ success: false, error: "No email in metadata." });
+  }
+
+  const users = loadUsers();
+  const user = users.find(u => u.email === cleanEmail);
+  if (!user) {
+    console.warn(`[Webhook] Payment for unregistered user: ${cleanEmail}`);
+    return res.status(200).json({ success: false, error: "User not found." });
+  }
+
+  user.hasPaid80 = true;
+  saveUsers(users);
+  console.log(`[Webhook] Verified payment — unlocked ${cleanEmail}`);
+  return res.json({ success: true, email: cleanEmail });
+});
   });
 
   // LOG LEADS USED & GET REMAINING LIMIT
