@@ -97,7 +97,7 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
   if (yocoSecretKey && yocoSecretKey.trim().length > 0) {
     try {
       console.log(`[Yoco Checkout] Invoking Yoco API for ${cleanEmail || 'guest'} (Amount: $${amountUSD} / R${amountZARCents / 100})`);
-      const response = await fetch("https://online.yoco.com/v1/checkout/sessions", {
+      const response = await fetch("https://payments.yoco.com/api/checkouts", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${yocoSecretKey.trim()}`,
