@@ -531,7 +531,9 @@ async function startServer() {
   // Trust upstream reverse proxy (Cloud Run load balancer)
   app.set("trust proxy", true);
 
-  app.use(express.json());
+  app.use(express.json({
+    verify: (req: any, _res, buf) => { req.rawBody = buf; }
+  }));
 
   // Endpoint to let authorized partner session update user password in server memory
   app.post("/api/auth/update-client-password", (req, res) => {
