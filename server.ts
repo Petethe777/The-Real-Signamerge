@@ -139,7 +139,7 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
   }
 
   // Fallback link if API key is not provided or if API call fails
-  const fallbackUrl = `https://pay.yoco.com/mergemega?amount=${amountUSD === 80 ? '1300' : '1520'}${cleanEmail ? '&email=' + encodeURIComponent(cleanEmail) : ''}`;
+  const fallbackUrl = `https://pay.yoco.com/mergemega?amount=${amountZARCents / 100}${cleanEmail ? '&email=' + encodeURIComponent(cleanEmail) : ''}`;
   return {
     success: true,
     checkoutUrl: fallbackUrl,
