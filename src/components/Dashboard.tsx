@@ -1341,7 +1341,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                           Unlock 100 Lists of Potential Clients
                         </h3>
                         <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
-                          Pay <strong className="text-primary font-black text-orange-600">$80</strong> to unlock 140 credits and premium source links.
+                          Pay <strong className="text-primary font-black text-orange-600">R1,350</strong> to unlock 140 credits and premium source links.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                           <a 
