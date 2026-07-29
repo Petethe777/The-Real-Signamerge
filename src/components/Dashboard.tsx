@@ -3021,7 +3021,7 @@ export default function Dashboard() {
                   <Button 
                     onClick={() => {
                       setHasClickedYoco(true);
-                      handleYocoCheckout(80);
+                      handleYocoCheckout();
                     }}
                     className="w-full h-14 bg-primary hover:bg-orange-650 rounded-2xl text-white font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 text-xs transition-colors"
                   >
@@ -3426,7 +3426,7 @@ export default function Dashboard() {
                  Pay <strong className="text-primary font-black text-orange-600">R1,350</strong> to unlock 100 lists of premium potential clients. </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                       <Button 
-                        onClick={() => handleYocoCheckout(80)}
+                        onClick={() => handleYocoCheckout();
                         className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
                       >
                         Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
