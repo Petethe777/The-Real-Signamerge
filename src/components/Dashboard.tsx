@@ -1344,15 +1344,12 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                           Pay <strong className="text-primary font-black text-orange-600">R1,350</strong> to unlock 140 credits and premium source links.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                          <a 
-                            href="https://pay.yoco.com/mergemega?amount=1300" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            referrerPolicy="no-referrer"
-                            className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
-                          >
-                            Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
-                          </a>
+                          <Button 
+  onClick={() => handleYocoCheckout()}
+  className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
+>
+  Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
+</Button>
                           <Link 
                             to="/digital-consulting-pros#payment-section"
                             className="w-full sm:w-auto text-center rounded-xl bg-gray-50 hover:bg-gray-150 text-gray-550 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border border-gray-200"
@@ -2384,26 +2381,25 @@ export default function Dashboard() {
     }, 1200);
   };
 
-  const handleYocoCheckout = async (amountUSD = 80) => {
-    const targetEmail = onboardingData.email || session?.user?.email || "";
+ const targetEmail = onboardingData.email || session?.user?.email || "";
     setIsVerifyingPayment(true);
     setVerificationStatus("Generating official Yoco Checkout Session...");
     try {
       const res = await fetch("/api/payments/create-yoco-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: targetEmail, amount: amountUSD })
+        body: JSON.stringify({ email: targetEmail })
       });
       const data = await res.json();
       setIsVerifyingPayment(false);
       if (data && data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
-        window.open(`https://pay.yoco.com/mergemega?amount=${amountUSD === 80 ? '1300' : '1520'}${targetEmail ? '&email=' + encodeURIComponent(targetEmail) : ''}`, "_blank");
+        setVerificationStatus("Payment system is temporarily unavailable. Please try again shortly.");
       }
     } catch (err) {
       setIsVerifyingPayment(false);
-      window.open(`https://pay.yoco.com/mergemega?amount=1300${targetEmail ? '&email=' + encodeURIComponent(targetEmail) : ''}`, "_blank");
+      setVerificationStatus("Payment system is temporarily unavailable. Please try again shortly.");
     }
   };
 
@@ -3427,8 +3423,7 @@ export default function Dashboard() {
                       Unlock 100 Lists of Potential Clients
                     </h3>
                     <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
-                      Pay <strong className="text-primary font-black text-orange-600">$80</strong> to unlock 100 lists of premium potential clients.
-                    </p>
+                 Pay <strong className="text-primary font-black text-orange-600">R1,350</strong> to unlock 100 lists of premium potential clients. </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                       <Button 
                         onClick={() => handleYocoCheckout(80)}
