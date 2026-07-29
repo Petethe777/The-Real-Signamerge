@@ -144,7 +144,7 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
     success: true,
     checkoutUrl: fallbackUrl,
     email: cleanEmail,
-    amount: `$${amountUSD} USD`,
+    amount: `R1,350 ZAR`,
     provider: "yoco_portal_fallback"
   };
 }
