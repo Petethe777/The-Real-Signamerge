@@ -553,8 +553,17 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
 
           <div className="hidden lg:flex flex-col items-end px-3">
             <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Access Tier</span>
-            <span className="text-xs font-bold text-primary">Enterprise Node 4.0</span>
+            <span className="text-xs font-bold text-primary">{hasPaid ? "Premium Tier" : "Restricted Preview Tier"}</span>
           </div>
+
+          {!hasPaid && (
+            <Button
+              onClick={() => handleYocoCheckout()}
+              className="rounded-xl h-11 bg-primary hover:bg-orange-650 text-white text-xs font-black uppercase tracking-wider px-5 flex items-center gap-2 shadow-lg shadow-orange-500/10"
+            >
+              Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
+            </Button>
+          )}
 
           <Button 
             onClick={handleLogout} 
