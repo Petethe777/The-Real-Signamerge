@@ -125,8 +125,8 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
           checkoutUrl,
           sessionId: resData.id,
           email: cleanEmail,
-          amount: `$${amountUSD} USD (~R${amountZARCents / 100} ZAR)`,
-          provider: "yoco_api"
+          amount: `R1,350 ZAR`,
+        provider: "yoco_api"
         };
       } else {
         console.warn("[Yoco Checkout] Yoco API responded with error or missing redirect URL:", resData);
