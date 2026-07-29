@@ -89,7 +89,7 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
   }
 
   // Convert USD to ZAR cents (R1,520 or 152000 ZAR cents for $80 USD)
-  const amountZARCents = Math.round(amountUSD * 19 * 100);
+  const amountZARCents = 135000; // Fixed price: R1,350 — server-controlled, ignores any client-supplied amount
 
   const successUrl = `${baseUrl}/?payment=success&email=${encodeURIComponent(cleanEmail)}`;
   const cancelUrl = `${baseUrl}/?payment=cancelled`;
