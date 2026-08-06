@@ -455,9 +455,52 @@ interface AccessToken {
   expiresAt: number;
 }
 
-const oauthClients: Record<string, OAuthClient> = {};
-const authCodes: Record<string, AuthCode> = {};
-const accessTokens: Record<string, AccessToken> = {};
+async function saveOAuthClient(client: OAuthClient) {
+  await supabaseService.from("oauth_clients").upsert({
+    client_id: client.clientId,
+    client_secret: client.clientSecret,
+    client_name: client.clientName,
+    redirect_uris: client.redirectUris
+  });
+}
+
+async function getOAuthClient(clientId: string): Promise<OAuthClient | null> {
+  const { data } = await supabaseService.from("oauth_clients").select("*").eq("client_id", clientId).maybeSingle();
+  if (!data) return null;
+  return { clientId: data.client_id, clientSecret: data.client_secret, clientName: data.client_name, redirectUris: data.redirect_uris };
+}
+
+async function saveAuthCode(authCode: AuthCode) {
+  await supabaseService.from("oauth_codes").insert({
+    code: authCode.code,
+    client_id: authCode.clientId,
+    redirect_uri: authCode.redirectUri,
+    user_id: authCode.userId,
+    expires_at: new Date(authCode.expiresAt).toISOString()
+  });
+}
+
+async function getAndDeleteAuthCode(code: string): Promise<AuthCode | null> {
+  const { data } = await supabaseService.from("oauth_codes").select("*").eq("code", code).maybeSingle();
+  if (!data) return null;
+  await supabaseService.from("oauth_codes").delete().eq("code", code);
+  return { code: data.code, clientId: data.client_id, redirectUri: data.redirect_uri, userId: data.user_id, expiresAt: new Date(data.expires_at).getTime() };
+}
+
+async function saveAccessToken(t: AccessToken) {
+  await supabaseService.from("oauth_tokens").insert({
+    token: t.token,
+    client_id: t.clientId,
+    user_id: t.userId,
+    expires_at: new Date(t.expiresAt).toISOString()
+  });
+}
+
+async function getAccessToken(token: string): Promise<AccessToken | null> {
+  const { data } = await supabaseService.from("oauth_tokens").select("*").eq("token", token).maybeSingle();
+  if (!data) return null;
+  return { token: data.token, clientId: data.client_id, userId: data.user_id, expiresAt: new Date(data.expires_at).getTime() };
+}
 
 let currentRequestContextUser: string | null = null;
 
