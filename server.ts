@@ -18,6 +18,10 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 dotenv.config();
+const digitalConsultingEmail = (process.env.DIGITAL_CONSULTING_EMAIL || "").trim().toLowerCase();
+const digitalConsultingPassword = (process.env.DIGITAL_CONSULTING_PASSWORD || "").trim();
+const adminEmail = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+const adminPassword = (process.env.ADMIN_PASSWORD || "").trim();
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "https://sscuyhvkyfemrsmfxhkt.supabase.co";
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3V5aHZreWZlbXJzbWZ4aGt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzQ5MzAsImV4cCI6MjA5NDMxMDkzMH0.qoURHMmKre8uGLem4b6GBrqtt4yHaUlE9LI9PYxW-c4";
