@@ -962,7 +962,7 @@ async function startServer() {
   });
 
   // PAYMENT WEBHOOK ENDPOINT
-import crypto from "crypto";
+
 
 // PAYMENT WEBHOOK ENDPOINT (signature-verified)
 app.post("/api/webhooks/payment", (req: any, res) => {
@@ -1019,7 +1019,6 @@ app.post("/api/webhooks/payment", (req: any, res) => {
   console.log(`[Webhook] Verified payment — unlocked ${cleanEmail}`);
   return res.json({ success: true, email: cleanEmail });
 });
-  });
 
   // LOG LEADS USED & GET REMAINING LIMIT
   app.post("/api/auth/log-leads-used", (req, res) => {
