@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import { ApifyClient } from 'apify-client';
 import { GoogleGenAI, Type } from "@google/genai";
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 import { searchDataset } from "./src/data/customerSearchDataset.js";
 
 // MCP Server SDK imports
