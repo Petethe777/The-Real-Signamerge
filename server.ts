@@ -525,28 +525,6 @@ function loadUsers(): ServerUser[] {
     console.error("Error loading users file:", err);
   }
 
-  // Seeding default users
-  const defaultUsers: ServerUser[] = [
-    {
-      email: "digitalconsultingpros@gmail.com",
-      password: "MaltaSecure2026!",
-      hasPaid80: true,
-      hasPaid20: false,
-      leadsUsedToday: 0,
-      lastLeadsReset: new Date().toISOString()
-    },
-    {
-      email: "petemkhize@gmail.com",
-      password: "LehakoeZakithi777",
-      hasPaid80: true,
-      hasPaid20: false,
-      leadsUsedToday: 0,
-      lastLeadsReset: new Date().toISOString()
-    }
-  ];
-  saveUsers(defaultUsers);
-  return defaultUsers;
-}
 
 function saveUsers(users: ServerUser[]) {
   try {
@@ -1688,10 +1666,6 @@ app.post("/api/webhooks/payment", (req: any, res) => {
 
     const users = loadUsers();
     const user = users.find(u => u.email === cleanEmail);
-
-    const isClientAdmin = cleanEmail === "digitalconsultingpros@gmail.com" && (cleanPassword === "MaltaSecure2026!" || (updatedClientPassword && cleanPassword === updatedClientPassword));
-    const isPeteAdmin = cleanEmail === "petemkhize@gmail.com" && cleanPassword === "LehakoeZakithi777";
-    
     const isValid = (user && user.password === cleanPassword) || isClientAdmin || isPeteAdmin;
 
     if (!isValid) {
