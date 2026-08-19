@@ -514,43 +514,97 @@ interface ServerUser {
   lastLeadsReset: string;
 }
 
-const USERS_FILE = path.join(process.cwd(), "server_users.json");
+// NOTE: The old server_users.json file-based store has been removed.
+// It lived on Render's ephemeral disk and was wiped on every redeploy,
+// which is why accounts/paid-status kept disappearing. All account and
+// payment data now lives in Supabase (see below), which persists across
+// deploys.
+// ---------------------------------------------------------------------------
+// Real Supabase-backed account system (replaces the ephemeral server_users.json
+// file). Passwords are handled entirely by Supabase Auth — never stored or
+// compared by this server. Paid/lead-limit status lives in `profiles`, a real
+// Postgres table, so it survives redeploys.
+// ---------------------------------------------------------------------------
 
-function loadUsers(): ServerUser[] {
-  try {
-    if (fs.existsSync(USERS_FILE)) {
-      const data = fs.readFileSync(USERS_FILE, "utf-8");
-      return JSON.parse(data);
-    }
-  } catch (err) {
-    console.error("Error loading users file:", err);
-  }
-
-
-function saveUsers(users: ServerUser[]) {
-  try {
-    const dir = path.dirname(USERS_FILE);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error saving users file:", err);
-  }
+interface SupabaseProfile {
+  id: string;
+  email: string;
+  hasPaid80: boolean;
+  hasPaid20: boolean;
+  leadsUsedToday: number;
+  lastLeadsReset: string;
 }
 
-function checkAndResetLeads(user: ServerUser): boolean {
-  const now = new Date();
-  const lastReset = new Date(user.lastLeadsReset || now.toISOString());
-  const hoursDiff = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
-  
-  if (hoursDiff >= 24) {
-    user.leadsUsedToday = 0;
-    user.lastLeadsReset = now.toISOString();
-    user.hasPaid20 = false; // Reset the $20 premium limit upgrade too
-    return true;
+function mapProfileRow(row: any): SupabaseProfile {
+  return {
+    id: row.id,
+    email: row.email,
+    hasPaid80: !!row.has_paid_80,
+    hasPaid20: !!row.has_paid_20,
+    leadsUsedToday: row.leads_used_today ?? 0,
+    lastLeadsReset: row.last_leads_reset ?? new Date().toISOString(),
+  };
+}
+
+/** Verifies email+password against real Supabase Auth (auth.users). */
+async function verifySupabaseCredentials(email: string, password: string): Promise<{ id: string; email: string } | null> {
+  const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
+  if (error || !data?.user) return null;
+  return { id: data.user.id, email: data.user.email || email };
+}
+
+/** Fetches (or lazily creates) the profiles row for a given authenticated user id. */
+async function getOrCreateProfile(userId: string, email: string): Promise<SupabaseProfile | null> {
+  const { data: existing, error: findErr } = await supabaseService
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (findErr) {
+    console.error("[Supabase] Error fetching profile:", findErr.message);
+    return null;
   }
-  return false;
+
+  if (existing) return mapProfileRow(existing);
+
+  const { data: created, error: createErr } = await supabaseService
+    .from("profiles")
+    .insert({
+      id: userId,
+      email,
+      has_paid_80: false,
+      has_paid_20: false,
+      leads_used_today: 0,
+      last_leads_reset: new Date().toISOString(),
+    })
+    .select("*")
+    .maybeSingle();
+
+  if (createErr || !created) {
+    console.error("[Supabase] Error creating profile:", createErr?.message);
+    return null;
+  }
+  return mapProfileRow(created);
+}
+
+/** Resets the daily lead counter/hasPaid20 boost if 24h have passed, persisting to Supabase. */
+async function checkAndResetLeadsSupabase(profile: SupabaseProfile): Promise<SupabaseProfile> {
+  const now = new Date();
+  const lastReset = new Date(profile.lastLeadsReset || now.toISOString());
+  const hoursDiff = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
+
+  if (hoursDiff >= 24) {
+    const { data, error } = await supabaseService
+      .from("profiles")
+      .update({ leads_used_today: 0, last_leads_reset: now.toISOString(), has_paid_20: false })
+      .eq("id", profile.id)
+      .select("*")
+      .maybeSingle();
+
+    if (!error && data) return mapProfileRow(data);
+  }
+  return profile;
 }
 
 async function startServer() {
@@ -817,8 +871,8 @@ async function startServer() {
     });
   });
 
-  // CUSTOM SIGNUP ENDPOINT
-  app.post("/api/auth/custom-signup", (req, res) => {
+  // CUSTOM SIGNUP ENDPOINT — creates a real Supabase Auth account + profiles row
+  app.post("/api/auth/custom-signup", async (req, res) => {
     const { email, password } = req.body;
     const cleanEmail = email ? email.trim().toLowerCase() : "";
     const cleanPassword = password ? password.trim() : "";
@@ -826,40 +880,40 @@ async function startServer() {
     if (!cleanEmail || !cleanPassword) {
       return res.status(400).json({ success: false, message: "Email and password are required." });
     }
-
-    const users = loadUsers();
-    const exists = users.find(u => u.email === cleanEmail);
-    if (exists) {
-      return res.status(400).json({ success: false, message: "An account with this email already exists." });
+    if (cleanPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters." });
     }
 
-    const newUser: ServerUser = {
-      email: cleanEmail,
-      password: cleanPassword,
-      hasPaid80: false, // Must pay $80 to unlock
-      hasPaid20: false,
-      leadsUsedToday: 0,
-      lastLeadsReset: new Date().toISOString()
-    };
+    const { data, error } = await supabaseAdmin.auth.signUp({ email: cleanEmail, password: cleanPassword });
 
-    users.push(newUser);
-    saveUsers(users);
+    if (error) {
+      const isDuplicate = /already registered|already exists/i.test(error.message);
+      return res.status(isDuplicate ? 400 : 500).json({
+        success: false,
+        message: isDuplicate ? "An account with this email already exists." : error.message
+      });
+    }
+    if (!data.user) {
+      return res.status(500).json({ success: false, message: "Signup failed. Please try again." });
+    }
 
-    console.log(`[Server Auth] Registered new user: ${cleanEmail}`);
-    return res.json({ 
-      success: true, 
+    const profile = await getOrCreateProfile(data.user.id, cleanEmail);
+
+    console.log(`[Server Auth] Registered new Supabase user: ${cleanEmail}`);
+    return res.json({
+      success: true,
       message: "Signup successful. Please complete the $80 subscription payment to activate your account.",
       user: {
-        email: newUser.email,
-        hasPaid80: false,
-        hasPaid20: false,
-        leadsUsedToday: 0
+        email: cleanEmail,
+        hasPaid80: profile?.hasPaid80 ?? false,
+        hasPaid20: profile?.hasPaid20 ?? false,
+        leadsUsedToday: profile?.leadsUsedToday ?? 0
       }
     });
   });
 
-  // CUSTOM LOGIN ENDPOINT
-  app.post("/api/auth/custom-login", (req, res) => {
+  // CUSTOM LOGIN ENDPOINT — validates against real Supabase Auth
+  app.post("/api/auth/custom-login", async (req, res) => {
     const { email, password } = req.body;
     const cleanEmail = email ? email.trim().toLowerCase() : "";
     const cleanPassword = password ? password.trim() : "";
@@ -868,39 +922,32 @@ async function startServer() {
       return res.status(400).json({ success: false, message: "Email and password are required." });
     }
 
-    const users = loadUsers();
-    const user = users.find(u => u.email === cleanEmail);
-    if (!user) {
-      return res.status(401).json({ success: false, message: "No account registered with this email." });
+    const authedUser = await verifySupabaseCredentials(cleanEmail, cleanPassword);
+    if (!authedUser) {
+      return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
 
-    let isMatch = user.password === cleanPassword;
-    if (cleanEmail === "digitalconsultingpros@gmail.com" && updatedClientPassword) {
-      isMatch = isMatch || (cleanPassword === updatedClientPassword);
+    let profile = await getOrCreateProfile(authedUser.id, authedUser.email);
+    if (!profile) {
+      return res.status(500).json({ success: false, message: "Could not load account profile." });
     }
-
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Incorrect password." });
-    }
-
-    checkAndResetLeads(user);
-    saveUsers(users);
+    profile = await checkAndResetLeadsSupabase(profile);
 
     console.log(`[Server Auth] User logged in: ${cleanEmail}`);
     return res.json({
       success: true,
       user: {
-        email: user.email,
-        hasPaid80: user.hasPaid80,
-        hasPaid20: user.hasPaid20,
-        leadsUsedToday: user.leadsUsedToday,
-        lastLeadsReset: user.lastLeadsReset
+        email: profile.email,
+        hasPaid80: profile.hasPaid80,
+        hasPaid20: profile.hasPaid20,
+        leadsUsedToday: profile.leadsUsedToday,
+        lastLeadsReset: profile.lastLeadsReset
       }
     });
   });
 
   // CONFIRM SUBSCRIPTION ENDPOINT ($80 PAYMENT LINK CLICKED/CONFIRMED)
-  app.post("/api/auth/confirm-subscription", (req, res) => {
+  app.post("/api/auth/confirm-subscription", async (req, res) => {
     const { email } = req.body;
     const cleanEmail = email ? email.trim().toLowerCase() : "";
 
@@ -908,30 +955,42 @@ async function startServer() {
       return res.status(400).json({ success: false, message: "Email is required." });
     }
 
-    const users = loadUsers();
-    const user = users.find(u => u.email === cleanEmail);
-    if (!user) {
+    const { data: profileRow, error: findErr } = await supabaseService
+      .from("profiles")
+      .select("*")
+      .eq("email", cleanEmail)
+      .maybeSingle();
+
+    if (findErr || !profileRow) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    user.hasPaid80 = true;
-    saveUsers(users);
+    const { data: updated, error: updateErr } = await supabaseService
+      .from("profiles")
+      .update({ has_paid_80: true })
+      .eq("id", profileRow.id)
+      .select("*")
+      .maybeSingle();
+
+    if (updateErr || !updated) {
+      return res.status(500).json({ success: false, message: "Failed to confirm subscription." });
+    }
 
     console.log(`[Server Auth] Subscription $80 confirmed for user: ${cleanEmail}`);
     return res.json({
       success: true,
       message: "Subscription successfully verified. Your account is fully unlocked!",
       user: {
-        email: user.email,
+        email: updated.email,
         hasPaid80: true,
-        hasPaid20: user.hasPaid20,
-        leadsUsedToday: user.leadsUsedToday
+        hasPaid20: updated.has_paid_20,
+        leadsUsedToday: updated.leads_used_today
       }
     });
   });
 
   // UPGRADE LIMIT ENDPOINT ($20 PAYMENT TO BUMP TO 100 LEADS CAP)
-  app.post("/api/auth/upgrade-limit", (req, res) => {
+  app.post("/api/auth/upgrade-limit", async (req, res) => {
     const { email } = req.body;
     const cleanEmail = email ? email.trim().toLowerCase() : "";
 
@@ -939,33 +998,42 @@ async function startServer() {
       return res.status(400).json({ success: false, message: "Email is required." });
     }
 
-    const users = loadUsers();
-    const user = users.find(u => u.email === cleanEmail);
-    if (!user) {
+    const { data: profileRow, error: findErr } = await supabaseService
+      .from("profiles")
+      .select("*")
+      .eq("email", cleanEmail)
+      .maybeSingle();
+
+    if (findErr || !profileRow) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    user.hasPaid20 = true;
-    saveUsers(users);
+    const { data: updated, error: updateErr } = await supabaseService
+      .from("profiles")
+      .update({ has_paid_20: true })
+      .eq("id", profileRow.id)
+      .select("*")
+      .maybeSingle();
+
+    if (updateErr || !updated) {
+      return res.status(500).json({ success: false, message: "Failed to upgrade limit." });
+    }
 
     console.log(`[Server Auth] Premium Daily Limit $20 confirmed for user: ${cleanEmail}`);
     return res.json({
       success: true,
       message: "Daily lead limit successfully upgraded to 100 leads for today!",
       user: {
-        email: user.email,
-        hasPaid80: user.hasPaid80,
+        email: updated.email,
+        hasPaid80: updated.has_paid_80,
         hasPaid20: true,
-        leadsUsedToday: user.leadsUsedToday
+        leadsUsedToday: updated.leads_used_today
       }
     });
   });
 
-  // PAYMENT WEBHOOK ENDPOINT
-
-
-// PAYMENT WEBHOOK ENDPOINT (signature-verified)
-app.post("/api/webhooks/payment", (req: any, res) => {
+  // PAYMENT WEBHOOK ENDPOINT (signature-verified)
+  app.post("/api/webhooks/payment", async (req: any, res) => {
   const webhookSecret = process.env.YOCO_WEBHOOK_SECRET;
   const svixId = req.headers["webhook-id"] as string;
   const svixTimestamp = req.headers["webhook-timestamp"] as string;
@@ -1000,28 +1068,40 @@ app.post("/api/webhooks/payment", (req: any, res) => {
     return res.json({ success: true, ignored: true });
   }
 
-  const email = event.payload?.metadata?.email;
-  const cleanEmail = email ? email.trim().toLowerCase() : "";
-  if (!cleanEmail) {
-    console.warn("[Webhook] No email in metadata for", event.payload?.id);
-    return res.status(200).json({ success: false, error: "No email in metadata." });
-  }
+    const email = event.payload?.metadata?.email;
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
+    if (!cleanEmail) {
+      console.warn("[Webhook] No email in metadata for", event.payload?.id);
+      return res.status(200).json({ success: false, error: "No email in metadata." });
+    }
 
-  const users = loadUsers();
-  const user = users.find(u => u.email === cleanEmail);
-  if (!user) {
-    console.warn(`[Webhook] Payment for unregistered user: ${cleanEmail}`);
-    return res.status(200).json({ success: false, error: "User not found." });
-  }
+    const { data: profile, error: findErr } = await supabaseService
+      .from("profiles")
+      .select("id")
+      .eq("email", cleanEmail)
+      .maybeSingle();
 
-  user.hasPaid80 = true;
-  saveUsers(users);
-  console.log(`[Webhook] Verified payment — unlocked ${cleanEmail}`);
-  return res.json({ success: true, email: cleanEmail });
-});
+    if (findErr || !profile) {
+      console.warn(`[Webhook] Payment for unregistered user: ${cleanEmail}`, findErr?.message);
+      return res.status(200).json({ success: false, error: "User not found." });
+    }
+
+    const { error: updateErr } = await supabaseService
+      .from("profiles")
+      .update({ has_paid_80: true })
+      .eq("id", profile.id);
+
+    if (updateErr) {
+      console.error(`[Webhook] Failed to unlock ${cleanEmail}:`, updateErr.message);
+      return res.status(500).json({ success: false, error: "Failed to update profile." });
+    }
+
+    console.log(`[Webhook] Verified payment — unlocked ${cleanEmail}`);
+    return res.json({ success: true, email: cleanEmail });
+  });
 
   // LOG LEADS USED & GET REMAINING LIMIT
-  app.post("/api/auth/log-leads-used", (req, res) => {
+  app.post("/api/auth/log-leads-used", async (req, res) => {
     const { email, count } = req.body;
     const cleanEmail = email ? email.trim().toLowerCase() : "";
     const addCount = parseInt(count, 10) || 0;
@@ -1030,27 +1110,38 @@ app.post("/api/webhooks/payment", (req: any, res) => {
       return res.status(400).json({ success: false, message: "Email is required." });
     }
 
-    const users = loadUsers();
-    const user = users.find(u => u.email === cleanEmail);
-    if (!user) {
+    const { data: profileRow, error: findErr } = await supabaseService
+      .from("profiles")
+      .select("*")
+      .eq("email", cleanEmail)
+      .maybeSingle();
+
+    if (findErr || !profileRow) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    const resetHappened = checkAndResetLeads(user);
-    const maxLimit = (user.hasPaid80 || user.hasPaid20) ? 100 : 33;
-    
-    user.leadsUsedToday += addCount;
-    if (user.leadsUsedToday > maxLimit) {
-      user.leadsUsedToday = maxLimit;
+    let profile = await checkAndResetLeadsSupabase(mapProfileRow(profileRow));
+    const resetHappened = profile.leadsUsedToday === 0 && profile.lastLeadsReset !== profileRow.last_leads_reset;
+    const maxLimit = (profile.hasPaid80 || profile.hasPaid20) ? 100 : 33;
+
+    const newCount = Math.min(profile.leadsUsedToday + addCount, maxLimit);
+
+    const { data: updated, error: updateErr } = await supabaseService
+      .from("profiles")
+      .update({ leads_used_today: newCount })
+      .eq("id", profile.id)
+      .select("*")
+      .maybeSingle();
+
+    if (updateErr || !updated) {
+      return res.status(500).json({ success: false, message: "Failed to log leads used." });
     }
-    
-    saveUsers(users);
 
     return res.json({
       success: true,
-      leadsUsedToday: user.leadsUsedToday,
+      leadsUsedToday: updated.leads_used_today,
       maxLimit,
-      limitReached: user.leadsUsedToday >= maxLimit,
+      limitReached: updated.leads_used_today >= maxLimit,
       resetHappened
     });
   });
@@ -1254,22 +1345,23 @@ app.post("/api/webhooks/payment", (req: any, res) => {
         }
 
         console.log(`[MCP Tool: confirm_subscription] Confirming $80 subscription for: ${email}`);
-        const users = loadUsers();
-        let user = users.find(u => u.email === email);
-        if (!user) {
-          user = {
-            email,
-            password: "mcp-user-auto",
-            hasPaid80: true,
-            hasPaid20: false,
-            leadsUsedToday: 0,
-            lastLeadsReset: new Date().toISOString()
+        const { data: profileRow } = await supabaseService
+          .from("profiles")
+          .select("id")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (!profileRow) {
+          return {
+            content: [{ type: "text", text: `Error: No Signalmerge account found for ${email}. Please sign up on signalmerge.co.za first.` }],
+            isError: true
           };
-          users.push(user);
-        } else {
-          user.hasPaid80 = true;
         }
-        saveUsers(users);
+
+        await supabaseService
+          .from("profiles")
+          .update({ has_paid_80: true })
+          .eq("id", profileRow.id);
 
         return {
           content: [
@@ -1304,34 +1396,30 @@ app.post("/api/webhooks/payment", (req: any, res) => {
         // Determine if user has premium subscription to view source links
         let isPremium = false;
 
-        // 1. Check if there is an authenticated OAuth context
+        // 1. Check if there is an authenticated OAuth context (set from the Supabase-verified session)
         if (currentRequestContextUser) {
-          const users = loadUsers();
-          const matchedUser = users.find(u => u.email === currentRequestContextUser);
-          if (matchedUser && (matchedUser.hasPaid80 || matchedUser.hasPaid20)) {
+          const { data: matchedProfile } = await supabaseService
+            .from("profiles")
+            .select("has_paid_80, has_paid_20")
+            .eq("email", currentRequestContextUser)
+            .maybeSingle();
+          if (matchedProfile && (matchedProfile.has_paid_80 || matchedProfile.has_paid_20)) {
             isPremium = true;
-          }
-          if (currentRequestContextUser === "digitalconsultingpros@gmail.com" || currentRequestContextUser === "petemkhize@gmail.com") {
-            isPremium = true; // Admin overrides
           }
         }
 
         // 2. Check if explicit email/password arguments are passed to override/direct auth
-        if (email && password) {
-          const users = loadUsers();
-          const matchedUser = users.find(u => u.email === email);
-          if (matchedUser && matchedUser.password === password) {
-            if (matchedUser.hasPaid80 || matchedUser.hasPaid20) {
+        if (!isPremium && email && password) {
+          const directAuthUser = await verifySupabaseCredentials(email, password);
+          if (directAuthUser) {
+            const { data: matchedProfile } = await supabaseService
+              .from("profiles")
+              .select("has_paid_80, has_paid_20")
+              .eq("id", directAuthUser.id)
+              .maybeSingle();
+            if (matchedProfile && (matchedProfile.has_paid_80 || matchedProfile.has_paid_20)) {
               isPremium = true;
             }
-          }
-          // Check for digitalconsultingpros owner override
-          if (email === "digitalconsultingpros@gmail.com" && (password === "MaltaSecure2026!" || (updatedClientPassword && password === updatedClientPassword))) {
-            isPremium = true;
-          }
-          // Check for petemkhize admin override
-          if (email === "petemkhize@gmail.com" && password === "LehakoeZakithi777") {
-            isPremium = true;
           }
         }
 
@@ -1527,7 +1615,7 @@ app.post("/api/webhooks/payment", (req: any, res) => {
   app.get("/.well-known/openid-configuration", handleDiscovery);
 
   // 2. Dynamic Client Registration (DCR)
-  app.post("/oauth/register", (req, res) => {
+  app.post("/oauth/register", async (req, res) => {
     applyRobustCors(req, res);
     try {
       const { client_name, redirect_uris, grant_types, response_types } = req.body || {};
@@ -1535,12 +1623,12 @@ app.post("/api/webhooks/payment", (req: any, res) => {
       const clientId = `client_${Math.random().toString(36).substring(2, 15)}`;
       const clientSecret = `secret_${Math.random().toString(36).substring(2, 15)}`;
       
-      oauthClients[clientId] = {
+      await saveOAuthClient({
         clientId,
         clientSecret,
         clientName: client_name || "Claude Client",
         redirectUris: redirect_uris || []
-      };
+      });
       
       console.log(`[OAuth] Registered client: ${clientId} (${client_name})`);
       
@@ -1560,7 +1648,7 @@ app.post("/api/webhooks/payment", (req: any, res) => {
   });
 
   // 3. Authorization Code Request Form (GET)
-  app.get("/oauth/authorize", (req, res) => {
+  app.get("/oauth/authorize", async (req, res) => {
     applyRobustCors(req, res);
     const { client_id, redirect_uri, response_type, state, scope } = req.query;
     
@@ -1568,7 +1656,7 @@ app.post("/api/webhooks/payment", (req: any, res) => {
       return res.status(400).send("Missing client_id or redirect_uri parameters");
     }
 
-    const client = oauthClients[client_id as string] || { clientName: "Claude Client" };
+    const client = (await getOAuthClient(client_id as string)) || { clientName: "Claude Client" };
 
     const html = `
 <!DOCTYPE html>
@@ -1651,7 +1739,7 @@ app.post("/api/webhooks/payment", (req: any, res) => {
   });
 
   // 4. Authorization Code Submit (POST)
-  app.post("/oauth/authorize", express.urlencoded({ extended: true }), (req, res) => {
+  app.post("/oauth/authorize", express.urlencoded({ extended: true }), async (req, res) => {
     applyRobustCors(req, res);
     const { client_id, redirect_uri, state, scope, email, password } = req.body;
 
@@ -1659,14 +1747,21 @@ app.post("/api/webhooks/payment", (req: any, res) => {
       return res.status(400).send("Missing client_id or redirect_uri parameters");
     }
 
-    const client = oauthClients[client_id as string] || { clientName: "Claude Client" };
-    
+    const client = (await getOAuthClient(client_id as string)) || { clientName: "Claude Client" };
     const cleanEmail = email ? email.trim().toLowerCase() : "";
     const cleanPassword = password ? password.trim() : "";
 
-    const users = loadUsers();
-    const user = users.find(u => u.email === cleanEmail);
-    const isValid = (user && user.password === cleanPassword) || isClientAdmin || isPeteAdmin;
+    // Validate against real Supabase Auth accounts (same accounts as the website).
+    const authedUser = cleanEmail && cleanPassword
+      ? await verifySupabaseCredentials(cleanEmail, cleanPassword)
+      : null;
+
+    const isValid = !!authedUser;
+
+    if (isValid && authedUser) {
+      // Ensure a profiles row exists so paid-status checks downstream work.
+      await getOrCreateProfile(authedUser.id, authedUser.email);
+    }
 
     if (!isValid) {
       const html = `
@@ -1755,13 +1850,13 @@ app.post("/api/webhooks/payment", (req: any, res) => {
     }
 
     const code = "code_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    authCodes[code] = {
+    await saveAuthCode({
       code,
       clientId: client_id as string,
       redirectUri: redirect_uri as string,
       userId: cleanEmail,
       expiresAt: Date.now() + 5 * 60 * 1000
-    };
+    });
 
     console.log(`[OAuth] Generated authorization code for: ${cleanEmail}`);
 
@@ -1775,7 +1870,7 @@ app.post("/api/webhooks/payment", (req: any, res) => {
   });
 
   // 5. Token Exchange (POST)
-  app.post("/oauth/token", (req, res) => {
+  app.post("/oauth/token", async (req, res) => {
     applyRobustCors(req, res);
     
     const { grant_type, code, redirect_uri, client_id, client_secret } = req.body || {};
@@ -1800,25 +1895,22 @@ app.post("/api/webhooks/payment", (req: any, res) => {
       return res.status(400).json({ error: "invalid_request", error_description: "Missing code parameter." });
     }
 
-    const authSession = authCodes[code];
+    const authSession = await getAndDeleteAuthCode(code);
     if (!authSession) {
       return res.status(400).json({ error: "invalid_grant", error_description: "Authorization code not found or invalid." });
     }
 
     if (Date.now() > authSession.expiresAt) {
-      delete authCodes[code];
       return res.status(400).json({ error: "invalid_grant", error_description: "Authorization code has expired." });
     }
 
-    delete authCodes[code];
-
     const token = "token_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    accessTokens[token] = {
+    await saveAccessToken({
       token,
       clientId: authSession.clientId,
       userId: authSession.userId,
       expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000
-    };
+    });
 
     console.log(`[OAuth] Issued access token for user: ${authSession.userId}`);
 
@@ -1904,7 +1996,7 @@ app.post("/api/webhooks/payment", (req: any, res) => {
 
     let authUser = "";
     if (token) {
-      const session = accessTokens[token];
+      const session = await getAccessToken(token);
       if (session && Date.now() <= session.expiresAt) {
         authUser = session.userId;
       }
@@ -1958,7 +2050,7 @@ app.post("/api/webhooks/payment", (req: any, res) => {
       
       let userEmail = "";
       if (token) {
-        const session = accessTokens[token];
+        const session = await getAccessToken(token);
         if (session && Date.now() <= session.expiresAt) {
           userEmail = session.userId;
         }
