@@ -166,6 +166,25 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   }, [profile]);
   const [activeTab, setActiveTab] = useState<'discovery' | 'analytics' | 'dataset'>('discovery');
 
+  // Triggers the real Yoco checkout for the R1,350 / $80 subscription unlock.
+  const handleYocoCheckout = async () => {
+    try {
+      const res = await fetch("/api/payments/create-yoco-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: profile?.email || "" })
+      });
+      const data = await res.json();
+      if (data && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        alert("Payment system is temporarily unavailable. Please try again shortly.");
+      }
+    } catch (err) {
+      alert("Payment system is temporarily unavailable. Please try again shortly.");
+    }
+  };
+
   const [isAuditing, setIsAuditing] = useState(isApproved);
   const [isAdminView, setIsAdminView] = useState(false);
   const [allProfiles, setAllProfiles] = useState<any[]>([]);
@@ -2390,7 +2409,12 @@ export default function Dashboard() {
     }, 1200);
   };
 
- const targetEmail = onboardingData.email || session?.user?.email || "";
+  const [startedSignup, setStartedSignup] = useState(false);
+
+  // Triggers the real Yoco checkout for the R1,350 / $80 subscription unlock.
+  // Used by all 4 "Subscribe"/"Unlock" buttons across the dashboard.
+  const handleYocoCheckout = async () => {
+    const targetEmail = onboardingData.email || session?.user?.email || "";
     setIsVerifyingPayment(true);
     setVerificationStatus("Generating official Yoco Checkout Session...");
     try {
@@ -2411,8 +2435,6 @@ export default function Dashboard() {
       setVerificationStatus("Payment system is temporarily unavailable. Please try again shortly.");
     }
   };
-
-  const [startedSignup, setStartedSignup] = useState(false);
 
   const toggleIntegration = (tool: string) => {
     const current = onboardingData.sellingRegion.integrations || [];
@@ -3435,7 +3457,7 @@ export default function Dashboard() {
                  Pay <strong className="text-primary font-black text-orange-600">R1,350</strong> to unlock 100 lists of premium potential clients. </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                       <Button 
-                        onClick={() => handleYocoCheckout();
+                        onClick={() => handleYocoCheckout()}
                         className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
                       >
                         Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
@@ -3902,3 +3924,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
