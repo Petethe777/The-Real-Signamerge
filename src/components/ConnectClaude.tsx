@@ -17,8 +17,8 @@ export default function ConnectClaude() {
   // Interactive Simulator state
   const [selectedTool, setSelectedTool] = useState<"search_leads" | "get_search_logs" | "verify_audit" | "checkout_subscription" | "confirm_subscription">("search_leads");
   const [simQuery, setSimQuery] = useState("Sweden clothing manufacturer");
-  const [simEmail, setSimEmail] = useState("digitalconsultingpros@gmail.com");
-  const [simPassword, setSimPassword] = useState("MaltaSecure2026!");
+  const [simEmail, setSimEmail] = useState("");
+  const [simPassword, setSimPassword] = useState("");
   const [simulating, setSimulating] = useState(false);
   const [simResult, setSimResult] = useState<any>(null);
 
@@ -71,23 +71,15 @@ export default function ConnectClaude() {
         const data = await response.json();
         setSimResult(data);
       } else if (selectedTool === "verify_audit") {
-        // Mock auth verify
-        if (simEmail === "digitalconsultingpros@gmail.com" && simPassword === "MaltaSecure2026!") {
-          setSimResult({
-            success: true,
-            user: {
-              email: "digitalconsultingpros@gmail.com",
-              company: "Digital Consulting Pros",
-              approved: true,
-              role: "admin"
-            }
-          });
-        } else {
-          setSimResult({
-            success: false,
-            error: "Authentication failed: Invalid credentials."
-          });
-        }
+        // Calls the real server-side verification endpoint — no credentials
+        // are ever checked or stored in the browser.
+        const response = await fetch("/api/auth/verify-client-audit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: simEmail, password: simPassword })
+        });
+        const data = await response.json();
+        setSimResult(data);
       }
     } catch (err: any) {
       setSimResult({ error: err.message || "Failed to query simulation endpoint." });
@@ -452,7 +444,7 @@ export default function ConnectClaude() {
                       <Input 
                         value={simEmail} 
                         onChange={(e) => setSimEmail(e.target.value)} 
-                        placeholder="digitalconsultingpros@gmail.com"
+                        placeholder="you@company.com"
                         className="rounded-xl border-orange-100 focus-visible:ring-0 focus-visible:border-primary text-xs font-bold"
                       />
                     </div>
@@ -462,7 +454,7 @@ export default function ConnectClaude() {
                         type="password"
                         value={simPassword} 
                         onChange={(e) => setSimPassword(e.target.value)} 
-                        placeholder="MaltaSecure2026!"
+                        placeholder="••••••••••"
                         className="rounded-xl border-orange-100 focus-visible:ring-0 focus-visible:border-primary text-xs font-bold"
                       />
                     </div>
