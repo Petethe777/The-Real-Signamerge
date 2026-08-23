@@ -1166,7 +1166,7 @@ export default function DigitalConsultingAudit() {
                     <Key className="w-4 h-4 text-orange-600" /> Update Audit Access Password
                   </h5>
                   <p className="text-slate-600 text-[11px] leading-relaxed">
-                    Set a custom secure password to replace the default <code className="bg-orange-100 px-1 py-0.5 rounded font-mono font-bold text-orange-700 text-[10px]">MaltaSecure2026!</code>. This updates our global Supabase replication engine instantly.
+                    Set a custom secure password to replace the current audit access password. This updates our global Supabase replication engine instantly.
                   </p>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
