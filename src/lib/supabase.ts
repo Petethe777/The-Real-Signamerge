@@ -35,7 +35,7 @@ const getMockProfiles = () => {
   const defaultProfiles = [
     {
       id: 'admin-id',
-      email: 'petemkhize@gmail.com',
+      email: 'admin@example.com',
       company_name: 'Signalmerge Admin',
       location: 'South Africa',
       is_approved: true,
@@ -323,62 +323,11 @@ export const supabase = {
         console.warn('Backend custom login failed:', err);
       }
 
-      // Master Sandbox Bypass checks:
-      if (cleanEmail === 'petemkhize@gmail.com' && cleanPw === 'LehakoeZakithi777') {
-        const user = { id: 'admin-id', email: 'petemkhize@gmail.com', role: 'admin' };
-        const session = { access_token: 'mock-token', user };
-        localStorage.setItem('mock_session', JSON.stringify(session));
-        window.dispatchEvent(new Event('mock-auth-change'));
-        return { data: { user, session }, error: null };
-      }
-
-      const isDefaultClientEmail = cleanEmail === 'digitalconsultingpros@gmail.com';
-      if (isDefaultClientEmail) {
-        // Try to fetch custom-set password from real Supabase table 'client_credentials' if built & configured
-        let dbPw = null;
-        if (realClient) {
-          try {
-            const { data, error } = await realClient
-              .from('client_credentials')
-              .select('password')
-              .eq('email', 'digitalconsultingpros@gmail.com')
-              .maybeSingle();
-            if (data && data.password) {
-              dbPw = data.password.trim();
-              localStorage.setItem('saved_password_digitalconsultingpros@gmail.com', dbPw);
-            }
-          } catch (e) {
-            console.warn("Could not retrieve custom client password from Supabase: ", e);
-          }
-        }
-
-        const savedPw = dbPw || localStorage.getItem('saved_password_digitalconsultingpros@gmail.com');
-        const matchPw = savedPw ? savedPw.trim() : 'MaltaSecure2026!';
-
-        if (cleanPw === matchPw || cleanPw === `${matchPw})` || (matchPw === 'MaltaSecure2026!' && (cleanPw === 'MaltaSecure2026!' || cleanPw === 'MaltaSecure2026!)'))) {
-          const user = { 
-            id: 'digital-consulting-pros-id', 
-            email: 'digitalconsultingpros@gmail.com', 
-            role: 'client_audit', 
-            company_name: 'Digital Consulting Pros' 
-          };
-          const session = { access_token: 'mock-token', user };
-          
-          // Background sync server-side memory
-          try {
-            fetch('/api/auth/update-client-password', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: 'digitalconsultingpros@gmail.com', password: matchPw })
-            }).catch(() => {});
-          } catch (err) {}
-
-          localStorage.setItem('mock_session', JSON.stringify(session));
-          window.dispatchEvent(new Event('mock-auth-change'));
-          return { data: { user, session }, error: null };
-        }
-      }
-
+      // NOTE: The previous hardcoded "Master Sandbox Bypass" credential
+      // checks have been removed from here — they shipped real admin
+      // passwords inside the browser bundle, visible to anyone via
+      // dev tools. Authentication now goes exclusively through the
+      // real server-side Supabase Auth check above (/api/auth/custom-login).
       // Check for other standard registered mock accounts:
       const allMock = getMockProfiles();
       const mockUser = allMock.find((p: any) => p.email === cleanEmail);
@@ -470,8 +419,8 @@ export const supabase = {
           id: userId,
           email: cleanEmail,
           created_at: new Date().toISOString(),
-          is_approved: cleanEmail === 'petemkhize@gmail.com' ? true : false,
-          role: cleanEmail === 'petemkhize@gmail.com' ? 'admin' : 'user'
+          is_approved: false,
+          role: 'user'
         });
         saveMockProfiles(all);
       }
