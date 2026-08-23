@@ -122,10 +122,10 @@ export const getPlatformReach = (keywords: string[] | undefined | null, platform
 };
 
 const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: () => void }) => {
-  const isOwner = profile?.email === 'petemkhize@gmail.com';
+  const isOwner = profile?.role === 'admin';
   const isApproved = isOwner || profile?.role === 'admin' || profile?.is_approved === true;
   const isAdmin = isOwner || profile?.role === 'admin';
-  const hasPaid = profile?.hasPaid80 === true || profile?.email === 'petemkhize@gmail.com' || profile?.email === 'digitalconsultingpros@gmail.com';
+  const hasPaid = profile?.hasPaid80 === true || profile?.role === 'admin';
 
   const [credits, setCredits] = useState(() => {
     if (!hasPaid) {
@@ -2200,7 +2200,7 @@ export default function Dashboard() {
             .eq('id', session.user.id)
             .maybeSingle();
           
-          const isAdminSession = session?.user?.email === 'petemkhize@gmail.com';
+          const isAdminSession = data?.role === 'admin';
 
           if (data) {
             setUserProfile(data);
@@ -3089,7 +3089,7 @@ export default function Dashboard() {
     );
   };
 
-  const isUserOwner = session?.user?.email === 'petemkhize@gmail.com' || userProfile?.email === 'petemkhize@gmail.com' || userProfile?.role === 'admin';
+  const isUserOwner = userProfile?.role === 'admin';
 
   const mergedProfile = useMemo(() => {
     if (!session) return null;
@@ -3924,4 +3924,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
