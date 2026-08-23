@@ -822,41 +822,36 @@ async function startServer() {
     const cleanEmail = email ? email.trim().toLowerCase() : "";
     const cleanPassword = password ? password.trim() : "";
 
-    const targetEmail = "digitalconsultingpros@gmail.com";
-    const targetPassword = "MaltaSecure2026!";
-
-    // Allow both hardcoded and environment-provided credentials to be extremely fallback-resilient
+    // Credentials come exclusively from environment variables — never hardcoded.
+    // Set DIGITAL_CONSULTING_EMAIL / DIGITAL_CONSULTING_PASSWORD and
+    // ADMIN_EMAIL / ADMIN_PASSWORD in Render's environment settings.
     const envEmail = (process.env.DIGITAL_CONSULTING_EMAIL || "").trim().toLowerCase();
     const envPassword = (process.env.DIGITAL_CONSULTING_PASSWORD || "").trim();
+    const adminEmailEnv = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+    const adminPasswordEnv = (process.env.ADMIN_PASSWORD || "").trim();
 
-    const isPasswordCorrect = 
-      cleanPassword === targetPassword || 
-      cleanPassword === `${targetPassword})` ||
-      (updatedClientPassword && cleanPassword === updatedClientPassword) ||
-      (updatedClientPassword && cleanPassword === `${updatedClientPassword})`) ||
+    const isPasswordCorrect =
       (envPassword && cleanPassword === envPassword) ||
-      (envPassword && cleanPassword === `${envPassword})`);
+      (updatedClientPassword && cleanPassword === updatedClientPassword);
 
-    const isEmailCorrect = 
-      cleanEmail === targetEmail || 
-      (envEmail && cleanEmail === envEmail);
+    const isEmailCorrect = envEmail && cleanEmail === envEmail;
 
     if (isEmailCorrect && isPasswordCorrect) {
       return res.json({
         success: true,
         user: {
-          email: targetEmail,
+          email: envEmail,
           role: "client_audit",
           company_name: "Digital Consulting Pros",
           location: "Malta",
           is_approved: true
         }
       });
-    } else if (cleanEmail === "petemkhize@gmail.com" && cleanPassword === "LehakoeZakithi777") {
+    } else if (adminEmailEnv && adminPasswordEnv && cleanEmail === adminEmailEnv && cleanPassword === adminPasswordEnv) {
       return res.json({
         success: true,
         user: {
-          email: "petemkhize@gmail.com",
+          email: adminEmailEnv,
           role: "admin",
           company_name: "Signalmerge Admin",
           location: "South Africa",
@@ -1470,17 +1465,18 @@ async function startServer() {
         const password = (args?.password as string || "").trim();
         console.log(`[MCP Tool: verify_audit] Verifying audit credentials for: ${email}`);
 
-        const targetEmail = "digitalconsultingpros@gmail.com";
-        const targetPassword = "MaltaSecure2026!";
-        
-        const isEmailCorrect = email === targetEmail || (process.env.DIGITAL_CONSULTING_EMAIL && email === process.env.DIGITAL_CONSULTING_EMAIL.trim().toLowerCase());
-        const isPasswordCorrect = password === targetPassword || (process.env.DIGITAL_CONSULTING_PASSWORD && password === process.env.DIGITAL_CONSULTING_PASSWORD.trim());
+        // Credentials come exclusively from environment variables — never hardcoded.
+        const envEmail = (process.env.DIGITAL_CONSULTING_EMAIL || "").trim().toLowerCase();
+        const envPassword = (process.env.DIGITAL_CONSULTING_PASSWORD || "").trim();
+
+        const isEmailCorrect = envEmail && email === envEmail;
+        const isPasswordCorrect = envPassword && password === envPassword;
 
         if (isEmailCorrect && isPasswordCorrect) {
           return {
             content: [{
               type: "text",
-              text: JSON.stringify({ success: true, user: { email: targetEmail, company: "Digital Consulting Pros", approved: true } }, null, 2)
+              text: JSON.stringify({ success: true, user: { email: envEmail, company: "Digital Consulting Pros", approved: true } }, null, 2)
             }]
           };
         }
