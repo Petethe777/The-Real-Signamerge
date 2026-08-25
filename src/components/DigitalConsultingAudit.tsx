@@ -1059,7 +1059,7 @@ export default function DigitalConsultingAudit() {
                 rel="referrer noopener"
                 className="w-full py-4 text-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg shadow-orange-600/25 flex items-center justify-center gap-2"
               >
-                Sign Up & Subscribe Now ($80) <ArrowUpRight className="w-4 h-4" />
+                Sign Up & Buy Credits ($80) <ArrowUpRight className="w-4 h-4" />
               </a>
 
               <Button
@@ -1578,7 +1578,7 @@ export default function DigitalConsultingAudit() {
 
           {/* Database Footer Summary */}
           <div className="p-4 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-500 leading-normal font-mono font-bold uppercase tracking-wider">
-            SECURED LEAD FEED • CONNECTED TO ACTIVE SOCIAL RESEARCH AND GEMINI SEARCH NODES
+            SECURED LEAD FEED • CONNECTED TO ACTIVE SOCIAL RESEARCH AND EXA SEARCH NODES
           </div>
         </div>
 
