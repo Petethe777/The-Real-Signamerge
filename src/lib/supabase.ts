@@ -379,7 +379,7 @@ export const supabase = {
                 id: userId,
                 email: cleanEmail,
                 created_at: new Date().toISOString(),
-                is_approved: false,
+                is_approved: true,
                 role: 'user'
               });
               saveMockProfiles(all);
@@ -419,7 +419,7 @@ export const supabase = {
           id: userId,
           email: cleanEmail,
           created_at: new Date().toISOString(),
-          is_approved: false,
+          is_approved: true,
           role: 'user'
         });
         saveMockProfiles(all);
