@@ -123,7 +123,8 @@ export const getPlatformReach = (keywords: string[] | undefined | null, platform
 
 const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: () => void }) => {
   const isOwner = profile?.role === 'admin';
-  const isApproved = isOwner || profile?.role === 'admin' || profile?.is_approved === true;
+  // Admin-approval gate removed: every signed-up/logged-in user gets full workspace access immediately.
+  const isApproved = true;
   const isAdmin = isOwner || profile?.role === 'admin';
   const hasPaid = profile?.hasPaid80 === true || profile?.role === 'admin';
 
@@ -165,6 +166,12 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
     }
   }, [profile]);
   const [activeTab, setActiveTab] = useState<'discovery' | 'analytics' | 'dataset'>('discovery');
+
+  // --- Free-tier search limiting: unpaid users get exactly ONE search, returning 3 leads. ---
+  const [freeSearchUsed, setFreeSearchUsed] = useState<boolean>(!!profile?.free_search_used);
+  useEffect(() => {
+    setFreeSearchUsed(!!profile?.free_search_used);
+  }, [profile?.free_search_used]);
 
   // Triggers the real Yoco checkout for the R1,350 / $80 subscription unlock.
   const handleYocoCheckout = async () => {
@@ -297,6 +304,15 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
             setCorrectedQuery((res as any).correctedQuery);
           }
         }
+        // The very first view an unpaid user gets (their default keyword search on load, or
+        // whatever search brought them here) IS their one free search — consume it now so any
+        // further explicit searches via handleLocalSearch are blocked.
+        if (!hasPaid && !freeSearchUsed) {
+          setFreeSearchUsed(true);
+          if (profile?.id) {
+            supabase.from('profiles').update({ free_search_used: true }).eq('id', profile.id);
+          }
+        }
       } catch (err) {
         setSearchFeedback("AI Scanner at capacity. Showing 2026 database fallback.");
       } finally {
@@ -401,6 +417,12 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   const handleLocalSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!innerSearchValue.trim()) return;
+
+    // Unpaid users only get ONE search, ever. Block further searches and prompt to buy credits.
+    if (!hasPaid && freeSearchUsed) {
+      setSearchFeedback("You've used your free search. Buy credits to keep searching and unlock full lead access.");
+      return;
+    }
     
     // Save inner keyword search to Supabase
     saveSearchQuery(innerSearchValue, profile?.email);
@@ -412,6 +434,13 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
         const nextTotal = Math.max(0, prev.total - 1);
         return { ...prev, daily: nextDaily, total: nextTotal };
       });
+    } else {
+      // Mark the free search as consumed, locally and in Supabase, so it can't be reused
+      // by refreshing or logging back in.
+      setFreeSearchUsed(true);
+      if (profile?.id) {
+        supabase.from('profiles').update({ free_search_used: true }).eq('id', profile.id);
+      }
     }
     
     setIsSearchingTransition(true);
@@ -580,7 +609,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
               onClick={() => handleYocoCheckout()}
               className="rounded-xl h-11 bg-primary hover:bg-orange-650 text-white text-xs font-black uppercase tracking-wider px-5 flex items-center gap-2 shadow-lg shadow-orange-500/10"
             >
-              Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
+              Buy Credits <Zap className="w-3.5 h-3.5 fill-white" />
             </Button>
           )}
 
@@ -593,26 +622,6 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
           </Button>
         </div>
       </header>
-
-      {/* Sandbox Info Banner if workspace is not approved */}
-      {!activeWorkspace?.is_approved && (
-        <div className="bg-gradient-to-r from-orange-500 to-amber-600 text-white px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-md">
-          <div className="flex items-center gap-2 text-left">
-            <ShieldCheck className="w-5 h-5 shrink-0 text-white fill-orange-600" />
-            <span>
-              Workspace Pending Authorization — Your unique Signalmerge dashboard is active in validation mode. An admin is reviewing your search parameters to grant full production access.
-            </span>
-          </div>
-          {isOwner && (
-            <Button
-              onClick={() => approveUser(activeWorkspace.id)}
-              className="bg-white hover:bg-gray-100 text-[#111] font-black rounded-xl text-[9px] uppercase tracking-wider px-4 h-8 shrink-0 border-none"
-            >
-              Approve Workspace
-            </Button>
-          )}
-        </div>
-      )}
 
       {/* Admin Approvals & User Management Drawer */}
       {isAdminView && isOwner && (
@@ -1224,13 +1233,14 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                       <Input 
                         value={innerSearchValue}
                         onChange={(e) => setInnerSearchValue(e.target.value)}
-                        placeholder="Enter custom keywords (e.g. 'n8n tools', 'need figma designer')..."
+                        disabled={!hasPaid && freeSearchUsed}
+                        placeholder={!hasPaid && freeSearchUsed ? "Free search used — buy credits to search again" : "Enter custom keywords (e.g. 'n8n tools', 'need figma designer')..."}
                         className="border-none shadow-none focus-visible:ring-0 text-sm bg-transparent pl-2 pr-2 h-10 w-full font-bold placeholder:font-medium placeholder:text-gray-400"
                       />
                     </div>
                     <Button 
                       type="submit" 
-                      disabled={isLoadingResults || isSearchingTransition} 
+                      disabled={isLoadingResults || isSearchingTransition || (!hasPaid && freeSearchUsed)} 
                       className="h-10 px-6 rounded-xl bg-primary hover:bg-orange-600 text-white text-xs font-black uppercase tracking-wider gap-2 shadow-md shadow-orange-500/20 shrink-0"
                     >
                       {isLoadingResults || isSearchingTransition ? (
@@ -1243,6 +1253,11 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                   <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-3">
                     {activeQuery ? `Currently searching: "${activeQuery}"` : `Default matching workspace keyword: "${userKeywords[0] || 'leads'}"`}
                   </p>
+                  {searchFeedback && (
+                    <p className="text-center text-[10px] text-orange-600 font-black uppercase tracking-wider mt-2">
+                      {searchFeedback}
+                    </p>
+                  )}
                 </form>
 
                 {correctedQuery && (
@@ -1271,9 +1286,10 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50 bg-white">
+                        {/* Unpaid users get exactly 3 full lead results from their one free search (no blur — the leads themselves are the free sample); the "Source" link stays locked until they buy credits. */}
                         {filteredResults.length > 0 && !isSearchingTransition ? (
-                          (hasPaid ? filteredResults.slice(0, 140) : filteredResults.slice(0, 30)).map((result, idx) => {
-                            const isBlurred = !hasPaid && idx >= 15;
+                          (hasPaid ? filteredResults.slice(0, 140) : filteredResults.slice(0, 3)).map((result, idx) => {
+                            const isBlurred = false;
                             return (
                               <motion.tr 
                                 key={result.id} 
@@ -1359,24 +1375,24 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                     </table>
                   </div>
 
-                  {!hasPaid && filteredResults.length > 15 && (
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-32 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
+                  {!hasPaid && filteredResults.length > 0 && (
+                    <div className="relative bg-gradient-to-t from-white via-white/95 to-transparent pt-16 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
                       <div className="bg-white border border-orange-100 rounded-[2rem] p-8 max-w-lg shadow-2xl relative">
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1 shadow-md">
-                          <Sparkles className="w-3 h-3 fill-white" /> Core Limit Reached
+                          <Sparkles className="w-3 h-3 fill-white" /> Free Search Used
                         </div>
                         <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
-                          Unlock 100 Lists of Potential Clients
+                          You've seen your 3 free leads
                         </h3>
                         <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
-                          Pay <strong className="text-primary font-black text-orange-600">R1,350</strong> to unlock 140 credits and premium source links.
+                          Buy credits (<strong className="text-primary font-black text-orange-600">R1,350</strong>) to unlock unlimited searches, 140 monthly credits, and every locked source link.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                           <Button 
   onClick={() => handleYocoCheckout()}
   className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
 >
-  Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
+  Buy Credits <Zap className="w-3.5 h-3.5 fill-white" />
 </Button>
                           <Link 
                             to="/digital-consulting-pros#payment-section"
@@ -2309,7 +2325,7 @@ export default function Dashboard() {
             usp: "Registered workspace client waiting for admin activation.",
             selling_region: { state: "Global", county: "Worldwide", pricing: 1500, integrations: ["Zapier", "n8n"] },
             audit_completed: true,
-            is_approved: false, // Manual admin approval initially
+            is_approved: true, // Admin approval requirement removed — workspace is active immediately on signup
             updated_at: new Date().toISOString(),
           });
 
@@ -3309,9 +3325,10 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
+                {/* Guest preview: capped to 3 leads for consistency with the logged-in free-search limit. */}
                 {filteredResults.length > 0 && !isScanning ? (
-                  filteredResults.slice(0, 30).map((result, idx) => {
-                    const isActuallyBlurred = idx >= 15;
+                  filteredResults.slice(0, 3).map((result, idx) => {
+                    const isActuallyBlurred = false;
                     return (
                       <motion.tr 
                         key={result.id} 
@@ -3419,19 +3436,19 @@ export default function Dashboard() {
             </table>
           </div>
 
-          {filteredResults.length > 15 && (
+          {filteredResults.length > 0 && (
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-32 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
               <div className="bg-white border border-orange-100 rounded-[2rem] p-8 max-w-lg shadow-2xl relative">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1 shadow-md">
-                  <Sparkles className="w-3 animate-pulse" /> Core Limit Reached
+                  <Sparkles className="w-3 animate-pulse" /> Free Preview Used
                 </div>
                 {!session ? (
                   <>
                     <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
-                      Unlock 15+ More Real-Time Leads
+                      You've seen your 3 free leads
                     </h3>
                     <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
-                      You've hit our free preview limit. Please <strong>sign up</strong> or <strong>log in</strong> now to unlock all 30 live customer leads and access their identity paths!
+                      Please <strong>sign up</strong> or <strong>log in</strong> now to unlock more live customer leads and access their identity paths!
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                       <button 
@@ -3460,7 +3477,7 @@ export default function Dashboard() {
                         onClick={() => handleYocoCheckout()}
                         className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
                       >
-                        Subscribe Now <Zap className="w-3.5 h-3.5 fill-white" />
+                        Buy Credits <Zap className="w-3.5 h-3.5 fill-white" />
                       </Button>
                       <Link 
                         to="/digital-consulting-pros#payment-section"
