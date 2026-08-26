@@ -445,6 +445,58 @@ const results = rawResults
 return results;
 }
 // In-memory variable to support custom-updated partner passwords dynamically
+
+// SHARED lead-access gate — used by BOTH /api/search and the MCP search_leads tool,
+// so the two paths can never drift out of sync again (which is what caused the last
+// two bugs: /api/search losing its gate entirely, and the MCP tool running its own
+// separate, broken "mask sourceUrl" system instead of this one).
+// Unpaid: exactly ONE free search, ever, capped at 3 leads. Paid: 150-lead pack,
+// non-renewing, only refilled by a new $80 payment via the webhook.
+async function checkLeadAccessAndGetLimit(email: string): Promise<
+  { ok: true; leadLimit: number } | { ok: false; paywalled: { _paywalled: true; reason: string; leadCreditsRemaining?: number } }
+> {
+  if (!email) {
+    // No identity to check — treat as a single free-tier lookup, not unlimited access.
+    return { ok: true, leadLimit: 3 };
+  }
+
+  const { data: gateProfile } = await supabaseService
+    .from("profiles")
+    .select("has_paid_80, lead_credits, free_search_used")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (!gateProfile) {
+    return { ok: true, leadLimit: 3 };
+  }
+
+  if (gateProfile.has_paid_80) {
+    const remaining = gateProfile.lead_credits ?? 0;
+    if (remaining <= 0) {
+      return { ok: false, paywalled: { _paywalled: true, reason: "lead_credits_exhausted", leadCreditsRemaining: 0 } };
+    }
+    return { ok: true, leadLimit: Math.min(remaining, 20) };
+  }
+
+  if (gateProfile.free_search_used) {
+    return { ok: false, paywalled: { _paywalled: true, reason: "free_search_used" } };
+  }
+
+  await supabaseService.from("profiles").update({ free_search_used: true }).eq("email", email);
+  return { ok: true, leadLimit: 3 };
+}
+
+// Deducts `count` from a paid user's lead_credits balance after a search actually
+// returns results. No-op for unpaid users (their limit is the one-time free search,
+// already marked used by checkLeadAccessAndGetLimit).
+async function deductLeadCredits(email: string, count: number): Promise<void> {
+  if (!email || count <= 0) return;
+  const { data } = await supabaseService.from("profiles").select("has_paid_80, lead_credits").eq("email", email).maybeSingle();
+  if (data?.has_paid_80) {
+    const newBalance = Math.max(0, (data.lead_credits ?? 0) - count);
+    await supabaseService.from("profiles").update({ lead_credits: newBalance }).eq("email", email);
+  }
+}
 let updatedClientPassword = "";
 
 // Simple in-memory OAuth tables
@@ -1182,8 +1234,14 @@ async function startServer() {
   // Real-time keyword fetching using the Exa API safely on server-side to hide keys in prod deployment
   app.get("/api/search", async (req, res) => {
     const query = req.query.q as string;
+    const email = ((req.query.email as string) || "").trim().toLowerCase();
     if (!query) {
       return res.json([]);
+    }
+
+    const access = await checkLeadAccessAndGetLimit(email);
+    if (!access.ok) {
+      return res.json(access.paywalled);
     }
 
     // Capture and log every search query to the Supabase database in the background instantly
@@ -1193,16 +1251,16 @@ async function startServer() {
           .from('search_queries')
           .insert({
             query: query.trim(),
-            user_email: 'anonymous_api',
+            user_email: email || 'anonymous_api',
             created_at: new Date().toISOString()
           });
         if (error) {
-          saveQueryToLocalFallback(query.trim(), 'anonymous_api');
+          saveQueryToLocalFallback(query.trim(), email || 'anonymous_api');
         } else {
           console.log(`[Server DB Search Auto-Logger] Automatically saved API query: "${query.trim()}"`);
         }
       } catch (e: any) {
-        saveQueryToLocalFallback(query.trim(), 'anonymous_api');
+        saveQueryToLocalFallback(query.trim(), email || 'anonymous_api');
       }
     })();
 
@@ -1214,7 +1272,11 @@ async function startServer() {
     }
 
     try {
-      const formatted = await performLeadsSearch(query);
+      let formatted = await performLeadsSearch(query);
+      if (Array.isArray(formatted)) {
+        formatted = formatted.slice(0, access.leadLimit);
+        await deductLeadCredits(email, formatted.length);
+      }
       return res.json(formatted);
     } catch (error: any) {
       console.warn("[Server] Leads search error:", error.message || error);
@@ -1398,8 +1460,7 @@ async function startServer() {
 
       if (name === "search_leads") {
         const query = (args?.query as string) || "";
-        const email = ((args?.email as string) || "").trim().toLowerCase();
-        const password = ((args?.password as string) || "").trim();
+        const email = ((args?.email as string) || currentRequestContextUser || "").trim().toLowerCase();
 
         if (!query) {
           return {
@@ -1407,51 +1468,22 @@ async function startServer() {
             isError: true,
           };
         }
-        
+
         console.log(`[MCP Tool: search_leads] Performing lead discovery for query: "${query}"`);
+
+        // Same gate as /api/search — no separate masking system, so this can't
+        // drift out of sync with the paid/free logic again.
+        const access = await checkLeadAccessAndGetLimit(email);
+        if (!access.ok) {
+          return {
+            content: [{ type: "text", text: JSON.stringify(access.paywalled, null, 2) }],
+          };
+        }
+
         let results = await performLeadsSearch(query);
-
-        // Determine if user has premium subscription to view source links
-        let isPremium = false;
-
-        // 1. Check if there is an authenticated OAuth context (set from the Supabase-verified session)
-        if (currentRequestContextUser) {
-          const { data: matchedProfile } = await supabaseService
-            .from("profiles")
-            .select("has_paid_80, has_paid_20")
-            .eq("email", currentRequestContextUser)
-            .maybeSingle();
-          if (matchedProfile && (matchedProfile.has_paid_80 || matchedProfile.has_paid_20)) {
-            isPremium = true;
-          }
-        }
-
-        // 2. Check if explicit email/password arguments are passed to override/direct auth
-        if (!isPremium && email && password) {
-          const directAuthUser = await verifySupabaseCredentials(email, password);
-          if (directAuthUser) {
-            const { data: matchedProfile } = await supabaseService
-              .from("profiles")
-              .select("has_paid_80, has_paid_20")
-              .eq("id", directAuthUser.id)
-              .maybeSingle();
-            if (matchedProfile && (matchedProfile.has_paid_80 || matchedProfile.has_paid_20)) {
-              isPremium = true;
-            }
-          }
-        }
-
-        // Mask source URLs for non-premium users
-        if (!isPremium && Array.isArray(results)) {
-          results = results.map(item => {
-            if (item && typeof item === "object") {
-              return {
-                ...item,
-                sourceUrl: "[RESTRICTED - Upgrade to premium subscription to unlock source links]"
-              };
-            }
-            return item;
-          });
+        if (Array.isArray(results)) {
+          results = results.slice(0, access.leadLimit);
+          await deductLeadCredits(email, results.length);
         }
 
         return {
