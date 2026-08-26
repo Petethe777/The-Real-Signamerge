@@ -2088,33 +2088,7 @@ async function startServer() {
       res.status(400).send("No transport found for sessionId");
     }
   });
-app.post('/api/search', async (req, res) => {
-  const { query, platform } = req.body; // platform: "tiktok" | "instagram"
-  try {
-    if (platform === 'tiktok') {
-      const run = await apifyClient.actor('clockworks/tiktok-scraper').call({
-        hashtags: [query],
-        resultsPerPage: 20
-      });
-      const { items } = await apifyClient.dataset(run.defaultDatasetId).listItems();
-      return res.json({ results: items });
-    }
-    if (platform === 'instagram') {
-      const run = await apifyClient.actor('apify/instagram-scraper').call({
-        search: query,
-        searchType: 'user',
-        resultsType: 'posts',
-        resultsLimit: 20
-      });
-      const { items } = await apifyClient.dataset(run.defaultDatasetId).listItems();
-      return res.json({ results: items });
-    }
-    return res.status(400).json({ error: 'Unknown platform' });
-  } catch (err) {
-    console.error('[Apify] Search failed:', err);
-    res.status(502).json({ error: 'Search temporarily unavailable' });
-  }
-});
+
   // Vite integration
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
