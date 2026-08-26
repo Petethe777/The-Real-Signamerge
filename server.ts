@@ -7,7 +7,6 @@ import dotenv from "dotenv";
 // Note: Gemini (@google/genai) has been replaced by Exa as the primary search engine.
 // The package import below is left only if some other unrelated code path still needs it;
 // remove it (and the "@google/genai" dependency) once you confirm nothing else references it.
-import { GoogleGenAI, Type } from "@google/genai";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { searchDataset } from "./src/data/customerSearchDataset.js";
