@@ -39,6 +39,7 @@ const getMockProfiles = () => {
       company_name: 'Signalmerge Admin',
       location: 'South Africa',
       is_approved: true,
+      lead_credits: 150,
       role: 'admin',
       customer_keywords: ['ai', 'marketing', 'automations'],
       customer_phrases: ['looking for help with ai integrations', 'need n8n workflow specialist'],
@@ -52,6 +53,7 @@ const getMockProfiles = () => {
       company_name: 'Digital Consulting Pros',
       location: 'Malta',
       is_approved: true,
+      lead_credits: 150,
       role: 'client_audit',
       customer_keywords: ['logistics', 'clothing', 'suppliers'],
       customer_phrases: ['looking for reliable manufacturers in China', 'need shipping broker from Italy'],
@@ -64,7 +66,8 @@ const getMockProfiles = () => {
       email: 'johndoe@gmail.com',
       company_name: 'Doe Digital Agency',
       location: 'California',
-      is_approved: false,
+      is_approved: true,
+      lead_credits: 150,
       role: 'user',
       customer_keywords: ['saas', 'sales-development', 'outbound'],
       customer_phrases: ['seeking outreach tool experts', 'need warm leads on linkedin'],
@@ -78,6 +81,7 @@ const getMockProfiles = () => {
       company_name: 'Lee Design Group',
       location: 'New York',
       is_approved: true,
+      lead_credits: 150,
       role: 'user',
       customer_keywords: ['webdesign', 'branding', 'figma'],
       customer_phrases: ['looking for figma UI designer', 'redesigning corporate website'],
@@ -380,6 +384,7 @@ export const supabase = {
                 email: cleanEmail,
                 created_at: new Date().toISOString(),
                 is_approved: true,
+                lead_credits: 150,
                 role: 'user'
               });
               saveMockProfiles(all);
@@ -420,6 +425,7 @@ export const supabase = {
           email: cleanEmail,
           created_at: new Date().toISOString(),
           is_approved: true,
+          lead_credits: 150,
           role: 'user'
         });
         saveMockProfiles(all);
