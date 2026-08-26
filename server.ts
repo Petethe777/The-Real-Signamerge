@@ -356,13 +356,15 @@ function detectQueryCountryServer(query: string): string | null {
 
 function detectPlatformFromUrl(url: string): string {
   const u = (url || "").toLowerCase();
+
   if (u.includes("instagram.com")) return "Instagram";
   if (u.includes("tiktok.com")) return "TikTok";
   if (u.includes("twitter.com") || u.includes("x.com")) return "Twitter";
   if (u.includes("linkedin.com")) return "LinkedIn";
   if (u.includes("reddit.com")) return "Reddit";
   if (u.includes("youtube.com") || u.includes("youtu.be")) return "YouTube";
-  return "Reddit"; // safe default that still renders a supported badge
+
+  return "Web";
 }
 
 function extractHashtags(text: string): string[] {
