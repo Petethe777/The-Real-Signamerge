@@ -625,7 +625,6 @@ async function checkAndResetLeadsSupabase(profile: SupabaseProfile): Promise<Sup
 
 async function startServer() {
   const app = express();
-  const apifyClient = new ApifyClient({ token: process.env.APIFY_API_TOKEN });
   const PORT = 3000;
 
   // Trust upstream reverse proxy (Cloud Run load balancer)
