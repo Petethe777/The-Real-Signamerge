@@ -100,7 +100,7 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
   }
 
   // Convert USD to ZAR cents (R1,520 or 152000 ZAR cents for $80 USD)
-  const amountZARCents = 135000; // Fixed price: R1,350 — server-controlled, ignores any client-supplied amount
+  const amountZARCents = 128000; // Fixed price: R1,280 — server-controlled, ignores any client-supplied amount
 
   const successUrl = `${baseUrl}/?payment=success&email=${encodeURIComponent(cleanEmail)}`;
   const cancelUrl = `${baseUrl}/?payment=cancelled`;
@@ -136,7 +136,7 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
           checkoutUrl,
           sessionId: resData.id,
           email: cleanEmail,
-          amount: `R1,350 ZAR`,
+          amount: `R1,280 ZAR`,
         provider: "yoco_api"
         };
       } else {
@@ -155,7 +155,7 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
     success: true,
     checkoutUrl: fallbackUrl,
     email: cleanEmail,
-    amount: `R1,350 ZAR`,
+    amount: `R1,280 ZAR`,
     provider: "yoco_portal_fallback"
   };
 }
@@ -587,6 +587,7 @@ async function getOrCreateProfile(userId: string, email: string): Promise<Supaba
       has_paid_80: false,
       has_paid_20: false,
       is_approved: true, // Admin approval requirement removed
+      lead_credits: 150,
       leads_used_today: 0,
       last_leads_reset: new Date().toISOString(),
     })
@@ -1075,10 +1076,18 @@ async function startServer() {
     return res.json({ success: true, ignored: true });
   }
 
-    const email = event.payload?.metadata?.email;
-    const cleanEmail = email ? email.trim().toLowerCase() : "";
+    const email = event.payload?.metadata?.email
+      || event.payload?.metadata?.customer_email
+      || event.payload?.customer?.email
+      || event.payload?.payer?.email
+      || event.payload?.billingAddress?.email;
+    const cleanEmail = email ? String(email).trim().toLowerCase() : "";
     if (!cleanEmail) {
-      console.warn("[Webhook] No email in metadata for", event.payload?.id);
+      // Log the full payload so you can inspect Render logs after a real test payment
+      // through the static pay.yoco.com/mergemega link and tell me exactly which field
+      // (if any) actually carries the payer's email — static Payment Links don't
+      // guarantee the same metadata shape as checkouts created via the API.
+      console.warn("[Webhook] No email found in payment payload for", event.payload?.id, JSON.stringify(event.payload));
       return res.status(200).json({ success: false, error: "No email in metadata." });
     }
 
@@ -1095,7 +1104,7 @@ async function startServer() {
 
     const { error: updateErr } = await supabaseService
       .from("profiles")
-      .update({ has_paid_80: true })
+      .update({ has_paid_80: true, lead_credits: 150 })
       .eq("id", profile.id);
 
     if (updateErr) {
