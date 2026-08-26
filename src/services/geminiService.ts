@@ -945,50 +945,30 @@ export const correctQuerySearch = (query: string): { corrected: string; original
 };
 
 export const searchSocialMedia = async (query: string): Promise<DemandResult[]> => {
-  if (!query) return [];
+  const cleanQuery = query.trim();
 
-  const correction = correctQuerySearch(query);
-  const searchTerm = correction.corrected;
-
-  try {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}&original=${encodeURIComponent(query)}`);
-    const xCorrected = res.headers.get("X-Corrected-Query") || (correction.isDifferent ? searchTerm : null);
-    
-    if (!res.ok) {
-      throw new Error(`Failed to fetch from search API: ${res.status}`);
-    }
-    const results = await res.json();
-    
-    // Fallback if the endpoint returned something but it's not a populated array
-    if (!Array.isArray(results) || results.length === 0) {
-      const fallbackResults = getDynamicFallbackResults(searchTerm);
-      if (results && (results as any)._rateLimited) {
-        (fallbackResults as any)._rateLimited = true;
-      } else {
-        // If it's some other non-array object/error, default to treating it as fallback-mode
-        (fallbackResults as any)._rateLimited = true;
-      }
-      if (xCorrected) {
-        (fallbackResults as any).correctedQuery = xCorrected;
-        (fallbackResults as any).originalQuery = query;
-      }
-      return fallbackResults;
-    }
-    
-    if (xCorrected) {
-      (results as any).correctedQuery = xCorrected;
-      (results as any).originalQuery = query;
-    }
-    
-    return results;
-  } catch (error: any) {
-    console.warn("[Client fallback] Local server search failed. Returning dynamic match records:", error);
-    const fallbackResults = getDynamicFallbackResults(searchTerm);
-    (fallbackResults as any)._rateLimited = true;
-    if (correction.isDifferent) {
-      (fallbackResults as any).correctedQuery = searchTerm;
-      (fallbackResults as any).originalQuery = query;
-    }
-    return fallbackResults;
+  if (!cleanQuery) {
+    return [];
   }
+
+  const res = await fetch(
+    `/api/search?q=${encodeURIComponent(cleanQuery)}`
+  );
+
+  if (!res.ok) {
+    throw new Error(`Exa search failed with status ${res.status}`);
+  }
+
+  const results = await res.json();
+
+  if (!Array.isArray(results)) {
+    throw new Error("Exa search returned an invalid response.");
+  }
+
+  return results.filter(
+    (result: any) =>
+      result &&
+      typeof result.sourceUrl === "string" &&
+      /^https:\/\/.+/i.test(result.sourceUrl)
+  );
 };
