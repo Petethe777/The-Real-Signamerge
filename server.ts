@@ -587,7 +587,7 @@ async function getOrCreateProfile(userId: string, email: string): Promise<Supaba
       has_paid_80: false,
       has_paid_20: false,
       is_approved: true, // Admin approval requirement removed
-      lead_credits: 150,
+      lead_credits: 0, // New users start with 0 leads — they buy 150 via "Buy Credits"
       leads_used_today: 0,
       last_leads_reset: new Date().toISOString(),
     })
