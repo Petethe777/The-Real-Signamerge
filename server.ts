@@ -415,13 +415,15 @@ async function performLeadsSearch(query: string): Promise<any> {
   const data: any = await response.json();
   const rawResults: any[] = Array.isArray(data?.results) ? data.results : [];
 
-  const detectedCountry = detectQueryCountryServer(searchTerm.toLowerCase());
-  const fallbackLocations = ["Johannesburg", "Cape Town", "London", "Milan", "Stockholm", "Singapore", "Zürich", "Manila", "New York", "Toronto"];
+const detectedCountry = detectQueryCountryServer(searchTerm.toLowerCase());
 
-  const results = rawResults.map((r: any, idx: number) => {
-    const content = (r.text || r.title || "No content found").trim().slice(0, 400);
+const results = rawResults
+  .filter((r: any) => typeof r?.url === "string" && /^https:\/\/.+/i.test(r.url))
+  .map((r: any, idx: number) => {
+    const content = (r.text || r.title || "").trim().slice(0, 400);
+
     return {
-      id: r.id || `exa-${Math.random().toString(36).substring(2, 11)}`,
+      id: r.id || `exa-${idx}`,
       platform: detectPlatformFromUrl(r.url),
       content,
       views: "Verified",
@@ -429,15 +431,16 @@ async function performLeadsSearch(query: string): Promise<any> {
       hashtags: extractHashtags(content),
       location: detectedCountry
         ? detectedCountry.replace(/\b\w/g, c => c.toUpperCase())
-        : fallbackLocations[idx % fallbackLocations.length],
-      contactStatus: idx % 3 === 0 ? "Hot Prospect" : "Verified Lead",
-      time: r.publishedDate ? new Date(r.publishedDate).toLocaleDateString() : "2026",
-      sourceUrl: r.url || "#",
+        : "Global",
+      contactStatus: "Verified Lead",
+      time: r.publishedDate
+        ? new Date(r.publishedDate).toLocaleDateString()
+        : "Recently",
+      sourceUrl: r.url,
     };
   });
 
-  return results;
-}
+return results;
 
 // In-memory variable to support custom-updated partner passwords dynamically
 let updatedClientPassword = "";
