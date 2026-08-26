@@ -126,7 +126,10 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   // Admin-approval gate removed: every signed-up/logged-in user gets full workspace access immediately.
   const isApproved = true;
   const isAdmin = isOwner || profile?.role === 'admin';
-  const hasPaid = profile?.hasPaid80 === true || profile?.role === 'admin';
+  // "Paid" access is unlocked either by the has_paid_80 flag OR by simply having lead credits
+  // available — existing users were backfilled with 150 credits directly and never got
+  // has_paid_80 flipped, so credits alone must be enough to unlock full access.
+  const hasPaid = profile?.hasPaid80 === true || profile?.role === 'admin' || (profile?.leadCredits ?? 0) > 0;
 
   const [credits, setCredits] = useState(() => {
     const leadCredits = profile?.leadCredits ?? 0;
@@ -1285,7 +1288,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                       <tbody className="divide-y divide-gray-50 bg-white">
                         {/* Unpaid users get exactly 3 full lead results from their one free search (no blur — the leads themselves are the free sample); the "Source" link stays locked until they buy credits. */}
                         {filteredResults.length > 0 && !isSearchingTransition ? (
-                          (hasPaid ? filteredResults.slice(0, 140) : filteredResults.slice(0, 3)).map((result, idx) => {
+                          (hasPaid ? filteredResults.slice(0, credits.maxTotal || 150) : filteredResults.slice(0, 3)).map((result, idx) => {
                             const isBlurred = false;
                             return (
                               <motion.tr 
