@@ -443,7 +443,7 @@ const results = rawResults
   });
 
 return results;
-
+}
 // In-memory variable to support custom-updated partner passwords dynamically
 let updatedClientPassword = "";
 
