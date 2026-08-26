@@ -2215,6 +2215,17 @@ export default function Dashboard() {
             .select('*')
             .eq('id', session.user.id)
             .maybeSingle();
+
+          // Diagnostic: shows exactly what Supabase returned for this account, so you can
+          // confirm in DevTools -> Console whether lead_credits/has_paid_80 actually arrived
+          // from the database as expected, or whether the row/columns weren't found.
+          console.log('[Signalmerge] profiles row for', session.user.id, session.user.email, '=>', {
+            error,
+            lead_credits: data?.lead_credits,
+            has_paid_80: data?.has_paid_80,
+            is_approved: data?.is_approved,
+            audit_completed: data?.audit_completed,
+          });
           
           const isAdminSession = data?.role === 'admin';
 
