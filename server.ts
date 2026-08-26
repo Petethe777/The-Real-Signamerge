@@ -4,7 +4,6 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-import { ApifyClient } from 'apify-client';
 // Note: Gemini (@google/genai) has been replaced by Exa as the primary search engine.
 // The package import below is left only if some other unrelated code path still needs it;
 // remove it (and the "@google/genai" dependency) once you confirm nothing else references it.
