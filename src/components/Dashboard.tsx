@@ -129,7 +129,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   const hasPaid = profile?.hasPaid80 === true || profile?.role === 'admin';
 
   const [credits, setCredits] = useState(() => {
-    const leadCredits = profile?.leadCredits ?? 150;
+    const leadCredits = profile?.leadCredits ?? 0;
     if (!hasPaid) {
       return { daily: 0, total: 0, maxDaily: 0, maxTotal: leadCredits };
     }
@@ -2323,7 +2323,7 @@ export default function Dashboard() {
             selling_region: { state: "Global", county: "Worldwide", pricing: 1500, integrations: ["Zapier", "n8n"] },
             audit_completed: true,
             is_approved: true, // Admin approval requirement removed — workspace is active immediately on signup
-            lead_credits: 150,
+            lead_credits: 0, // New users start with 0 leads — they buy 150 via "Buy Credits"
             updated_at: new Date().toISOString(),
           });
 
@@ -3090,7 +3090,7 @@ export default function Dashboard() {
 
   const mergedProfile = useMemo(() => {
     if (!session) return null;
-    return { ...(userProfile || {}), id: session.user.id, email: session.user.email, role: isUserOwner ? 'admin' : (userProfile?.role || 'user'), hasPaid80: session?.user?.hasPaid80 || userProfile?.has_paid_80 || isUserOwner, leadCredits: userProfile?.lead_credits ?? 150 };
+    return { ...(userProfile || {}), id: session.user.id, email: session.user.email, role: isUserOwner ? 'admin' : (userProfile?.role || 'user'), hasPaid80: session?.user?.hasPaid80 || userProfile?.has_paid_80 || isUserOwner, leadCredits: userProfile?.lead_credits ?? 0 };
   }, [session, userProfile, isUserOwner]);
 
   if (isAuthLoading || isProfileLoading) {
