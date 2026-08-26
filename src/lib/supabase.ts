@@ -384,7 +384,7 @@ export const supabase = {
                 email: cleanEmail,
                 created_at: new Date().toISOString(),
                 is_approved: true,
-                lead_credits: 150,
+                lead_credits: 0, // New users start with 0 leads — they buy 150 via "Buy Credits"
                 role: 'user'
               });
               saveMockProfiles(all);
@@ -425,7 +425,7 @@ export const supabase = {
           email: cleanEmail,
           created_at: new Date().toISOString(),
           is_approved: true,
-          lead_credits: 150,
+          lead_credits: 0, // New users start with 0 leads — they buy 150 via "Buy Credits"
           role: 'user'
         });
         saveMockProfiles(all);
