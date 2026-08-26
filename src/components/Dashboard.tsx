@@ -129,17 +129,22 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   const hasPaid = profile?.hasPaid80 === true || profile?.role === 'admin';
 
   const [credits, setCredits] = useState(() => {
+    const leadCredits = profile?.leadCredits ?? 150;
     if (!hasPaid) {
-      return { daily: 0, total: 0, maxDaily: 0, maxTotal: 140 };
+      return { daily: 0, total: 0, maxDaily: 0, maxTotal: leadCredits };
     }
     const key = `signalmerge_credits_${profile?.email || 'guest'}`;
     const saved = localStorage.getItem(key);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // If a stale cached value doesn't match the account's current lead-credit
+        // allocation (e.g. the 140 -> 150 bump), reset to the fresh value instead
+        // of carrying the old cap forward.
+        if (parsed.maxTotal === leadCredits) return parsed;
       } catch (e) {}
     }
-    return { daily: 5, total: 140, maxDaily: 5, maxTotal: 140 };
+    return { daily: 5, total: leadCredits, maxDaily: 5, maxTotal: leadCredits };
   });
 
   useEffect(() => {
@@ -173,23 +178,15 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
     setFreeSearchUsed(!!profile?.free_search_used);
   }, [profile?.free_search_used]);
 
-  // Triggers the real Yoco checkout for the R1,350 / $80 subscription unlock.
-  const handleYocoCheckout = async () => {
-    try {
-      const res = await fetch("/api/payments/create-yoco-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: profile?.email || "" })
-      });
-      const data = await res.json();
-      if (data && data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else {
-        alert("Payment system is temporarily unavailable. Please try again shortly.");
-      }
-    } catch (err) {
-      alert("Payment system is temporarily unavailable. Please try again shortly.");
-    }
+  // Triggers the real Yoco checkout for the R1,280 / $80 subscription unlock.
+  const handleYocoCheckout = () => {
+    // Always send users straight to the fixed Yoco payment link — no backend round-trip,
+    // so there's no "payment system unavailable" failure mode. Appending the user's email
+    // as a query param is a best-effort attempt at reconciliation; the reliable match happens
+    // server-side in the /api/webhooks/payment handler.
+    const email = profile?.email || "";
+    const url = `https://pay.yoco.com/mergemega?amount=1280${email ? `&email=${encodeURIComponent(email)}` : ""}`;
+    window.location.href = url;
   };
 
   const [isAuditing, setIsAuditing] = useState(isApproved);
@@ -1206,7 +1203,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                   <div className="flex flex-col text-left">
                     <span className="text-[8px] font-black text-gray-500 uppercase tracking-wider leading-none">Total Credit</span>
                     <span className="text-xs font-black text-white leading-none mt-1">
-                      {hasPaid ? `${credits.total} / 140` : '0 / 140'}
+                      {hasPaid ? `${credits.total} / 150` : '0 / 150'}
                     </span>
                   </div>
                 </div>
@@ -1353,7 +1350,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                   <button 
                                     disabled 
                                     className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 text-gray-400 gap-2 text-[10px] font-black uppercase px-4 py-2 cursor-not-allowed select-none"
-                                    title="Unlock 140 monthly credits and source links by purchasing a subscription"
+                                    title="Unlock 150 monthly credits and source links by purchasing a subscription"
                                   >
                                     🔒 Source Locked
                                   </button>
@@ -1385,7 +1382,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                           You've seen your 3 free leads
                         </h3>
                         <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
-                          Buy credits (<strong className="text-primary font-black text-orange-600">R1,350</strong>) to unlock unlimited searches, 140 monthly credits, and every locked source link.
+                          Buy credits (<strong className="text-primary font-black text-orange-600">R1,280</strong>) to unlock unlimited searches, 150 monthly credits, and every locked source link.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                           <Button 
@@ -2326,6 +2323,7 @@ export default function Dashboard() {
             selling_region: { state: "Global", county: "Worldwide", pricing: 1500, integrations: ["Zapier", "n8n"] },
             audit_completed: true,
             is_approved: true, // Admin approval requirement removed — workspace is active immediately on signup
+            lead_credits: 150,
             updated_at: new Date().toISOString(),
           });
 
@@ -2427,29 +2425,12 @@ export default function Dashboard() {
 
   const [startedSignup, setStartedSignup] = useState(false);
 
-  // Triggers the real Yoco checkout for the R1,350 / $80 subscription unlock.
-  // Used by all 4 "Subscribe"/"Unlock" buttons across the dashboard.
-  const handleYocoCheckout = async () => {
+  // Sends the user straight to the fixed Yoco payment link (R1,280 / 150 leads unlock).
+  // Used by all "Buy Credits"/"Unlock" buttons across the dashboard.
+  const handleYocoCheckout = () => {
     const targetEmail = onboardingData.email || session?.user?.email || "";
-    setIsVerifyingPayment(true);
-    setVerificationStatus("Generating official Yoco Checkout Session...");
-    try {
-      const res = await fetch("/api/payments/create-yoco-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: targetEmail })
-      });
-      const data = await res.json();
-      setIsVerifyingPayment(false);
-      if (data && data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else {
-        setVerificationStatus("Payment system is temporarily unavailable. Please try again shortly.");
-      }
-    } catch (err) {
-      setIsVerifyingPayment(false);
-      setVerificationStatus("Payment system is temporarily unavailable. Please try again shortly.");
-    }
+    const url = `https://pay.yoco.com/mergemega?amount=1280${targetEmail ? `&email=${encodeURIComponent(targetEmail)}` : ""}`;
+    window.location.href = url;
   };
 
   const toggleIntegration = (tool: string) => {
@@ -3109,13 +3090,7 @@ export default function Dashboard() {
 
   const mergedProfile = useMemo(() => {
     if (!session) return null;
-    return {
-      ...(userProfile || {}),
-      id: session.user.id,
-      email: session.user.email,
-      role: isUserOwner ? 'admin' : (userProfile?.role || 'user'),
-      hasPaid80: session?.user?.hasPaid80 || userProfile?.has_paid_80 || isUserOwner
-    };
+    return { ...(userProfile || {}), id: session.user.id, email: session.user.email, role: isUserOwner ? 'admin' : (userProfile?.role || 'user'), hasPaid80: session?.user?.hasPaid80 || userProfile?.has_paid_80 || isUserOwner, leadCredits: userProfile?.lead_credits ?? 150 };
   }, [session, userProfile, isUserOwner]);
 
   if (isAuthLoading || isProfileLoading) {
@@ -3471,7 +3446,7 @@ export default function Dashboard() {
                       Unlock 100 Lists of Potential Clients
                     </h3>
                     <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
-                 Pay <strong className="text-primary font-black text-orange-600">R1,350</strong> to unlock 100 lists of premium potential clients. </p>
+                 Pay <strong className="text-primary font-black text-orange-600">R1,280</strong> to unlock 100 lists of premium potential clients. </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                       <Button 
                         onClick={() => handleYocoCheckout()}
