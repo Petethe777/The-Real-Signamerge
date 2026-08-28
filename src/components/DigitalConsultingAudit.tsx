@@ -36,7 +36,7 @@ const rawLeadsData: Lead[] = [
   {
     id: "lead-2",
     platform: "Instagram",
-    intent: "Who is the best independent consultant for auditing and scaling our e-commerce apparel brand in Europe? Budget is ready, looking for direct experience with high conversion online shopping funnels.",
+    intent: "Who is the best independent consultant for auditing and scaling our e-commerce apparel brand in Europe? Budget is ready, looking for direct experience with high conversion online shop[...]",
     location: "Italy / Milan",
     time: "2h ago"
   },
@@ -439,13 +439,16 @@ export default function DigitalConsultingAudit() {
     return 129600;
   });
 
-  // Perform search query from the server (Exa)
+  // Perform search query from the server (Exa) - FIXED VERSION
   const performLeadsSearch = async (queryToSearch: string) => {
     setIsSearchingLeads(true);
     setSearchLeadsError(null);
+    setLeadsList([]);
     try {
       const q = queryToSearch.trim() || "leads";
-      const results = await searchSocialMedia(q);
+      const userEmail = localStorage.getItem("signalmerge_user_email") || undefined;
+      
+      const results = await searchSocialMedia(q, userEmail);
       
       const countToLog = Math.min(results.length, 33);
       if (localStorage.getItem("signalmerge_user_email")) {
@@ -465,17 +468,8 @@ export default function DigitalConsultingAudit() {
       setLeadsList(results || []);
     } catch (err: any) {
       console.error("Failed to query leads:", err);
-      setSearchLeadsError("Database connection saturated. Showing latest Discovery signals.");
-      setLeadsList(rawLeadsData.map(l => ({
-        ...l,
-        content: l.intent,
-        views: "145k",
-        likes: "12k",
-        hashtags: ["agency", "lead", "sourcing"],
-        contactStatus: "Verified Lead",
-        time: l.time,
-        sourceUrl: "#"
-      })));
+      setSearchLeadsError(`Search failed: ${err.message || "Unknown error"}. Please verify your email/credentials or try again.`);
+      setLeadsList([]);
     } finally {
       setIsSearchingLeads(false);
     }
@@ -862,7 +856,7 @@ export default function DigitalConsultingAudit() {
             {authMode === "login" ? (
               <div>
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 border border-orange-200/60 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-2">
+                  <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 border border-orange-200/60 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-3">
                     <Lock className="w-3 h-3 text-orange-600" /> Secure Registry Gate
                   </div>
                   <h1 className="text-lg font-bold text-slate-900 tracking-tight">Access Customer Registry</h1>
@@ -927,7 +921,7 @@ export default function DigitalConsultingAudit() {
             ) : (
               <div>
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 border border-orange-200/60 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-2">
+                  <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 border border-orange-200/60 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-3">
                     <Sparkles className="w-3 h-3 text-orange-600" /> Standard Lead Allocation
                   </div>
                   <h1 className="text-lg font-bold text-slate-900 tracking-tight">Create Corporate Account</h1>
@@ -1039,7 +1033,7 @@ export default function DigitalConsultingAudit() {
               </div>
               <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Activate Your Signalmerge License</h2>
               <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                Thank you for registering <span className="text-orange-600 font-bold">{currentUserEmail}</span>. First-time client profiles require a standard subscription license of <strong className="text-slate-900 font-bold">$80 USD</strong> to open their dedicated social search tunnels and query buyer nodes.
+                Thank you for registering <span className="text-orange-600 font-bold">{currentUserEmail}</span>. First-time client profiles require a standard subscription license of <strong className="text-orange-600">$80 USD</strong>.
               </p>
             </div>
 
@@ -1057,7 +1051,7 @@ export default function DigitalConsultingAudit() {
                 href="https://pay.yoco.com/mergemega?amount=1295" 
                 target="_blank" 
                 rel="referrer noopener"
-                className="w-full py-4 text-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg shadow-orange-600/25 flex items-center justify-center gap-2"
+                className="w-full py-4 text-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg shadow-orange-600/20 flex items-center justify-center gap-2"
               >
                 Sign Up & Buy Credits ($80) <ArrowUpRight className="w-4 h-4" />
               </a>
@@ -1125,7 +1119,7 @@ export default function DigitalConsultingAudit() {
           <div>
             <h5 className="text-sm font-extrabold text-blue-900 tracking-tight">Account Verification Status: Operational Vetting Pending</h5>
             <p className="text-xs text-blue-700 mt-1.5 leading-relaxed max-w-4xl">
-              Your profile is undergoing standard compliance validation. <strong>It will take 3 - 7 business days for your account to be fully verified.</strong> In the meantime, you have been allocated full database querying capabilities, unlimited custom social sweeps, and direct buyer contact metrics below.
+              Your profile is undergoing standard compliance validation. <strong>It will take 3 - 7 business days for your account to be fully verified.</strong> In the meantime, you have been granted limited access to demo the platform.
             </p>
           </div>
         </div>
@@ -1140,13 +1134,13 @@ export default function DigitalConsultingAudit() {
             <div className="flex items-center gap-3 shrink-0 flex-wrap justify-center">
               <button
                 onClick={() => setIsChangePasswordOpen(!isChangePasswordOpen)}
-                className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer"
+                className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-1.5"
               >
                 <Key className="w-3.5 h-3.5 text-orange-600" /> {isChangePasswordOpen ? "Close Password Settings" : "Change Password"}
               </button>
               <button
                 onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 px-4.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer"
+                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 px-4.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 focus:outline-none"
               >
                 <Lock className="w-3.5 h-3.5" /> Sign Out & Lock Secure Registry
               </button>
@@ -1241,7 +1235,7 @@ export default function DigitalConsultingAudit() {
             </div>
             <h4 className="text-base font-bold text-slate-900 tracking-tight">Capped Brand Partnerships Policy</h4>
             <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
-              We operate exclusively with a hand-selected group of high-potential growth enterprises globally. To maintain superior API speeds and guarantee lead signal quality, we enforce strict capacity caps. <span className="text-orange-600 font-bold">Digital Consulting Pros</span> must act quickly; this live customer search audit will close indefinitely when the countdown expires.
+              We operate exclusively with a hand-selected group of high-potential growth enterprises globally. To maintain superior API speeds and guarantee lead signal quality, we enforce strict bandwidth caps per partner cohort.
             </p>
           </div>
           <div className="shrink-0 flex items-center">
@@ -1441,12 +1435,20 @@ export default function DigitalConsultingAudit() {
               <Button
                 onClick={() => performLeadsSearch(searchQuery)}
                 disabled={isSearchingLeads}
-                className="bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs px-5 py-3.5 rounded-xl shadow-lg shadow-orange-600/10 flex items-center gap-1.5 focus:outline-none shrink-0 w-full sm:w-auto justify-center cursor-pointer"
+                className="bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs px-5 py-3.5 rounded-xl shadow-lg shadow-orange-600/10 flex items-center gap-1.5 focus:outline-none whitespace-nowrap"
               >
                 {isSearchingLeads ? "Scanning..." : "Search Live Leads"}
               </Button>
             </div>
           </div>
+
+          {/* Error Message Display */}
+          {searchLeadsError && (
+            <div className="p-4 bg-red-50 border-b border-red-200 text-red-700 text-xs flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <p>{searchLeadsError}</p>
+            </div>
+          )}
 
           {/* Platform category selectors */}
           <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-3 flex flex-wrap gap-2 items-center">
@@ -1490,8 +1492,8 @@ export default function DigitalConsultingAudit() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm font-sans">
-                {filteredLeads.length > 0 ? (
-                  filteredLeads.slice(0, visibleLimit).map((lead) => {
+                {leadsList.length > 0 ? (
+                  leadsList.map((lead) => {
                     // Determine platform color badge
                     const colorMap = {
                       LinkedIn: "bg-blue-50 text-blue-600 border-blue-200/50",
@@ -1513,7 +1515,7 @@ export default function DigitalConsultingAudit() {
                           </span>
                         </td>
                         <td className="py-5 px-6 max-w-sm sm:max-w-md lg:max-w-xl leading-relaxed text-slate-700 font-medium">
-                          <p className="line-clamp-3 select-all">"{lead.intent}"</p>
+                          <p className="line-clamp-3 select-all">"{lead.content || lead.intent}"</p>
                         </td>
                         <td className="py-5 px-6 font-mono text-xs text-slate-600 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
@@ -1526,7 +1528,7 @@ export default function DigitalConsultingAudit() {
                           </div>
                         </td>
                         <td className="py-5 px-6 text-right whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 text-[10px] text-emerald-700 font-black px-2.5 py-1.5 rounded-xl uppercase tracking-wider justify-end shadow-sm">
+                          <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 text-[10px] text-emerald-700 font-black px-2.5 py-1.5 rounded-xl uppercase">
                             <ShieldCheck className="w-3 h-3 text-emerald-650" /> Active Lead Access
                           </span>
                         </td>
@@ -1536,7 +1538,7 @@ export default function DigitalConsultingAudit() {
                 ) : (
                   <tr>
                     <td colSpan={5} className="py-12 text-center text-slate-500 bg-white">
-                      No matching records found. Try running a different search query above.
+                      {isSearchingLeads ? "Loading results..." : "No results found. Try running a search above."}
                     </td>
                   </tr>
                 )}
@@ -1544,24 +1546,24 @@ export default function DigitalConsultingAudit() {
             </table>
           </div>
 
-          {filteredLeads.length > visibleLimit && (
-            <div className="absolute inset-x-0 bottom-[51px] bg-gradient-to-t from-white via-white/95 to-transparent pt-32 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
+          {leadsList.length > visibleLimit && (
+            <div className="absolute inset-x-0 bottom-[51px] bg-gradient-to-t from-white via-white/95 to-transparent pt-32 pb-12 flex flex-col items-center justify-center text-center p-8 z-20">
               <div className="bg-white border border-orange-100 rounded-[2rem] p-8 max-w-lg shadow-2xl relative">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-orange-600 text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1 shadow-md">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-orange-600 text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1">
                   <Sparkles className="w-3 animate-pulse" /> Daily Search Limit Reached
                 </div>
                 <h3 className="text-base font-black text-slate-900 mb-3 mt-2 leading-snug uppercase tracking-tight">
                   Extend Allocation to 100 Leads Daily
                 </h3>
                 <p className="text-slate-600 text-xs font-bold leading-relaxed mb-6">
-                  You can have a maximum of 33 leads a day. If you want more than 33 leads, you can pay an extra <strong className="text-orange-600">$20 USD</strong> to get a max of 100 leads today!
+                  You can have a maximum of 33 leads a day. If you want more than 33 leads, you can pay an extra <strong className="text-orange-600">$20 USD</strong> to get a max of 100 leads today.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                   <a 
                     href="https://pay.yoco.com/mergemega?amount=339"
                     target="_blank"
                     rel="referrer noopener"
-                    className="w-full sm:w-auto text-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto text-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-600/20 flex items-center justify-center gap-2"
                   >
                     Upgrade Now ($20) <ArrowUpRight className="w-3.5 h-3.5" />
                   </a>
@@ -1579,155 +1581,6 @@ export default function DigitalConsultingAudit() {
           {/* Database Footer Summary */}
           <div className="p-4 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-500 leading-normal font-mono font-bold uppercase tracking-wider">
             SECURED LEAD FEED • CONNECTED TO ACTIVE SOCIAL RESEARCH AND EXA SEARCH NODES
-          </div>
-        </div>
-
-        {/* COST RECKONER REMOVED */}
-        <div id="payment-section" className="hidden">
-          
-          {/* Card left: pricing breakdown */}
-          <Card className="bg-white border border-slate-200 rounded-2xl flex flex-col justify-between p-8 relative overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl pointer-events-none" />
-            
-            <div className="space-y-4">
-              <span className="text-[10px] font-black font-mono tracking-widest text-orange-600 uppercase">
-                Contract Pricing Breakdown
-              </span>
-              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                Digital Consulting Pros Plan
-              </h2>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Unlock instant access to the Signalmerge real-time customer search engine. Filter premium leads, reveal source contact metrics, export with one click, and receive continuous push notifications of hot prospects globally.
-              </p>
-
-              <div className="space-y-3 pt-4">
-                <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-orange-600 shrink-0" />
-                    <div>
-                      <span className="block text-xs font-bold text-slate-800">Continuous 2026 Social Audits</span>
-                      <span className="block text-[10px] text-slate-400 font-mono">Sweeping TikTok, Instagram, Reddit, Facebook & more</span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-mono font-bold text-emerald-600">Included</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-orange-600 shrink-0" />
-                    <div>
-                      <span className="block text-xs font-bold text-slate-800">1,000 Monthly High-Intent Signals</span>
-                      <span className="block text-[10px] text-slate-400 font-mono">Complete location metrics & organic text filters</span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-mono font-bold text-emerald-600">Included</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-orange-600 shrink-0" />
-                    <div>
-                      <span className="block text-xs font-bold text-slate-800 font-sans">Full Database Dashboard Access</span>
-                      <span className="block text-[10px] text-slate-400 font-mono">Instant CSV exports with unlocked direct buyer contact pointers</span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-mono font-bold text-emerald-600">Included</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-slate-100 pt-6 mt-6 flex items-center justify-between">
-              <div>
-                <span className="block text-[9px] text-slate-400 font-black uppercase font-mono">RECURRING VALUE LOCK</span>
-                <span className="text-xs text-slate-500 font-medium">Commencing June 30, 2026</span>
-              </div>
-              <div className="text-right">
-                <span className="text-2xl font-extrabold text-slate-900">€80 <span className="text-xs font-mono text-slate-500 font-normal">/ month</span></span>
-              </div>
-            </div>
-          </Card>
-
-          {/* Card right: setup pay checkout link standard standard */}
-          <Card className="bg-white border border-orange-200 rounded-2xl p-8 relative flex flex-col justify-between overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-[80px] pointer-events-none" />
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black font-mono tracking-widest text-emerald-800 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-md uppercase">
-                  Action Required Now
-                </span>
-                <span className="text-xs text-orange-600 font-mono font-black animate-pulse leading-none">
-                  ⏳ 36h Limit
-                </span>
-              </div>
-              
-              <h3 className="text-xl font-bold text-slate-900 tracking-tight">Authorize One-Time Setup Fee</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Secure the global Signalmerge data pipeline allocation. Authorize the setup parameter fee immediately using the secure Yoco link below. Any delay in setup authorization risks automatic re-allocation to alternative digital firms.
-              </p>
-
-              {/* Huge Fee Breakdown */}
-              <div className="bg-orange-50/40 border border-orange-100/60 p-4 rounded-xl flex items-center justify-between my-4">
-                <div>
-                  <span className="block text-[9.5px] font-black font-mono tracking-widest text-orange-700 leading-none mb-1">SETUP FEE (EUROS)</span>
-                  <span className="text-3xl font-extrabold text-slate-900">€160</span>
-                  <span className="text-xs text-slate-500 ml-2">Equivalent to R3,040 ZAR</span>
-                </div>
-                <div className="text-right">
-                   <span className="block text-[8px] font-black font-mono text-orange-600 leading-none uppercase">Yoco Portal Gate</span>
-                   <span className="text-sm text-slate-500 font-mono font-medium">Secured Standard</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4 mt-6">
-              <a 
-                href="https://pay.yoco.com/mergemega?amount=3040" 
-                target="_blank" 
-                rel="referrer noopener"
-                className="block text-center py-5 bg-orange-600 hover:bg-orange-750 text-white font-extrabold text-sm rounded-xl tracking-wide shadow-xl shadow-orange-600/25 transition-all uppercase flex items-center justify-center gap-2 active:scale-[0.98]"
-              >
-                Pay Setup Fee Now (€160) <ArrowUpRight className="w-5 h-5" />
-              </a>
-
-              <div className="text-center space-y-2.5">
-                <span className="block text-xs font-mono font-bold text-slate-600 uppercase">
-                  (Equivalent to R3,040 ZAR)
-                </span>
-                <div className="p-3 bg-emerald-50 border border-emerald-100/50 rounded-xl text-left shadow-sm">
-                  <p className="text-[11px] text-emerald-800 font-bold leading-relaxed flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-650 shrink-0 mt-0.5" />
-                    <span>
-                      <strong className="uppercase">Important Notice:</strong> Your custom pipeline and dashboard setup will be fully completed and delivered in <strong className="underline">7 business days</strong> once payment has been approved.
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center gap-4 text-[10px] text-slate-400 font-mono select-none">
-                <span className="flex items-center gap-1">🛡️ SSL Secure</span>
-                <span>•</span>
-                <span className="flex items-center gap-1">💳 Visa & Mastercard</span>
-                <span>•</span>
-                <span className="flex items-center gap-1">🇿🇦 Yoco Certified Direct</span>
-              </div>
-            </div>
-          </Card>
-
-        </div>
-
-        {/* BOTTOM TIMED EXPIRY WARNING FOOTER */}
-        <div className="hidden">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5 justify-center sm:justify-start">
-                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
-                <h5 className="text-sm font-bold text-slate-950 tracking-tight">Final Registry Authorization Decrypt Notice</h5>
-              </div>
-              <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
-                Upon expiration of the <span className="text-red-600 font-bold font-mono">36-hour countdown</span>, this custom audit profile for Digital Consulting Pros global hub will disconnect from active monitoring nodes, lock completely, and the reserved buyer allocation slot will automatically release to the next agency candidate on the global waitlist. Clear the R3,040 Setup via the secured Yoco portal above to guarantee long-term pipeline continuity.
-              </p>
-            </div>
           </div>
         </div>
 
