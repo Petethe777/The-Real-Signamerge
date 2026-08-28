@@ -23,7 +23,7 @@ const adminEmail = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const adminPassword = (process.env.ADMIN_PASSWORD || "").trim();
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "https://sscuyhvkyfemrsmfxhkt.supabase.co";
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3V5aHZreWZlbXJzbWZ4aGt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzQ5MzAsImV4cCI6MjA5NDMxMDkzMH0.qoURHMmKre8uGLem4b6GBrqtt4yHaUlE9LI9PYxW-c4";
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3V5aHZreWZlbXJzbWZ4aGt0Iiwicm9[...]
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseAnonKey);
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -132,7 +132,7 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
           sessionId: resData.id,
           email: cleanEmail,
           amount: `R1,280 ZAR`,
-        provider: "yoco_api"
+          provider: "yoco_api"
         };
       } else {
         console.warn("[Yoco Checkout] Yoco API responded with error or missing redirect URL:", resData);
@@ -154,7 +154,6 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
     provider: "yoco_portal_fallback"
   };
 }
-
 
 function getLevenshteinDistance(a: string, b: string): number {
   const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
@@ -369,7 +368,52 @@ function extractHashtags(text: string): string[] {
   return Array.from(new Set(matches)).slice(0, 5);
 }
 
-// Global Reusable Leads Discovery Search Engine — powered by Exa (replaces Gemini).
+/**
+ * LEAD CLASSIFICATION HEURISTIC
+ * Determines if a result is likely a buyer/lead vs a service provider
+ * Returns 'lead' | 'provider' | 'unknown'
+ */
+function classifyResultAsLeadOrProvider(result: any): 'lead' | 'provider' | 'unknown' {
+  const text = ((result.text || "") + " " + (result.title || "")).toLowerCase();
+  
+  // Strong provider indicators
+  const providerIndicators = [
+    "hire us", "hire me", "our services", "our agency", "our company", "we are", "we offer", "we provide",
+    "contact us for", "book a", "schedule a", "book now", "get a quote", "request a quote", "ask for a quote",
+    "call us", "email us", "visit our", "our team", "our experts", "my team", "my services", "hire my",
+    "limited company", "pty ltd", "llc", "inc", "pvt ltd", "consulting firm", "service provider",
+    "agency specializing", "expert in", "specialist in", "years of experience", "certified", "licensed"
+  ];
+  
+  // Strong buyer indicators (intent signals)
+  const buyerIndicators = [
+    "looking for", "seeking", "need", "sourcing", "searching for", "hire a", "hire an", "looking to hire",
+    "in need of", "want to", "looking to", "anyone here", "anyone know", "who can", "who do you",
+    "recommendations for", "can anyone", "does anyone", "urgent", "asap", "immediately", "budget",
+    "budget ready", "ready to", "will pay", "willing to pay", "pricing for", "cost of", "how much",
+    "looking to buy", "interested in", "want to work with", "sourcing from"
+  ];
+
+  let buyerScore = 0;
+  let providerScore = 0;
+
+  buyerIndicators.forEach(indicator => {
+    if (text.includes(indicator)) buyerScore += 1;
+  });
+
+  providerIndicators.forEach(indicator => {
+    if (text.includes(indicator)) providerScore += 1;
+  });
+
+  // Clear winner
+  if (buyerScore > providerScore && buyerScore >= 1) return 'lead';
+  if (providerScore > buyerScore && providerScore >= 1) return 'provider';
+  
+  // Mixed signals or ambiguous
+  return 'unknown';
+}
+
+// Global Reusable Leads Discovery Search Engine — powered by Exa
 async function performLeadsSearch(query: string): Promise<any> {
   const correction = correctQuerySearch(query);
   const searchTerm = correction.corrected;
@@ -384,13 +428,8 @@ async function performLeadsSearch(query: string): Promise<any> {
     return { _rateLimited: true, reason: "invalid_key_format" };
   }
 
-  // Broad query: businesses/providers AND people expressing intent, not restricted to a
-  // narrow "social media post" content type. The old template locked results to organic
-  // TikTok/Instagram/Reddit posts specifically, which is a very thin content pool for most
-  // local-service/B2B queries — causing Exa to return loosely-related "closest match"
-  // results instead of genuinely relevant ones. This version lets Exa draw from company
-  // sites, directories, review platforms, and social/forum posts alike.
-  const exaQuery = `Companies, service providers, and people actively discussing, offering, recommending, or requesting: ${searchTerm}`;
+  // Enhanced query for buyers/leads specifically
+  const exaQuery = `(looking for OR seeking OR need OR hire OR sourcing OR "how much" OR "can anyone" OR "who do you" OR urgent) ${searchTerm}`;
 
   const response = await fetch("https://api.exa.ai/search", {
     method: "POST",
@@ -418,39 +457,46 @@ async function performLeadsSearch(query: string): Promise<any> {
   const data: any = await response.json();
   const rawResults: any[] = Array.isArray(data?.results) ? data.results : [];
 
-const detectedCountry = detectQueryCountryServer(searchTerm.toLowerCase());
+  const detectedCountry = detectQueryCountryServer(searchTerm.toLowerCase());
 
-const results = rawResults
-  .filter((r: any) => typeof r?.url === "string" && /^https:\/\/.+/i.test(r.url))
-  .map((r: any, idx: number) => {
-    const content = (r.text || r.title || "").trim().slice(0, 400);
+  const results = rawResults
+    .filter((r: any) => typeof r?.url === "string" && /^https:\/\/.+/i.test(r.url))
+    .map((r: any, idx: number) => {
+      // Classify: is this a buyer (lead) or a provider?
+      const classification = classifyResultAsLeadOrProvider(r);
+      
+      const content = (r.text || r.title || "").trim().slice(0, 400);
+      const score = r.score || (1 - (idx / rawResults.length)); // Exa relevance score (descending)
 
-    return {
-      id: r.id || `exa-${idx}`,
-      platform: detectPlatformFromUrl(r.url),
-      content,
-      views: "Verified",
-      likes: "Signal",
-      hashtags: extractHashtags(content),
-      location: detectedCountry
-        ? detectedCountry.replace(/\b\w/g, c => c.toUpperCase())
-        : "Global",
-      contactStatus: "Verified Lead",
-      time: r.publishedDate
-        ? new Date(r.publishedDate).toLocaleDateString()
-        : "Recently",
-      sourceUrl: r.url,
-    };
-  });
+      return {
+        id: r.id || `exa-${idx}`,
+        platform: detectPlatformFromUrl(r.url),
+        content,
+        title: r.title || "",
+        author: r.author || null,
+        publishedDate: r.publishedDate || null,
+        relevanceScore: score,
+        classification, // 'lead', 'provider', or 'unknown'
+        location: detectedCountry
+          ? detectedCountry.replace(/\b\w/g, c => c.toUpperCase())
+          : "Global",
+        time: r.publishedDate
+          ? new Date(r.publishedDate).toLocaleDateString()
+          : "Recently",
+        sourceUrl: r.url,
+        hashtags: extractHashtags(content),
+      };
+    })
+    // Filter: only return strong buyer signals or unknown (not clear providers)
+    .filter((r: any) => r.classification !== 'provider');
 
-return results;
+  return results;
 }
+
 // In-memory variable to support custom-updated partner passwords dynamically
 
 // SHARED lead-access gate — used by BOTH /api/search and the MCP search_leads tool,
-// so the two paths can never drift out of sync again (which is what caused the last
-// two bugs: /api/search losing its gate entirely, and the MCP tool running its own
-// separate, broken "mask sourceUrl" system instead of this one).
+// so the two paths can never drift out of sync again.
 // Unpaid: exactly ONE free search, ever, capped at 3 leads. Paid: 150-lead pack,
 // non-renewing, only refilled by a new $80 payment via the webhook.
 async function checkLeadAccessAndGetLimit(email: string): Promise<
@@ -498,6 +544,7 @@ async function deductLeadCredits(email: string, count: number): Promise<void> {
     await supabaseService.from("profiles").update({ lead_credits: newBalance }).eq("email", email);
   }
 }
+
 let updatedClientPassword = "";
 
 // Simple in-memory OAuth tables
@@ -1097,39 +1144,39 @@ async function startServer() {
 
   // PAYMENT WEBHOOK ENDPOINT (signature-verified)
   app.post("/api/webhooks/payment", async (req: any, res) => {
-  const webhookSecret = process.env.YOCO_WEBHOOK_SECRET;
-  const svixId = req.headers["webhook-id"] as string;
-  const svixTimestamp = req.headers["webhook-timestamp"] as string;
-  const svixSignature = req.headers["webhook-signature"] as string;
+    const webhookSecret = process.env.YOCO_WEBHOOK_SECRET;
+    const svixId = req.headers["webhook-id"] as string;
+    const svixTimestamp = req.headers["webhook-timestamp"] as string;
+    const svixSignature = req.headers["webhook-signature"] as string;
 
-  if (!webhookSecret || !svixId || !svixTimestamp || !svixSignature || !req.rawBody) {
-    console.warn("[Webhook] Missing signature headers or secret — rejecting.");
-    return res.status(400).json({ success: false, error: "Missing signature." });
-  }
+    if (!webhookSecret || !svixId || !svixTimestamp || !svixSignature || !req.rawBody) {
+      console.warn("[Webhook] Missing signature headers or secret — rejecting.");
+      return res.status(400).json({ success: false, error: "Missing signature." });
+    }
 
-  // Reject anything older than 3 minutes to stop replay attacks
-  const age = Math.abs(Date.now() / 1000 - Number(svixTimestamp));
-  if (age > 180) {
-    return res.status(400).json({ success: false, error: "Timestamp too old." });
-  }
+    // Reject anything older than 3 minutes to stop replay attacks
+    const age = Math.abs(Date.now() / 1000 - Number(svixTimestamp));
+    if (age > 180) {
+      return res.status(400).json({ success: false, error: "Timestamp too old." });
+    }
 
-  const signedContent = `${svixId}.${svixTimestamp}.${req.rawBody.toString("utf8")}`;
-  const secretBytes = Buffer.from(webhookSecret.split("_")[1], "base64");
-  const expectedSig = crypto.createHmac("sha256", secretBytes).update(signedContent).digest("base64");
+    const signedContent = `${svixId}.${svixTimestamp}.${req.rawBody.toString("utf8")}`;
+    const secretBytes = Buffer.from(webhookSecret.split("_")[1], "base64");
+    const expectedSig = crypto.createHmac("sha256", secretBytes).update(signedContent).digest("base64");
 
-  const validSig = svixSignature
-    .split(" ")
-    .some(sig => sig.split(",")[1] === expectedSig);
+    const validSig = svixSignature
+      .split(" ")
+      .some(sig => sig.split(",")[1] === expectedSig);
 
-  if (!validSig) {
-    console.warn("[Webhook] Signature mismatch — rejecting.");
-    return res.status(401).json({ success: false, error: "Invalid signature." });
-  }
+    if (!validSig) {
+      console.warn("[Webhook] Signature mismatch — rejecting.");
+      return res.status(401).json({ success: false, error: "Invalid signature." });
+    }
 
-  const event = req.body;
-  if (event.type !== "payment.succeeded") {
-    return res.json({ success: true, ignored: true });
-  }
+    const event = req.body;
+    if (event.type !== "payment.succeeded") {
+      return res.json({ success: true, ignored: true });
+    }
 
     const email = event.payload?.metadata?.email
       || event.payload?.metadata?.customer_email
@@ -1138,10 +1185,6 @@ async function startServer() {
       || event.payload?.billingAddress?.email;
     const cleanEmail = email ? String(email).trim().toLowerCase() : "";
     if (!cleanEmail) {
-      // Log the full payload so you can inspect Render logs after a real test payment
-      // through the static pay.yoco.com/mergemega link and tell me exactly which field
-      // (if any) actually carries the payer's email — static Payment Links don't
-      // guarantee the same metadata shape as checkouts created via the API.
       console.warn("[Webhook] No email found in payment payload for", event.payload?.id, JSON.stringify(event.payload));
       return res.status(200).json({ success: false, error: "No email in metadata." });
     }
@@ -1347,7 +1390,7 @@ async function startServer() {
         },
         {
           name: "checkout_subscription",
-          description: "Generate an official Yoco $80 USD subscription checkout link for a user to pay and unlock full 2026 Signalmerge intelligence access, unmask restricted source links, and clear account limits.",
+          description: "Generate an official Yoco $80 USD subscription checkout link for a user to pay and unlock full 2026 Signalmerge intelligence access, unmask restricted source links, and clear all limits.",
           inputSchema: {
             type: "object",
             properties: {
@@ -1472,8 +1515,7 @@ async function startServer() {
 
         console.log(`[MCP Tool: search_leads] Performing lead discovery for query: "${query}"`);
 
-        // Same gate as /api/search — no separate masking system, so this can't
-        // drift out of sync with the paid/free logic again.
+        // Same gate as /api/search
         const access = await checkLeadAccessAndGetLimit(email);
         if (!access.ok) {
           return {
@@ -1774,7 +1816,7 @@ async function startServer() {
 
       <button 
         type="submit" 
-        class="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-extrabold text-xs uppercase tracking-wider py-4 rounded-xl shadow-lg shadow-orange-500/10 transition-all hover:-translate-y-0.5 active:translate-y-0"
+        class="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-extrabold text-xs uppercase tracking-wider py-4 rounded-xl shadow-lg shadow-orange-500/10 transition-all hover:shadow-lg"
       >
         Approve & Connect
       </button>
@@ -1885,7 +1927,7 @@ async function startServer() {
 
       <button 
         type="submit" 
-        class="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-extrabold text-xs uppercase tracking-wider py-4 rounded-xl shadow-lg shadow-orange-500/10 transition-all hover:-translate-y-0.5 active:translate-y-0"
+        class="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-extrabold text-xs uppercase tracking-wider py-4 rounded-xl shadow-lg shadow-orange-500/10 transition-all hover:shadow-lg"
       >
         Approve & Connect
       </button>
@@ -2147,7 +2189,7 @@ async function startServer() {
     });
   }
 
-    app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`[Server] Core engine running on http://localhost:${PORT}`);
   });
 }
