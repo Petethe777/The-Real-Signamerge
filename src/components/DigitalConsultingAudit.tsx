@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useNavigate } from "react-router-dom";
 import { TermsModal } from "@/components/TermsModal";
-import { searchSocialMedia } from "@/services/geminiService";
+import { searchSocialMedia } from "@/services/searchService";
 
 // Types for Leads Database
 interface Lead {
@@ -439,7 +439,7 @@ export default function DigitalConsultingAudit() {
     return 129600;
   });
 
-  // Perform search query from the server or Gemini
+  // Perform search query from the server (Exa)
   const performLeadsSearch = async (queryToSearch: string) => {
     setIsSearchingLeads(true);
     setSearchLeadsError(null);
