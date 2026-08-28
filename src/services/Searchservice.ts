@@ -255,15 +255,16 @@ export const correctQuerySearch = (query: string): { corrected: string; original
   };
 };
 
-export const searchSocialMedia = async (query: string): Promise<DemandResult[]> => {
+export const searchSocialMedia = async (query: string, email?: string): Promise<DemandResult[]> => {
   const cleanQuery = query.trim();
 
   if (!cleanQuery) {
     return [];
   }
 
+  const emailParam = email ? `&email=${encodeURIComponent(email.trim().toLowerCase())}` : "";
   const res = await fetch(
-    `/api/search?q=${encodeURIComponent(cleanQuery)}`
+    `/api/search?q=${encodeURIComponent(cleanQuery)}${emailParam}`
   );
 
   if (!res.ok) {
