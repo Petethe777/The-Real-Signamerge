@@ -4,9 +4,6 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-// Note: Gemini (@google/genai) has been replaced by Exa as the primary search engine.
-// The package import below is left only if some other unrelated code path still needs it;
-// remove it (and the "@google/genai" dependency) once you confirm nothing else references it.
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { searchDataset } from "./src/data/customerSearchDataset.js";
@@ -1241,7 +1238,7 @@ async function startServer() {
 
     const access = await checkLeadAccessAndGetLimit(email);
     if (!access.ok) {
-      return res.json(access.paywalled);
+      return res.json((access as any).paywalled);
     }
 
     // Capture and log every search query to the Supabase database in the background instantly
@@ -1476,7 +1473,7 @@ async function startServer() {
         const access = await checkLeadAccessAndGetLimit(email);
         if (!access.ok) {
           return {
-            content: [{ type: "text", text: JSON.stringify(access.paywalled, null, 2) }],
+            content: [{ type: "text", text: JSON.stringify((access as any).paywalled, null, 2) }],
           };
         }
 
