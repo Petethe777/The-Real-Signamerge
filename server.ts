@@ -384,9 +384,13 @@ async function performLeadsSearch(query: string): Promise<any> {
     return { _rateLimited: true, reason: "invalid_key_format" };
   }
 
-  // Build a query that steers Exa toward organic, high-intent social/B2B posts,
-  // mirroring the intent-detection behaviour the app previously got from the Gemini prompt.
-  const exaQuery = `Real, organic 2026 social media posts and forum threads (TikTok, Instagram, Reddit, X/Twitter, LinkedIn, YouTube) where people are actively asking for help, recommendations, suppliers, manufacturers, freelancers, or B2B services related to: ${searchTerm}`;
+  // Broad query: businesses/providers AND people expressing intent, not restricted to a
+  // narrow "social media post" content type. The old template locked results to organic
+  // TikTok/Instagram/Reddit posts specifically, which is a very thin content pool for most
+  // local-service/B2B queries — causing Exa to return loosely-related "closest match"
+  // results instead of genuinely relevant ones. This version lets Exa draw from company
+  // sites, directories, review platforms, and social/forum posts alike.
+  const exaQuery = `Companies, service providers, and people actively discussing, offering, recommending, or requesting: ${searchTerm}`;
 
   const response = await fetch("https://api.exa.ai/search", {
     method: "POST",
