@@ -268,13 +268,13 @@ export const searchSocialMedia = async (query: string, email?: string): Promise<
   );
 
   if (!res.ok) {
-    throw new Error(`Exa search failed with status ${res.status}`);
+    throw new Error(`Search API returned status ${res.status}: ${await res.text()}`);
   }
 
   const results = await res.json();
 
   if (!Array.isArray(results)) {
-    throw new Error("Exa search returned an invalid response.");
+    throw new Error("Search API returned an invalid response.");
   }
 
   return results.filter(
