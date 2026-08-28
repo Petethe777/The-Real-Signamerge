@@ -40,7 +40,7 @@ import { Input } from "@/components/ui/input";
 import { DemandResult } from "@/types";
 import { tiktokDataset, instagramDataset } from "@/data/datasets";
 import { mockClients } from "@/data/mockClients";
-import { searchSocialMedia, detectQueryCountry, scrubLocationFromContent } from "@/services/geminiService";
+import { searchSocialMedia, detectQueryCountry, scrubLocationFromContent } from "@/services/searchService";
 import { supabase, isSupabaseConfigured, saveSearchQuery } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { AnimatePresence } from "motion/react";
@@ -291,7 +291,18 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
       setSearchFeedback(null);
       setCorrectedQuery(null);
       try {
-        const res = await searchSocialMedia(q);
+        const res = await searchSocialMedia(q, profile?.email);
+        if (res && (res as any)._paywalled) {
+          const reason = (res as any).reason;
+          setLiveResults([]);
+          setSearchFeedback(
+            reason === "free_search_used"
+              ? "You've used your free search. Buy a $80 pack (150 leads) to keep searching."
+              : "You've used all 150 leads in your pack. Purchase another $80 pack to keep searching."
+          );
+          setIsLoadingResults(false);
+          return;
+        }
         if (res && (res as any)._rateLimited) {
           setLiveResults(res || []);
           setSearchFeedback("AI Scanner is busy. Showing cached results.");
@@ -1675,7 +1686,18 @@ export default function Dashboard() {
       setError(null);
       setCorrectedQuery(null);
       try {
-        const results = await searchSocialMedia(query);
+        const results = await searchSocialMedia(query, session?.user?.email);
+        if (results && (results as any)._paywalled) {
+          const reason = (results as any).reason;
+          setLiveResults([]);
+          setError(
+            reason === "free_search_used"
+              ? "You've used your free search. Buy a $80 pack (150 leads) to keep searching."
+              : "You've used all 150 leads in your pack. Purchase another $80 pack to keep searching."
+          );
+          setIsLoading(false);
+          return;
+        }
         if (results && (results as any)._rateLimited) {
           setLiveResults(results || []);
           setError("AI Scanner is busy. Showing results from 2026 database.");
