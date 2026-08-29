@@ -31,7 +31,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseAnonKey);
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const supabaseService = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey);
+
+if (!supabaseServiceKey) {
+  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable.");
+}
+
+const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
 
 // In-Memory and File persistent Fallback database for search query logging when Supabase is unreachable/offline
 const fallbackLogPath = path.join(process.cwd(), "search_queries_fallback.json");
