@@ -22,8 +22,12 @@ const digitalConsultingPassword = (process.env.DIGITAL_CONSULTING_PASSWORD || ""
 const adminEmail = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const adminPassword = (process.env.ADMIN_PASSWORD || "").trim();
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "https://sscuyhvkyfemrsmfxhkt.supabase.co";
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3V5aHZreWZlbXJzbWZ4aGt0Iiwicm9[...]
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables.");
+}
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseAnonKey);
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
