@@ -1405,7 +1405,14 @@ async function startServer() {
   //=============================================================================
   // MCP (MODEL CONTEXT PROTOCOL) SERVER - OPTION A INTEGRATED BUILD
   //=============================================================================
-  const mcpServer = new Server(
+  // NOTE: this used to be a single module-level `const mcpServer = new Server(...)`
+  // reused for every incoming SSE connection. The MCP SDK's Server.connect() can
+  // only be called once per Server instance — a second client connecting (or even
+  // a routine reconnect/health check) threw "Already connected to a transport"
+  // and crashed the entire Node process. This is now a factory that builds a
+  // fresh Server (with the same handlers) per connection instead.
+  function createMcpServer(): Server {
+    const mcpServer = new Server(
     {
       name: "signalmerge-discovery-server",
       version: "2.0.0",
@@ -1674,8 +1681,13 @@ async function startServer() {
     }
   });
 
+  return mcpServer;
+  }
+
   // MCP SSE Transport connection pool
   const mcpTransports: Record<string, SSEServerTransport> = {};
+  // Per-session Server instances, so each connection's server can be closed on disconnect
+  const mcpServersBySession: Record<string, Server> = {};
 
   // Helper to apply extremely robust CORS headers dynamically
   const applyRobustCors = (req: any, res: any) => {
@@ -2178,8 +2190,13 @@ async function startServer() {
       (transport as any).userEmail = authUser;
       console.log(`[MCP Server] Session ${transport.sessionId} authorized for user: ${authUser}`);
     }
-    
+
     mcpTransports[transport.sessionId] = transport;
+
+    // Each connection gets its own Server instance — required by the SDK,
+    // since Server.connect() can only be called once per instance.
+    const sessionMcpServer = createMcpServer();
+    mcpServersBySession[transport.sessionId] = sessionMcpServer;
 
     // Standard SSE 15-second keepalive interval to prevent Cloud Run/proxy idling timeouts
     const keepAliveInterval = setInterval(() => {
@@ -2195,9 +2212,16 @@ async function startServer() {
       clearInterval(keepAliveInterval);
       console.log(`[MCP Server] Connection closed for session ${transport.sessionId}`);
       delete mcpTransports[transport.sessionId];
+      const closingServer = mcpServersBySession[transport.sessionId];
+      delete mcpServersBySession[transport.sessionId];
+      if (closingServer) {
+        closingServer.close().catch((err: any) => {
+          console.warn(`[MCP Server] Error closing session ${transport.sessionId}:`, err?.message || err);
+        });
+      }
     });
 
-    await mcpServer.connect(transport);
+    await sessionMcpServer.connect(transport);
     console.log(`[MCP Server] Session ${transport.sessionId} successfully connected over SSE.`);
   });
 
