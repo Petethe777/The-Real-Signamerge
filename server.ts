@@ -382,44 +382,76 @@ function extractHashtags(text: string): string[] {
  * Determines if a result is likely a buyer/lead vs a service provider
  * Returns 'lead' | 'provider' | 'unknown'
  */
+// Aggregator/tender domains that are never genuine buyer leads, regardless of
+// keyword content — hard-excluded before any keyword scoring even runs.
+const NON_LEAD_DOMAINS = [
+  "tenderbulletins.co.za", "tenders-sa.org", "etenders.gov.za", "tendersonline.co.za",
+  "biddingsource.com", "onlinetenders.co.za", "tenderswanted.co.za"
+];
+
 function classifyResultAsLeadOrProvider(result: any): 'lead' | 'provider' | 'unknown' {
-  const text = ((result.text || "") + " " + (result.title || "")).toLowerCase();
-  
-  // Strong provider indicators
+  const rawText = (result.text || "");
+  const title = (result.title || "");
+  const text = (rawText + " " + title).toLowerCase();
+  const url = (result.url || "").toLowerCase();
+  const platform = detectPlatformFromUrl(result.url || "");
+  const isSocial = ["LinkedIn", "Instagram", "TikTok", "Twitter", "Reddit", "Facebook", "YouTube"].includes(platform);
+
+  // Hard exclude: tender/RFP aggregators are procurement notices, never a
+  // person or brand shopping for a service the way this tool means "lead."
+  if (NON_LEAD_DOMAINS.some(d => url.includes(d))) return 'provider';
+
+  // Structural signal: boilerplate that shows up on business/marketing sites
+  // regardless of topic (nav-skip links, quote CTAs, credential badges). A
+  // page hitting several of these together is a company website — even when
+  // its copy uses buyer-sounding phrases like "Need pest control?" to address
+  // the reader's problem, which is exactly what was fooling pure keyword
+  // scoring before.
+  const businessPageSignals = [
+    "skip to content", "skip to footer", "skip to main content", "skip to primary",
+    "contact us", "our services", "get a free quote", "request a quote",
+    "years of experience", "accredited", "call now", "as seen in", "member",
+    "founded in", "employs", "headquartered"
+  ];
+  const businessSignalHits = businessPageSignals.reduce(
+    (count, s) => text.includes(s) ? count + 1 : count, 0
+  );
+  if (businessSignalHits >= 2) return 'provider';
+
+  // Provider indicators — a page describing itself, not a person's request.
   const providerIndicators = [
-    "hire us", "hire me", "our services", "our agency", "our company", "we are", "we offer", "we provide",
-    "contact us for", "book a", "schedule a", "book now", "get a quote", "request a quote", "ask for a quote",
+    "hire us", "hire me", "our agency", "our company", "we offer", "we provide",
+    "contact us for", "book a", "schedule a", "book now",
     "call us", "email us", "visit our", "our team", "our experts", "my team", "my services", "hire my",
     "limited company", "pty ltd", "llc", "inc", "pvt ltd", "consulting firm", "service provider",
-    "agency specializing", "expert in", "specialist in", "years of experience", "certified", "licensed"
+    "agency specializing", "expert in", "specialist in", "certified", "licensed"
   ];
-  
-  // Strong buyer indicators (intent signals)
+
+  // Buyer indicators — trimmed of generic words ("need", "how much", "cost of",
+  // "want to") that show up just as often in provider FAQ/CTA copy as in real
+  // requests. Kept phrases are ones a marketing page rarely has a reason to use.
   const buyerIndicators = [
-    "looking for", "seeking", "need", "sourcing", "searching for", "hire a", "hire an", "looking to hire",
-    "in need of", "want to", "looking to", "anyone here", "anyone know", "who can", "who do you",
-    "recommendations for", "can anyone", "does anyone", "urgent", "asap", "immediately", "budget",
-    "budget ready", "ready to", "will pay", "willing to pay", "pricing for", "cost of", "how much",
-    "looking to buy", "interested in", "want to work with", "sourcing from"
+    "looking for a", "looking for someone", "seeking a", "seeking someone",
+    "anyone here", "anyone know a good", "anyone know of a", "who can recommend",
+    "who do you use for", "recommendations for a", "can anyone recommend",
+    "does anyone know a", "urgent help needed", "will pay for",
+    "willing to pay for", "looking to hire a", "in need of a", "hire a", "hire an"
   ];
 
   let buyerScore = 0;
   let providerScore = 0;
+  buyerIndicators.forEach(indicator => { if (text.includes(indicator)) buyerScore += 1; });
+  providerIndicators.forEach(indicator => { if (text.includes(indicator)) providerScore += 1; });
 
-  buyerIndicators.forEach(indicator => {
-    if (text.includes(indicator)) buyerScore += 1;
-  });
-
-  providerIndicators.forEach(indicator => {
-    if (text.includes(indicator)) providerScore += 1;
-  });
-
-  // Clear winner
   if (buyerScore > providerScore && buyerScore >= 1) return 'lead';
   if (providerScore > buyerScore && providerScore >= 1) return 'provider';
-  
-  // Mixed signals or ambiguous
-  return 'unknown';
+  if (buyerScore === providerScore && buyerScore > 0) return isSocial ? 'lead' : 'unknown';
+
+  // No keyword signal either way. A social post with zero signal is genuinely
+  // ambiguous — leave as unknown. A plain static "Web" page with zero signal
+  // is overwhelmingly a business page (that's what static pages mostly are),
+  // so default it to provider instead of letting it slip through as "unknown."
+  return isSocial ? 'unknown' : 'provider';
 }
 
 // Global Reusable Leads Discovery Search Engine — powered by Exa
@@ -450,6 +482,7 @@ async function performLeadsSearch(query: string): Promise<any> {
       query: exaQuery,
       type: "auto",
       numResults: 20,
+      excludeDomains: NON_LEAD_DOMAINS,
       contents: {
         text: { maxCharacters: 400, includeHtmlTags: false },
         highlights: false,
