@@ -1065,6 +1065,38 @@ async function startServer() {
     });
   });
 
+  // CHANGE PASSWORD ENDPOINT — verifies current password, then updates via service-role admin API
+  app.post("/api/auth/change-password", async (req, res) => {
+    const { email, currentPassword, newPassword } = req.body;
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
+    const cleanCurrentPassword = currentPassword ? currentPassword.trim() : "";
+    const cleanNewPassword = newPassword ? newPassword.trim() : "";
+
+    if (!cleanEmail || !cleanCurrentPassword || !cleanNewPassword) {
+      return res.status(400).json({ success: false, message: "Email, current password, and new password are required." });
+    }
+    if (cleanNewPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "New password must be at least 6 characters." });
+    }
+
+    const authedUser = await verifySupabaseCredentials(cleanEmail, cleanCurrentPassword);
+    if (!authedUser) {
+      return res.status(401).json({ success: false, message: "Current password is incorrect." });
+    }
+
+    const { error } = await supabaseService.auth.admin.updateUserById(authedUser.id, {
+      password: cleanNewPassword
+    });
+
+    if (error) {
+      console.error("[Server Auth] Password change failed:", error.message);
+      return res.status(500).json({ success: false, message: "Could not update password. Please try again." });
+    }
+
+    console.log(`[Server Auth] Password changed for: ${cleanEmail}`);
+    return res.json({ success: true, message: "Password updated successfully." });
+  });
+
   // CONFIRM SUBSCRIPTION ENDPOINT ($80 PAYMENT LINK CLICKED/CONFIRMED)
   app.post("/api/auth/confirm-subscription", async (req, res) => {
     const { email } = req.body;
