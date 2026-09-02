@@ -129,6 +129,9 @@ function HomePage() {
               </Button>
             </div>
           </form>
+          <p className="mt-4 text-[11px] md:text-xs font-bold text-gray-400 text-center">
+            1 free search, 3 real leads — no signup required. No payment until you choose to buy a 150-lead pack.
+          </p>
         </div>
 
         {/* Features List - Horizontal */}
