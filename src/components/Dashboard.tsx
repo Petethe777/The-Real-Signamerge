@@ -3316,6 +3316,15 @@ export default function Dashboard() {
               </div>
             )}
 
+            {!session && (
+              <div className="mb-6 bg-orange-50/60 border border-orange-100 rounded-3xl px-6 py-4 flex items-center gap-3 max-w-4xl mx-auto text-center justify-center">
+                <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                <p className="text-xs font-bold text-orange-900">
+                  Try it free — <strong>1 search, 3 real leads</strong>, no signup required. Sign up anytime to keep exploring — you're never asked to pay until you choose to buy a 150-lead pack.
+                </p>
+              </div>
+            )}
+
             {/* Results Table */}
             <div className="bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-orange-500/5 overflow-hidden relative">
               {/* Preview Mode Badge */}
