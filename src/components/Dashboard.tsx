@@ -1538,6 +1538,33 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [correctedQuery, setCorrectedQuery] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+
+  // --- Guest (not-signed-up) search limiting: 5 free searches, 3 leads each. ---
+  // No account exists yet for a guest, so there's nothing server-side to tie a counter
+  // to — this is tracked in localStorage instead. It's a soft limit (clearing storage
+  // resets it), which is the right trade-off for a pre-signup trust-building preview,
+  // not the actual paid-tier enforcement (that happens server-side once someone has an
+  // account — see checkLeadAccessAndGetLimit in server.ts).
+  const GUEST_SEARCH_LIMIT = 5;
+  const GUEST_STORAGE_KEY = "sm_guest_searches_used";
+  const [guestSearchesUsed, setGuestSearchesUsed] = useState<number>(() => {
+    try {
+      return parseInt(localStorage.getItem(GUEST_STORAGE_KEY) || "0", 10) || 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [showGuestLimitModal, setShowGuestLimitModal] = useState(false);
+  const recordGuestSearch = () => {
+    setGuestSearchesUsed(prev => {
+      const next = prev + 1;
+      try {
+        localStorage.setItem(GUEST_STORAGE_KEY, String(next));
+      } catch {}
+      return next;
+    });
+  };
+
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isUnlockChoiceModalOpen, setIsUnlockChoiceModalOpen] = useState(false);
@@ -1678,6 +1705,17 @@ export default function Dashboard() {
         setCorrectedQuery(null);
         return;
       }
+
+      // Guest search limit — checked BEFORE calling the server, since a guest with no
+      // account has no server-side counter to check against (see comment on
+      // guestSearchesUsed above). Signed-up users are still gated correctly server-side
+      // regardless of this check.
+      if (!session && guestSearchesUsed >= GUEST_SEARCH_LIMIT) {
+        setShowGuestLimitModal(true);
+        setLiveResults([]);
+        setIsLoading(false);
+        return;
+      }
       
       // Save query input to Supabase
       saveSearchQuery(query, session?.user?.email);
@@ -1691,8 +1729,8 @@ export default function Dashboard() {
           const reason = (results as any).reason;
           setLiveResults([]);
           setError(
-            reason === "free_search_used"
-              ? "You've used your free search. Buy a $80 pack (150 leads) to keep searching."
+            reason === "free_searches_exhausted"
+              ? "You've used all 5 free searches. Buy a $80 pack (150 leads) to keep searching."
               : "You've used all 150 leads in your pack. Purchase another $80 pack to keep searching."
           );
           setIsLoading(false);
@@ -1709,6 +1747,9 @@ export default function Dashboard() {
           if ((results as any).correctedQuery) {
             setCorrectedQuery((results as any).correctedQuery);
           }
+        }
+        if (!session) {
+          recordGuestSearch();
         }
       } catch (err: any) {
         console.error("Live search failed:", err);
@@ -3623,6 +3664,73 @@ export default function Dashboard() {
                   >
                     <Sparkles className="w-4 h-4 fill-white text-white" />
                     Sign up & Build Workspace
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Guest Free-Search-Limit Modal — shown once a not-signed-up visitor hits their
+          5th free search (3 leads each). Encourages signup + the $80 / 150-lead plan. */}
+      <AnimatePresence>
+        {showGuestLimitModal && (
+          <div className="fixed inset-0 z-[105] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowGuestLimitModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-orange-200 shadow-[0_0_24px_rgba(249,115,36,0.15)]"
+            >
+              <div className="p-10 text-center">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center shadow-md border border-orange-100">
+                    <Sparkles className="text-primary w-5 h-5" />
+                  </div>
+                  <button
+                    onClick={() => setShowGuestLimitModal(false)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <h3 className="text-xl font-black text-[#111] tracking-tight mb-3">
+                  You've used all 5 free searches
+                </h3>
+                <p className="text-gray-500 font-medium text-sm mb-8 leading-relaxed">
+                  Sign up for a free Workspace to keep going, or subscribe now for <strong className="text-primary">$80</strong> to unlock 150 real leads, unlimited searches, and full source details.
+                </p>
+
+                <div className="space-y-3.5">
+                  <button
+                    onClick={() => {
+                      setShowGuestLimitModal(false);
+                      setStartedSignup(true);
+                    }}
+                    className="w-full h-14 bg-primary hover:bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-200 shadow-lg shadow-orange-500/10 hover:shadow-orange-500/20 flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4 fill-white text-white" />
+                    Sign Up & Subscribe — $80
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowGuestLimitModal(false);
+                      setIsAuthModalOpen(true);
+                    }}
+                    className="w-full h-14 bg-white border border-gray-200 hover:border-primary text-gray-800 hover:text-primary rounded-2xl font-black uppercase tracking-wider text-xs transition-all duration-200 hover:bg-orange-50/20 shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <User className="w-4 h-4 text-primary" />
+                    Just Sign Up (Free)
                   </button>
                 </div>
               </div>
