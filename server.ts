@@ -468,6 +468,8 @@ async function performLeadsSearch(query: string, targetCount: number = 20): Prom
     ["todo", "placeholder", "undefined", "null", "none", "your_api_key", "your_exa_api_key"].includes(apiKey.toLowerCase()) ||
     apiKey.startsWith("YOUR_");
 
+  console.log(`[Exa Search] EXA_API_KEY configured: ${!isPlaceholder} (length: ${apiKey.length})`);
+
   if (isPlaceholder) {
     console.log("[Server Search Engine] EXA_API_KEY is not configured. Returning rate-limited query response.");
     return { _rateLimited: true, reason: "invalid_key_format" };
@@ -483,6 +485,8 @@ async function performLeadsSearch(query: string, targetCount: number = 20): Prom
   // for ~8, not 20) — fetching+processing full page content for 20 results when only 3
   // will ever be shown is the main source of unnecessary latency.
   const requestedResults = Math.min(20, Math.max(targetCount + 5, 8));
+
+  console.log(`[Exa Search] Query: "${exaQuery}" | Requesting ${requestedResults} results`);
 
   const response = await (async () => {
     const controller = new AbortController();
@@ -526,11 +530,14 @@ async function performLeadsSearch(query: string, targetCount: number = 20): Prom
 
   const data: any = await response.json();
   const rawResults: any[] = Array.isArray(data?.results) ? data.results : [];
+  console.log(`[Exa Search] Raw results from Exa: ${rawResults.length}`);
 
   const detectedCountry = detectQueryCountryServer(searchTerm.toLowerCase());
 
-  const results = rawResults
-    .filter((r: any) => typeof r?.url === "string" && /^https:\/\/.+/i.test(r.url))
+  const validUrlResults = rawResults.filter((r: any) => typeof r?.url === "string" && /^https:\/\/.+/i.test(r.url));
+  console.log(`[Exa Search] After valid-URL filter: ${validUrlResults.length} (dropped ${rawResults.length - validUrlResults.length})`);
+
+  const results = validUrlResults
     .map((r: any, idx: number) => {
       // Classify: is this a buyer (lead) or a provider?
       const classification = classifyResultAsLeadOrProvider(r);
@@ -559,6 +566,8 @@ async function performLeadsSearch(query: string, targetCount: number = 20): Prom
     })
     // Filter: only return strong buyer signals or unknown (not clear providers)
     .filter((r: any) => r.classification !== 'provider');
+
+  console.log(`[Exa Search] After provider-classification filter: ${results.length} (this is what gets returned)`);
 
   return results;
 }
