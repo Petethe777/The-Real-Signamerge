@@ -447,11 +447,15 @@ function classifyResultAsLeadOrProvider(result: any): 'lead' | 'provider' | 'unk
   if (providerScore > buyerScore && providerScore >= 1) return 'provider';
   if (buyerScore === providerScore && buyerScore > 0) return isSocial ? 'lead' : 'unknown';
 
-  // No keyword signal either way. A social post with zero signal is genuinely
-  // ambiguous — leave as unknown. A plain static "Web" page with zero signal
-  // is overwhelmingly a business page (that's what static pages mostly are),
-  // so default it to provider instead of letting it slip through as "unknown."
-  return isSocial ? 'unknown' : 'provider';
+  // No keyword signal either way. Genuinely ambiguous — keep it (as 'unknown') rather
+  // than discard it. The old version defaulted non-social pages with no exact keyword
+  // hit to 'provider' (silently dropped) on the assumption that most results would be
+  // social posts — but the search query was later broadened to include company sites,
+  // forums, and directories specifically, not just social platforms. Combined with the
+  // old default, that meant most real results for many queries were being thrown away
+  // before the user ever saw them. Keeping ambiguous results and letting the requester
+  // (and eventually a human) judge relevance is safer than confidently discarding them.
+  return 'unknown';
 }
 
 // Global Reusable Leads Discovery Search Engine — powered by Exa
