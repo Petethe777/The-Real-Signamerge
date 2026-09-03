@@ -455,7 +455,7 @@ function classifyResultAsLeadOrProvider(result: any): 'lead' | 'provider' | 'unk
 }
 
 // Global Reusable Leads Discovery Search Engine — powered by Exa
-async function performLeadsSearch(query: string): Promise<any> {
+async function performLeadsSearch(query: string, targetCount: number = 20): Promise<any> {
   const correction = correctQuerySearch(query);
   const searchTerm = correction.corrected;
 
@@ -469,26 +469,50 @@ async function performLeadsSearch(query: string): Promise<any> {
     return { _rateLimited: true, reason: "invalid_key_format" };
   }
 
-  // Enhanced query for buyers/leads specifically
-  const exaQuery = `(looking for OR seeking OR need OR hire OR sourcing OR "how much" OR "can anyone" OR "who do you" OR urgent) ${searchTerm}`;
+  // Natural-language buyer-intent framing — NOT boolean/keyword syntax. Exa's neural mode
+  // embeds this whole string as semantic meaning; literal "OR"/parentheses aren't
+  // interpreted as logic, they're just embedded as text, which dilutes the match quality.
+  // A clean sentence describing genuine intent performs much better in neural search.
+  const exaQuery = `People or businesses actively looking for, asking about, or needing help with: ${searchTerm}`;
 
-  const response = await fetch("https://api.exa.ai/search", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-    },
-    body: JSON.stringify({
-      query: exaQuery,
-      type: "auto",
-      numResults: 20,
-      excludeDomains: NON_LEAD_DOMAINS,
-      contents: {
-        text: { maxCharacters: 400, includeHtmlTags: false },
-        highlights: false,
-      },
-    }),
+  // Only request a small buffer above what's actually needed (free search shows 3 → ask
+  // for ~8, not 20) — fetching+processing full page content for 20 results when only 3
+  // will ever be shown is the main source of unnecessary latency.
+  const requestedResults = Math.min(20, Math.max(targetCount + 5, 8));
+
+  const response = await (async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // fail fast, never hang the UI
+    try {
+      return await fetch("https://api.exa.ai/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          query: exaQuery,
+          type: "auto",
+          numResults: requestedResults,
+          excludeDomains: NON_LEAD_DOMAINS,
+          contents: {
+            text: { maxCharacters: 300, includeHtmlTags: false },
+            highlights: false,
+          },
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  })().catch((err: any) => {
+    console.warn(`[Exa Search] Request failed or timed out: ${err?.message || err}`);
+    return null;
   });
+
+  if (!response) {
+    return { _rateLimited: true, reason: "exa_timeout_or_network_error" };
+  }
 
   if (!response.ok) {
     const errText = await response.text().catch(() => "");
@@ -541,22 +565,26 @@ async function performLeadsSearch(query: string): Promise<any> {
 // so the two paths can never drift out of sync again.
 // Unpaid: exactly ONE free search, ever, capped at 3 leads. Paid: 150-lead pack,
 // non-renewing, only refilled by a new $80 payment via the webhook.
+const FREE_SEARCH_LIMIT = 5;
+const FREE_SEARCH_LEADS_EACH = 3;
+
 async function checkLeadAccessAndGetLimit(email: string): Promise<
-  { ok: true; leadLimit: number } | { ok: false; paywalled: { _paywalled: true; reason: string; leadCreditsRemaining?: number } }
+  { ok: true; leadLimit: number } | { ok: false; paywalled: { _paywalled: true; reason: string; leadCreditsRemaining?: number; freeSearchesUsed?: number } }
 > {
   if (!email) {
-    // No identity to check — treat as a single free-tier lookup, not unlimited access.
-    return { ok: true, leadLimit: 3 };
+    // No identity to check server-side — guest search-count enforcement happens
+    // client-side (localStorage) since there's no account to tie a counter to yet.
+    return { ok: true, leadLimit: FREE_SEARCH_LEADS_EACH };
   }
 
   const { data: gateProfile } = await supabaseService
     .from("profiles")
-    .select("has_paid_80, lead_credits, free_search_used")
+    .select("has_paid_80, lead_credits, free_searches_used")
     .eq("email", email)
     .maybeSingle();
 
   if (!gateProfile) {
-    return { ok: true, leadLimit: 3 };
+    return { ok: true, leadLimit: FREE_SEARCH_LEADS_EACH };
   }
 
   if (gateProfile.has_paid_80) {
@@ -567,12 +595,13 @@ async function checkLeadAccessAndGetLimit(email: string): Promise<
     return { ok: true, leadLimit: Math.min(remaining, 20) };
   }
 
-  if (gateProfile.free_search_used) {
-    return { ok: false, paywalled: { _paywalled: true, reason: "free_search_used" } };
+  const used = gateProfile.free_searches_used ?? 0;
+  if (used >= FREE_SEARCH_LIMIT) {
+    return { ok: false, paywalled: { _paywalled: true, reason: "free_searches_exhausted", freeSearchesUsed: used } };
   }
 
-  await supabaseService.from("profiles").update({ free_search_used: true }).eq("email", email);
-  return { ok: true, leadLimit: 3 };
+  await supabaseService.from("profiles").update({ free_searches_used: used + 1 }).eq("email", email);
+  return { ok: true, leadLimit: FREE_SEARCH_LEADS_EACH };
 }
 
 // Deducts `count` from a paid user's lead_credits balance after a search actually
@@ -1390,7 +1419,7 @@ async function startServer() {
     }
 
     try {
-      let formatted = await performLeadsSearch(query);
+      let formatted = await performLeadsSearch(query, access.leadLimit);
       if (Array.isArray(formatted)) {
         formatted = formatted.slice(0, access.leadLimit);
         await deductLeadCredits(email, formatted.length);
@@ -1604,7 +1633,7 @@ async function startServer() {
           };
         }
 
-        let results = await performLeadsSearch(query);
+        let results = await performLeadsSearch(query, access.leadLimit);
         if (Array.isArray(results)) {
           results = results.slice(0, access.leadLimit);
           await deductLeadCredits(email, results.length);
