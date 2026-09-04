@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   Zap, Copy, Check, ArrowLeft, Globe, 
-  Play, Code, FileText, Sparkles, CheckCircle2, ShieldCheck,
+  Play, Code, FileText, CheckCircle2, ShieldCheck,
   ExternalLink, ArrowRight, Terminal, RefreshCw, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
