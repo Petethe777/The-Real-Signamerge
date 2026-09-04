@@ -579,7 +579,7 @@ async function performLeadsSearch(query: string, targetCount: number = 20): Prom
 // Unpaid: exactly ONE free search, ever, capped at 3 leads. Paid: 150-lead pack,
 // non-renewing, only refilled by a new $80 payment via the webhook.
 const FREE_SEARCH_LIMIT = 5;
-const FREE_SEARCH_LEADS_EACH = 3;
+const FREE_SEARCH_LEADS_EACH = 15;
 
 async function checkLeadAccessAndGetLimit(email: string): Promise<
   { ok: true; leadLimit: number } | { ok: false; paywalled: { _paywalled: true; reason: string; leadCreditsRemaining?: number; freeSearchesUsed?: number } }
