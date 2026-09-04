@@ -1546,22 +1546,25 @@ export default function Dashboard() {
   // account — see checkLeadAccessAndGetLimit in server.ts).
   const GUEST_SEARCH_LIMIT = 5;
   const GUEST_STORAGE_KEY = "sm_guest_searches_used";
-  const [guestSearchesUsed, setGuestSearchesUsed] = useState<number>(() => {
+  // Read synchronously from localStorage at decision time (not from React state) for the
+  // actual gate check — state can be stale for a moment if a new search fires before a
+  // previous one's state update has landed, which was very likely why the limit felt
+  // inconsistent (blocking too early, or showing results and the limit popup together).
+  const readGuestSearchesUsed = (): number => {
     try {
       return parseInt(localStorage.getItem(GUEST_STORAGE_KEY) || "0", 10) || 0;
     } catch {
       return 0;
     }
-  });
+  };
+  const [guestSearchesUsed, setGuestSearchesUsed] = useState<number>(readGuestSearchesUsed);
   const [showGuestLimitModal, setShowGuestLimitModal] = useState(false);
   const recordGuestSearch = () => {
-    setGuestSearchesUsed(prev => {
-      const next = prev + 1;
-      try {
-        localStorage.setItem(GUEST_STORAGE_KEY, String(next));
-      } catch {}
-      return next;
-    });
+    const next = readGuestSearchesUsed() + 1;
+    try {
+      localStorage.setItem(GUEST_STORAGE_KEY, String(next));
+    } catch {}
+    setGuestSearchesUsed(next); // for display only — the gate itself always re-reads localStorage directly
   };
 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -1697,6 +1700,8 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    let cancelled = false; // guards against a slower, superseded request overwriting a newer one's state
+
     async function fetchLiveResults() {
       if (!query) {
         setLiveResults([]);
@@ -1705,14 +1710,14 @@ export default function Dashboard() {
         return;
       }
 
-      // Guest search limit — checked BEFORE calling the server, since a guest with no
-      // account has no server-side counter to check against (see comment on
-      // guestSearchesUsed above). Signed-up users are still gated correctly server-side
-      // regardless of this check.
-      if (!session && guestSearchesUsed >= GUEST_SEARCH_LIMIT) {
-        setShowGuestLimitModal(true);
-        setLiveResults([]);
-        setIsLoading(false);
+      // Guest search limit — read fresh from localStorage right now, not from React
+      // state, which can be a render or two behind if searches fire in quick succession.
+      if (!session && readGuestSearchesUsed() >= GUEST_SEARCH_LIMIT) {
+        if (!cancelled) {
+          setShowGuestLimitModal(true);
+          setLiveResults([]);
+          setIsLoading(false);
+        }
         return;
       }
       
@@ -1724,6 +1729,7 @@ export default function Dashboard() {
       setCorrectedQuery(null);
       try {
         const results = await searchSocialMedia(query, session?.user?.email);
+        if (cancelled) return; // a newer search superseded this one — don't apply stale results
         if (results && (results as any)._paywalled) {
           const reason = (results as any).reason;
           setLiveResults([]);
@@ -1751,14 +1757,18 @@ export default function Dashboard() {
           recordGuestSearch();
         }
       } catch (err: any) {
+        if (cancelled) return;
         console.error("Live search failed:", err);
         setError("AI Scanning is at capacity. Using 2026 discovery database.");
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
 
     fetchLiveResults();
+    return () => {
+      cancelled = true;
+    };
   }, [query]);
 
   const databaseResults = useMemo(() => {
@@ -2526,6 +2536,20 @@ export default function Dashboard() {
     });
   };
 
+  const isUserOwner = userProfile?.role === 'admin';
+
+  // Moved here (was previously declared AFTER the `startedSignup` early return below,
+  // which is a React Rules of Hooks violation — a useMemo that only runs on some
+  // renders and not others causes React to throw and crash the whole component. This
+  // was very likely the actual cause of "the signup button leads nowhere": clicking it
+  // set startedSignup=true, which changed which branch renders, which changed how many
+  // hooks got called, which crashes React. Every hook must run unconditionally, on
+  // every render, before any early return — this is now positioned correctly for that.
+  const mergedProfile = useMemo(() => {
+    if (!session) return null;
+    return { ...(userProfile || {}), id: session.user.id, email: session.user.email, role: isUserOwner ? 'admin' : (userProfile?.role || 'user'), hasPaid80: session?.user?.hasPaid80 || userProfile?.has_paid_80 || isUserOwner, leadCredits: userProfile?.lead_credits ?? 0 };
+  }, [session, userProfile, isUserOwner]);
+
   if (startedSignup && !auditCompleted) {
     return (
       <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-4 sm:p-6 pb-20 selection:bg-orange-100 selection:text-orange-600 animate-in fade-in duration-200">
@@ -3161,13 +3185,6 @@ export default function Dashboard() {
       </div>
     );
   };
-
-  const isUserOwner = userProfile?.role === 'admin';
-
-  const mergedProfile = useMemo(() => {
-    if (!session) return null;
-    return { ...(userProfile || {}), id: session.user.id, email: session.user.email, role: isUserOwner ? 'admin' : (userProfile?.role || 'user'), hasPaid80: session?.user?.hasPaid80 || userProfile?.has_paid_80 || isUserOwner, leadCredits: userProfile?.lead_credits ?? 0 };
-  }, [session, userProfile, isUserOwner]);
 
   if (isAuthLoading || isProfileLoading) {
     return (
