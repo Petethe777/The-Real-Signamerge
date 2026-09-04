@@ -15,7 +15,6 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   Code,
-  Sparkles,
   Phone,
   FileText,
   Laptop,
