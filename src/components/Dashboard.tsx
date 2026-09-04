@@ -3373,6 +3373,15 @@ export default function Dashboard() {
               </div>
             )}
 
+            {!session && (
+              <div className="mb-6 bg-orange-50/60 border border-orange-100 rounded-3xl px-6 py-4 flex flex-col sm:flex-row items-center gap-2 sm:gap-3 max-w-4xl mx-auto text-center justify-center">
+                <Zap className="w-4 h-4 text-primary shrink-0" />
+                <p className="text-xs font-bold text-orange-900">
+                  Free preview: <strong>{Math.max(0, GUEST_SEARCH_LIMIT - guestSearchesUsed)} of {GUEST_SEARCH_LIMIT} searches left</strong> (up to 15 leads each), no signup required. Sign up anytime to keep exploring — no payment until you choose to buy a 150-lead pack for $80.
+                </p>
+              </div>
+            )}
+
             {/* Results Table */}
             <div className="bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-orange-500/5 overflow-hidden relative">
               {/* Preview Mode Badge */}
