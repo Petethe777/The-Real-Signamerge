@@ -4,7 +4,6 @@ import {
   Globe, 
   MapPin, 
   Search, 
-  Sparkles, 
   Hash, 
   Compass, 
   ShoppingBag, 
