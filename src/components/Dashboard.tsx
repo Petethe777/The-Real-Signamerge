@@ -1350,24 +1350,14 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                 </span>
                               </td>
                               <td className="px-8 py-6 text-right">
-                                {hasPaid ? (
-                                  <a 
-                                    href={result.sourceUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center rounded-xl border border-primary/25 bg-orange-50 text-primary hover:bg-primary hover:text-white transition-all gap-2 text-[10px] font-black uppercase px-4 py-2 transform hover:scale-[1.03]"
-                                  >
-                                    Open Source <ExternalLink className="w-3 h-3" />
-                                  </a>
-                                ) : (
-                                  <button 
-                                    disabled 
-                                    className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 text-gray-400 gap-2 text-[10px] font-black uppercase px-4 py-2 cursor-not-allowed select-none"
-                                    title="Unlock 150 monthly credits and source links by purchasing a subscription"
-                                  >
-                                    🔒 Source Locked
-                                  </button>
-                                )}
+                                <a 
+                                  href={result.sourceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center rounded-xl border border-primary/25 bg-orange-50 text-primary hover:bg-primary hover:text-white transition-all gap-2 text-[10px] font-black uppercase px-4 py-2 transform hover:scale-[1.03]"
+                                >
+                                  Open Source <ExternalLink className="w-3 h-3" />
+                                </a>
                               </td>
                             </motion.tr>
                           ); })
@@ -3456,27 +3446,14 @@ export default function Dashboard() {
                         </span>
                       </td>
                       <td className="px-8 py-6 text-right">
-                        <div className="flex flex-col items-end gap-2">
-                          <button 
-                            onClick={() => {
-                              if (!session) {
-                                setIsUnlockChoiceModalOpen(true);
-                              }
-                            }}
-                            className={`inline-flex items-center rounded-xl border gap-2 text-[10px] font-black uppercase px-4 py-2 transition-all transform hover:scale-105 active:scale-95 ${
-                              !session 
-                                ? 'bg-orange-50/50 text-primary border-primary hover:bg-primary hover:text-white hover:border-primary shadow-[0_0_12px_rgba(249,115,36,0.25)] hover:shadow-[0_0_18px_rgba(249,115,36,0.45)]' 
-                                : 'bg-[#111] text-white border-[#111]'
-                            }`}
-                          >
-                            {session ? "View Discovery" : "Unlock Source"} <ExternalLink className="w-3 h-3" />
-                          </button>
-                          {!session && (
-                            <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">
-                              Identity Restricted
-                            </span>
-                          )}
-                        </div>
+                        <a
+                          href={result.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center rounded-xl border gap-2 text-[10px] font-black uppercase px-4 py-2 transition-all transform hover:scale-105 active:scale-95 bg-[#111] text-white border-[#111] hover:bg-primary hover:border-primary"
+                        >
+                          Open Source <ExternalLink className="w-3 h-3" />
+                        </a>
                       </td>
                     </motion.tr>
                   ); })
