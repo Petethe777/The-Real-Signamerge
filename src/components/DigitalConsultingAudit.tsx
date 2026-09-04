@@ -3,7 +3,7 @@ import {
   Zap, Clock, ShieldCheck, ExternalLink, Lock,
   AlertTriangle, ArrowRight, Search, CheckCircle, RefreshCw,
   TrendingUp, Users, ArrowUpRight, BarChart2, MessageSquare,
-  Laptop, Compass, Sparkles, Filter, Globe, Info, Heart, ArrowLeft,
+  Laptop, Compass, Filter, Globe, Info, Heart, ArrowLeft,
   Key
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
