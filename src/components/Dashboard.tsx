@@ -3513,7 +3513,7 @@ export default function Dashboard() {
             </table>
           </div>
 
-          {filteredResults.length > 0 && (
+          {filteredResults.length > 0 && (session || guestSearchesUsed >= GUEST_SEARCH_LIMIT) && (
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-32 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
               <div className="bg-white border border-orange-100 rounded-[2rem] p-8 max-w-lg shadow-2xl relative">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1 shadow-md">
@@ -3522,7 +3522,7 @@ export default function Dashboard() {
                 {!session ? (
                   <>
                     <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
-                      You've seen your 15 free leads
+                      You've used all 5 free searches
                     </h3>
                     <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
                       Please <strong>sign up</strong> or <strong>log in</strong> now to unlock more live customer leads and access their identity paths!
