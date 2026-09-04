@@ -26,7 +26,6 @@ import {
   ShieldCheck,
   Check,
   Clock,
-  Sparkles,
   TrendingUp,
   Users,
   Lock,
@@ -175,7 +174,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   }, [profile]);
   const [activeTab, setActiveTab] = useState<'discovery' | 'analytics' | 'dataset'>('discovery');
 
-  // --- Free-tier search limiting: unpaid users get exactly ONE search, returning 3 leads. ---
+  // --- Free-tier search limiting: unpaid users get 5 searches, 15 leads each. ---
   const [freeSearchUsed, setFreeSearchUsed] = useState<boolean>(!!profile?.free_search_used);
   useEffect(() => {
     setFreeSearchUsed(!!profile?.free_search_used);
@@ -732,7 +731,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
               <div className="p-8 border-b border-gray-100 bg-orange-50/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-black text-[#111] flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
+                    <Zap className="w-5 h-5 text-primary" />
                     Consulting Intake Leads (Backup Repository)
                   </h2>
                   <p className="text-xs text-gray-500 font-medium">
@@ -855,7 +854,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                   <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-inner grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-200 text-left">
                                     <div className="md:col-span-2 border-b border-gray-100 pb-3 flex items-center justify-between">
                                       <h4 className="text-xs font-black text-[#111] uppercase tracking-wider flex items-center gap-1.5">
-                                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                                        <Zap className="w-3.5 h-3.5 text-primary" />
                                         Full Client Intake Assessment Form Answers
                                       </h4>
                                       <span className="text-[9px] text-gray-400 font-mono font-bold uppercase">ID: {lead.id}</span>
@@ -1170,7 +1169,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                       {item.category}
                     </span>
                     <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-primary" />
+                      <Zap className="w-3 h-3 text-primary" />
                       {item.reach} reach
                     </span>
                   </div>
@@ -1213,7 +1212,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                 </div>
 
                 <div className="flex items-center gap-2 bg-[#111] border border-gray-800 rounded-xl px-3 py-1.5 shadow-sm">
-                  <Sparkles className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
+                  <Zap className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
                   <div className="flex flex-col text-left">
                     <span className="text-[8px] font-black text-gray-500 uppercase tracking-wider leading-none">Total Credit</span>
                     <span className="text-xs font-black text-white leading-none mt-1">
@@ -1390,10 +1389,10 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                     <div className="relative bg-gradient-to-t from-white via-white/95 to-transparent pt-16 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
                       <div className="bg-white border border-orange-100 rounded-[2rem] p-8 max-w-lg shadow-2xl relative">
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1 shadow-md">
-                          <Sparkles className="w-3 h-3 fill-white" /> Free Search Used
+                          <Zap className="w-3 h-3 fill-white" /> Free Search Used
                         </div>
                         <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
-                          You've seen your 3 free leads
+                          You've seen your 15 free leads
                         </h3>
                         <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
                           Buy credits (<strong className="text-primary font-black text-orange-600">R1,280</strong>) to unlock unlimited searches, 150 monthly credits, and every locked source link.
@@ -1539,7 +1538,7 @@ export default function Dashboard() {
   const [correctedQuery, setCorrectedQuery] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
 
-  // --- Guest (not-signed-up) search limiting: 5 free searches, 3 leads each. ---
+  // --- Guest (not-signed-up) search limiting: 5 free searches, 15 leads each. ---
   // No account exists yet for a guest, so there's nothing server-side to tie a counter
   // to — this is tracked in localStorage instead. It's a soft limit (clearing storage
   // resets it), which is the right trade-off for a pre-signup trust-building preview,
@@ -3111,7 +3110,7 @@ export default function Dashboard() {
 
                 <div className="bg-orange-50/30 border border-orange-100 rounded-2xl p-6 text-left space-y-3 animate-in fade-in duration-300">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary fill-orange-500/20" />
+                    <Zap className="w-4 h-4 text-primary fill-orange-500/20" />
                     <span className="text-xs font-black text-primary uppercase tracking-wider">Signals Locked & Reserved</span>
                   </div>
                   <p className="text-xs text-gray-705 leading-relaxed font-semibold">
@@ -3377,7 +3376,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {/* Guest preview: capped to 3 leads for consistency with the logged-in free-search limit. */}
+                {/* Guest preview: capped to 15 leads for consistency with the logged-in free-search limit. */}
                 {filteredResults.length > 0 && !isScanning ? (
                   filteredResults.slice(0, 3).map((result, idx) => {
                     const isActuallyBlurred = false;
@@ -3492,12 +3491,12 @@ export default function Dashboard() {
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-32 pb-12 flex flex-col items-center justify-center text-center p-8 z-20 pointer-events-auto">
               <div className="bg-white border border-orange-100 rounded-[2rem] p-8 max-w-lg shadow-2xl relative">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest flex items-center gap-1 shadow-md">
-                  <Sparkles className="w-3 animate-pulse" /> Free Preview Used
+                  <Zap className="w-3 animate-pulse" /> Free Preview Used
                 </div>
                 {!session ? (
                   <>
                     <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
-                      You've seen your 3 free leads
+                      You've seen your 15 free leads
                     </h3>
                     <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
                       Please <strong>sign up</strong> or <strong>log in</strong> now to unlock more live customer leads and access their identity paths!
@@ -3507,7 +3506,7 @@ export default function Dashboard() {
                         onClick={() => setStartedSignup(true)}
                         className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-1"
                       >
-                        Sign Up Now <Sparkles className="w-4 h-4 fill-white" />
+                        Sign Up Now <Zap className="w-4 h-4 fill-white" />
                       </button>
                       <button 
                         onClick={handleLogin}
@@ -3653,7 +3652,7 @@ export default function Dashboard() {
                     }}
                     className="w-full h-14 bg-primary hover:bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-200 shadow-lg shadow-orange-500/10 hover:shadow-orange-500/20 flex items-center justify-center gap-2"
                   >
-                    <Sparkles className="w-4 h-4 fill-white text-white" />
+                    <Zap className="w-4 h-4 fill-white text-white" />
                     Sign up & Build Workspace
                   </button>
                 </div>
@@ -3664,7 +3663,7 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Guest Free-Search-Limit Modal — shown once a not-signed-up visitor hits their
-          5th free search (3 leads each). Encourages signup + the $80 / 150-lead plan. */}
+          5th free search (15 leads each). Encourages signup + the $80 / 150-lead plan. */}
       <AnimatePresence>
         {showGuestLimitModal && (
           <div className="fixed inset-0 z-[105] flex items-center justify-center p-4">
@@ -3684,7 +3683,7 @@ export default function Dashboard() {
               <div className="p-10 text-center">
                 <div className="flex justify-between items-center mb-6">
                   <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center shadow-md border border-orange-100">
-                    <Sparkles className="text-primary w-5 h-5" />
+                    <Zap className="text-primary w-5 h-5" />
                   </div>
                   <button
                     onClick={() => setShowGuestLimitModal(false)}
@@ -3709,7 +3708,7 @@ export default function Dashboard() {
                     }}
                     className="w-full h-14 bg-primary hover:bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-200 shadow-lg shadow-orange-500/10 hover:shadow-orange-500/20 flex items-center justify-center gap-2"
                   >
-                    <Sparkles className="w-4 h-4 fill-white text-white" />
+                    <Zap className="w-4 h-4 fill-white text-white" />
                     Sign Up & Subscribe — $80
                   </button>
 
