@@ -10,7 +10,7 @@ import {
   Quote, 
   Globe, 
   Heart, 
-  Sparkles, 
+  
   TrendingUp, 
   Target, 
   Compass, 
@@ -338,7 +338,7 @@ export default function AboutPage() {
             transition={{ duration: 0.6 }}
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-orange-500/20 bg-orange-500/5 text-primary text-[10px] font-black tracking-widest uppercase shadow-sm"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Zap className="w-3.5 h-3.5" />
             Real-Time Sales Sovereign
           </motion.div>
 
