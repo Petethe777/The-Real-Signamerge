@@ -275,10 +275,29 @@ function getClosestIndustryKeyword(word: string): string {
 
   const exemptWords = [
     "in", "for", "to", "at", "by", "with", "of", "and", "or", "the", "a", "an", "is", "are", "be", "from", "looking", "need", "hire", "with", "global", "brand", "brands",
-    "sell", "find", "buyers", "search", "me", "buyer", "get", "how", "who", "wants", "buy", "buying", "my", "owner", "customer", "customers", "client", "clients", "here", "there"
+    "sell", "find", "buyers", "search", "me", "buyer", "get", "how", "who", "wants", "buy", "buying", "my", "owner", "customer", "customers", "client", "clients", "here", "there",
+    // Short, extremely common, valid business/tech terms — these are NOT typos and must
+    // never be "corrected" into an unrelated list word just because they're short.
+    // This was the actual bug behind "AI Automation Firm" returning wedding photographer
+    // and unrelated gig results: "ai" (2 letters) wasn't exempt, and at 2 characters it's
+    // close enough by edit-distance to short unrelated words (like "ads", "seo", "dev")
+    // that it was silently getting rewritten before the search ever ran.
+    "ai", "ml", "iot", "api", "ux", "ui", "llm", "crm", "erp", "saas", "b2c"
   ];
 
   if (popularKeywords.includes(w) || exemptWords.includes(w) || datasetWords.has(w)) {
+    return word;
+  }
+
+  // Words of 4 characters or fewer are too easy to "correct" into an unrelated word by
+  // pure chance of edit-distance proximity, AND a "no vowels = gibberish" heuristic
+  // incorrectly flags real short acronyms too (NFT, VPN, CMS, CDN, SMS, D2C all have
+  // zero vowels and are completely legitimate). Empirically verified: correcting short
+  // words this way silently mangled ~20 of 30 common business terms tested (e.g. "ai"
+  // -> "ads", "firm" -> "crm", "hr" -> "crm", "ceo" -> "seo"), which is very likely the
+  // actual cause of irrelevant search results across many queries, not just one. Safest
+  // fix: never attempt correction on words this short — return them exactly as typed.
+  if (w.length <= 4) {
     return word;
   }
 
