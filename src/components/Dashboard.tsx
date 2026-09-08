@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { 
@@ -198,6 +198,12 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
 
   // Local state for live social keyword searching inside Discovery Hub
   const [innerSearchValue, setInnerSearchValue] = useState("");
+  const innerSearchTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const autoResizeInnerTextarea = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 240) + "px";
+  };
   const [activeQuery, setActiveQuery] = useState("");
   const [liveResults, setLiveResults] = useState<DemandResult[]>([]);
   const [selectedIntent, setSelectedIntent] = useState<DemandResult | null>(null);
@@ -1237,15 +1243,27 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
               <div className="space-y-6">
                 {/* Keyword Search Field */}
                 <form onSubmit={handleLocalSearch} className="relative w-full max-w-2xl mx-auto">
-                  <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-gray-50 border border-gray-200 rounded-2xl p-2 gap-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all shadow-sm">
-                    <div className="flex items-center flex-1">
-                      <Search className="w-5 h-5 text-gray-400 ml-3" />
-                      <Input 
+                  <div className="relative flex flex-col sm:flex-row items-stretch sm:items-end bg-gray-50 border border-gray-200 rounded-2xl p-2 gap-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all shadow-sm">
+                    <div className="flex items-start flex-1">
+                      <Search className="w-5 h-5 text-gray-400 ml-3 mt-2.5 shrink-0" />
+                      <textarea
+                        ref={innerSearchTextareaRef}
                         value={innerSearchValue}
-                        onChange={(e) => setInnerSearchValue(e.target.value)}
+                        onChange={(e) => {
+                          setInnerSearchValue(e.target.value);
+                          autoResizeInnerTextarea(e.target);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleLocalSearch(e as unknown as React.FormEvent);
+                          }
+                        }}
                         disabled={!hasPaid && freeSearchUsed}
                         placeholder={!hasPaid && freeSearchUsed ? "Free search used — buy credits to search again" : "e.g. 'AI automation services' — just the client type, not your whole business"}
-                        className="border-none shadow-none focus-visible:ring-0 text-sm bg-transparent pl-2 pr-2 h-10 w-full font-bold placeholder:font-medium placeholder:text-gray-400"
+                        rows={1}
+                        style={{ height: "auto", minHeight: "2.5rem", overflowY: "auto", maxHeight: "240px" }}
+                        className="border-none shadow-none focus-visible:ring-0 focus:outline-none resize-none text-sm bg-transparent pl-2 pr-2 py-2.5 w-full font-bold placeholder:font-medium placeholder:text-gray-400 leading-snug"
                       />
                     </div>
                     <Button 
@@ -1521,6 +1539,12 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const [searchValue, setSearchValue] = useState(query);
+  const headerSearchTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const autoResizeHeaderTextarea = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 160) + "px"; // smaller max — this is a compact header bar
+  };
   const [liveResults, setLiveResults] = useState<DemandResult[]>([]);
   const [selectedIntent, setSelectedIntent] = useState<DemandResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -3247,14 +3271,26 @@ export default function Dashboard() {
             <div className="h-4 w-px bg-orange-100 hidden sm:block" />
             
             <form onSubmit={handleSearch} className="relative w-full max-w-[280px] sm:max-w-none sm:w-80 mx-auto sm:mx-0">
-              <div className="relative flex items-center bg-orange-50/30 border border-orange-100 rounded-2xl px-3 py-1 sm:px-4 sm:py-1.5 focus-within:border-primary transition-all shadow-sm shadow-orange-500/5">
-                <Input 
+              <div className="relative flex items-end bg-orange-50/30 border border-orange-100 rounded-2xl px-3 py-1 sm:px-4 sm:py-1.5 focus-within:border-primary transition-all shadow-sm shadow-orange-500/5">
+                <textarea
+                   ref={headerSearchTextareaRef}
                    value={searchValue}
-                   onChange={(e) => setSearchValue(e.target.value)}
+                   onChange={(e) => {
+                     setSearchValue(e.target.value);
+                     autoResizeHeaderTextarea(e.target);
+                   }}
+                   onKeyDown={(e) => {
+                     if (e.key === "Enter" && !e.shiftKey) {
+                       e.preventDefault();
+                       handleSearch(e as unknown as React.FormEvent);
+                     }
+                   }}
                     placeholder="e.g. 'AI automation services' — just the client type, not your whole business"
-                   className="border-none shadow-none focus-visible:ring-0 text-xs bg-transparent p-0 h-auto placeholder:text-gray-400 font-bold w-full"
+                   rows={1}
+                   style={{ height: "auto", minHeight: "1.5em", overflowY: "auto", maxHeight: "160px" }}
+                   className="border-none shadow-none focus-visible:ring-0 focus:outline-none resize-none text-xs bg-transparent p-0 placeholder:text-gray-400 font-bold w-full leading-snug"
                 />
-                <Button type="submit" disabled={isLoading} className="ml-2 h-6 sm:h-7 px-2.5 sm:px-3 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[9px] sm:text-[10px] font-black uppercase gap-1 shrink-0">
+                <Button type="submit" disabled={isLoading} className="ml-2 h-6 sm:h-7 px-2.5 sm:px-3 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[9px] sm:text-[10px] font-black uppercase gap-1 shrink-0 mb-0.5">
                   {isLoading ? (
                     <Loader2 className="w-2.5 h-2.5 animate-spin" />
                   ) : (
