@@ -1244,7 +1244,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                         value={innerSearchValue}
                         onChange={(e) => setInnerSearchValue(e.target.value)}
                         disabled={!hasPaid && freeSearchUsed}
-                        placeholder={!hasPaid && freeSearchUsed ? "Free search used — buy credits to search again" : "Enter custom keywords (e.g. 'n8n tools', 'need figma designer')..."}
+                        placeholder={!hasPaid && freeSearchUsed ? "Free search used — buy credits to search again" : "e.g. 'AI automation services' — just the client type, not your whole business"}
                         className="border-none shadow-none focus-visible:ring-0 text-sm bg-transparent pl-2 pr-2 h-10 w-full font-bold placeholder:font-medium placeholder:text-gray-400"
                       />
                     </div>
@@ -3251,7 +3251,7 @@ export default function Dashboard() {
                 <Input 
                    value={searchValue}
                    onChange={(e) => setSearchValue(e.target.value)}
-                   placeholder="Find me customers..."
+                    placeholder="e.g. 'AI automation services' — just the client type, not your whole business"
                    className="border-none shadow-none focus-visible:ring-0 text-xs bg-transparent p-0 h-auto placeholder:text-gray-400 font-bold w-full"
                 />
                 <Button type="submit" disabled={isLoading} className="ml-2 h-6 sm:h-7 px-2.5 sm:px-3 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[9px] sm:text-[10px] font-black uppercase gap-1 shrink-0">
