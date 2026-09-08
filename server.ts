@@ -330,9 +330,42 @@ function getClosestIndustryKeyword(word: string): string {
   return word;
 }
 
+// Strips self-referential "meta" phrasing (talking ABOUT the search) so the underlying
+// service/niche is left as the core of the query, not buried inside it. This matters
+// because the query gets wrapped again later in a "people looking for X" template —
+// "find me clients for my AI automation business" becomes a confusing double-wrapper
+// ("people looking for... find me clients for my AI automation business") that dilutes
+// the actual service term Exa needs to match against. Stripping it down to "AI
+// automation business" (or similar) keeps the real subject front and center.
+function stripSelfReferentialPhrasing(query: string): string {
+  let q = query.trim();
+
+  const metaPrefixes = [
+    /^(find|get|show)\s+me\s+(clients?|customers?|leads?)\s+for\s+(my|our)\s+/i,
+    /^(i'?m?\s+)?(looking\s+for|need|want|searching\s+for)\s+(clients?|customers?|leads?)\s+for\s+(my|our)\s+/i,
+    /^(find|get|show)\s+me\s+(people|businesses)\s+(looking\s+for|needing|who\s+need)\s+/i,
+    /^(i'?m?\s+)?(looking\s+for|need|want)\s+(more\s+)?(clients?|customers?|leads?|business)\s+for\s+(my|our)\s+/i,
+    /^help\s+me\s+find\s+(clients?|customers?|leads?)\s+for\s+(my|our)\s+/i,
+  ];
+
+  for (const pattern of metaPrefixes) {
+    if (pattern.test(q)) {
+      q = q.replace(pattern, "").trim();
+      break;
+    }
+  }
+
+  // Trailing "...business"/"...company"/"...agency" is fine to keep (it's descriptive),
+  // but a leading "my"/"our" left over after stripping isn't needed either.
+  q = q.replace(/^(my|our)\s+/i, "").trim();
+
+  return q || query.trim(); // never return empty — fall back to the original if we over-stripped
+}
+
 function correctQuerySearch(query: string): { corrected: string; original: string; isDifferent: boolean } {
-  const cleanQ = query.trim();
-  if (!cleanQ) return { corrected: "", original: "", isDifferent: false };
+  const trueOriginal = query.trim();
+  const cleanQ = stripSelfReferentialPhrasing(trueOriginal);
+  if (!cleanQ) return { corrected: "", original: trueOriginal, isDifferent: false };
 
   // Remove punctuation when evaluating word tokens to avoid trailing/leading punctuation corrupting spelling matching
   const words = cleanQ.split(/\s+/);
@@ -349,8 +382,8 @@ function correctQuerySearch(query: string): { corrected: string; original: strin
   const corrected = correctedWords.join(" ");
   return {
     corrected,
-    original: cleanQ,
-    isDifferent: corrected.toLowerCase() !== cleanQ.toLowerCase()
+    original: trueOriginal,
+    isDifferent: corrected.toLowerCase() !== trueOriginal.toLowerCase()
   };
 }
 
