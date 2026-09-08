@@ -119,7 +119,7 @@ function HomePage() {
             <div className="relative flex items-center bg-white border-2 border-orange-100 rounded-2xl p-1.5 md:p-2 shadow-xl shadow-orange-500/5 focus-within:border-primary transition-all duration-300">
               <Input 
                 type="text"
-                placeholder="Find me customers..."
+                placeholder="e.g. 'AI automation services' — just the client type, not your whole business"
                 className="border-none shadow-none focus-visible:ring-0 text-sm md:text-lg h-auto py-3.5 md:py-7 px-3 md:px-8 bg-transparent placeholder:text-[#9CA3AF] flex-grow"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
