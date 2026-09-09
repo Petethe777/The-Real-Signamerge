@@ -39,31 +39,16 @@ const testimonials = [
 
 function HomePage() {
   const [searchValue, setSearchValue] = useState("");
-  const [phraseIndex, setPhraseIndex] = useState(0);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  const phrases = [
-    <>
-      Make <span className="text-primary">more</span> money
-    </>,
-    <>
-      Grow your <span className="text-primary">revenue</span>
-    </>
-  ];
-
   useEffect(() => {
-    const phraseTimer = setInterval(() => {
-      setPhraseIndex((prev) => (prev + 1) % phrases.length);
-    }, 2000);
-    
     const testimonialTimer = setInterval(() => {
       setTestimonialIndex((prev) => (prev + 1) % testimonials.length);
     }, 4000);
 
     return () => {
-      clearInterval(phraseTimer);
       clearInterval(testimonialTimer);
     };
   }, []);
@@ -99,22 +84,6 @@ function HomePage() {
       <main className="relative z-10 pt-24 pb-24 px-12 max-w-7xl mx-auto flex flex-col items-center text-center">
         {/* Search Section */}
         <div className="w-full max-w-3xl mb-8 flex flex-col items-center">
-          {/* Animated Phrases */}
-          <div className="h-8 mb-4 overflow-hidden relative w-full">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={phraseIndex}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -20, opacity: 0 }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
-                className="text-[#111] font-bold text-lg uppercase tracking-[0.2em]"
-              >
-                {phrases[phraseIndex]}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
           <form onSubmit={handleSearch} className="relative group w-full px-4 sm:px-0">
             <div className="relative flex items-center bg-white border-2 border-orange-100 rounded-2xl p-1.5 md:p-2 shadow-xl shadow-orange-500/5 focus-within:border-primary transition-all duration-300">
               <Input 
@@ -135,15 +104,7 @@ function HomePage() {
         <div className="flex flex-wrap justify-center gap-8 mb-20 text-[10px] font-black tracking-[0.2em] text-[#9CA3AF] uppercase">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-primary rounded-full" />
-            <span>Real-time tracking</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-primary rounded-full" />
-            <span>AI-driven insights</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-primary rounded-full" />
-            <span>3 Clicks to export</span>
+            <span>Find your ideal customer in one click</span>
           </div>
         </div>
 
