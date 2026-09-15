@@ -88,7 +88,7 @@ function saveConsultingLead(leadData: any) {
   }
 }
 
-async function createYocoCheckoutSession(email: string, amountUSD: number = 80, req?: any) {
+async function createYocoCheckoutSession(email: string, amountUSD: number = 99, req?: any) {
   const yocoSecretKey = process.env.YOCO_SECRET_KEY || process.env.YOCO_API_KEY || process.env.YOCO_SECRET_LIVE_KEY || process.env.YOCO_KEY;
   const cleanEmail = email ? email.trim().toLowerCase() : "";
 
@@ -103,8 +103,8 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
     } catch (e) {}
   }
 
-  // Convert USD to ZAR cents (R1,520 or 152000 ZAR cents for $80 USD)
-  const amountZARCents = 128000; // Fixed price: R1,280 — server-controlled, ignores any client-supplied amount
+  // Convert USD to ZAR cents (R1,520 or 152000 ZAR cents for $99 USD)
+  const amountZARCents = 160000; // Fixed price: R1,600 — server-controlled, ignores any client-supplied amount
 
   const successUrl = `${baseUrl}/?payment=success&email=${encodeURIComponent(cleanEmail)}`;
   const cancelUrl = `${baseUrl}/?payment=cancelled`;
@@ -140,7 +140,7 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
           checkoutUrl,
           sessionId: resData.id,
           email: cleanEmail,
-          amount: `R1,280 ZAR`,
+          amount: `R1,600 ZAR`,
           provider: "yoco_api"
         };
       } else {
@@ -159,7 +159,7 @@ async function createYocoCheckoutSession(email: string, amountUSD: number = 80, 
     success: true,
     checkoutUrl: fallbackUrl,
     email: cleanEmail,
-    amount: `R1,280 ZAR`,
+    amount: `R1,600 ZAR`,
     provider: "yoco_portal_fallback"
   };
 }
@@ -629,17 +629,17 @@ async function performLeadsSearch(query: string, targetCount: number = 20): Prom
 // SHARED lead-access gate — used by BOTH /api/search and the MCP search_leads tool,
 // so the two paths can never drift out of sync again.
 // Unpaid: exactly ONE free search, ever, capped at 3 leads. Paid: 150-lead pack,
-// non-renewing, only refilled by a new $80 payment via the webhook.
-const FREE_SEARCH_LIMIT = 5;
-const FREE_SEARCH_LEADS_EACH = 15;
+// non-renewing, only refilled by a new $99 payment via the webhook.
+const FREE_SEARCH_LIMIT = 2;
+const FREE_SEARCH_LEADS_EACH = 5;
 
 async function checkLeadAccessAndGetLimit(email: string): Promise<
-  { ok: true; leadLimit: number } | { ok: false; paywalled: { _paywalled: true; reason: string; leadCreditsRemaining?: number; freeSearchesUsed?: number } }
+  { ok: true; leadLimit: number; isPaid: boolean } | { ok: false; paywalled: { _paywalled: true; reason: string; leadCreditsRemaining?: number; freeSearchesUsed?: number } }
 > {
   if (!email) {
     // No identity to check server-side — guest search-count enforcement happens
     // client-side (localStorage) since there's no account to tie a counter to yet.
-    return { ok: true, leadLimit: FREE_SEARCH_LEADS_EACH };
+    return { ok: true, leadLimit: FREE_SEARCH_LEADS_EACH, isPaid: false };
   }
 
   const { data: gateProfile } = await supabaseService
@@ -649,7 +649,7 @@ async function checkLeadAccessAndGetLimit(email: string): Promise<
     .maybeSingle();
 
   if (!gateProfile) {
-    return { ok: true, leadLimit: FREE_SEARCH_LEADS_EACH };
+    return { ok: true, leadLimit: FREE_SEARCH_LEADS_EACH, isPaid: false };
   }
 
   if (gateProfile.has_paid_80) {
@@ -657,7 +657,7 @@ async function checkLeadAccessAndGetLimit(email: string): Promise<
     if (remaining <= 0) {
       return { ok: false, paywalled: { _paywalled: true, reason: "lead_credits_exhausted", leadCreditsRemaining: 0 } };
     }
-    return { ok: true, leadLimit: Math.min(remaining, 20) };
+    return { ok: true, leadLimit: Math.min(remaining, 20), isPaid: true };
   }
 
   const used = gateProfile.free_searches_used ?? 0;
@@ -666,7 +666,7 @@ async function checkLeadAccessAndGetLimit(email: string): Promise<
   }
 
   await supabaseService.from("profiles").update({ free_searches_used: used + 1 }).eq("email", email);
-  return { ok: true, leadLimit: FREE_SEARCH_LEADS_EACH };
+  return { ok: true, leadLimit: FREE_SEARCH_LEADS_EACH, isPaid: false };
 }
 
 // Deducts `count` from a paid user's lead_credits balance after a search actually
@@ -680,6 +680,22 @@ async function deductLeadCredits(email: string, count: number): Promise<void> {
     await supabaseService.from("profiles").update({ lead_credits: newBalance }).eq("email", email);
   }
 }
+
+// Strips real source access from results for unpaid users. This masks BOTH sourceUrl
+// AND id — id must also be masked because Exa's `id` field can itself equal the raw
+// URL (this exact leak happened once before in this project, in the MCP tool: sourceUrl
+// was masked but id still exposed the real link). Masking happens here, server-side,
+// before the response is ever sent — hiding a button in the UI is not real enforcement,
+// since anyone can read the raw network response in their browser's dev tools.
+function maskResultsForFreeTier(results: any[]): any[] {
+  return results.map((r, i) => ({
+    ...r,
+    id: `locked-${i}`,
+    sourceUrl: null,
+    locked: true,
+  }));
+}
+
 
 let updatedClientPassword = "";
 
@@ -1148,7 +1164,7 @@ async function startServer() {
     console.log(`[Server Auth] Registered new Supabase user: ${cleanEmail}`);
     return res.json({
       success: true,
-      message: "Signup successful. Please complete the $80 subscription payment to activate your account.",
+      message: "Signup successful. Please complete the $99 subscription payment to activate your account.",
       user: {
         email: cleanEmail,
         hasPaid80: profile?.hasPaid80 ?? false,
@@ -1224,7 +1240,7 @@ async function startServer() {
     return res.json({ success: true, message: "Password updated successfully." });
   });
 
-  // CONFIRM SUBSCRIPTION ENDPOINT ($80 PAYMENT LINK CLICKED/CONFIRMED)
+  // CONFIRM SUBSCRIPTION ENDPOINT ($99 PAYMENT LINK CLICKED/CONFIRMED)
   app.post("/api/auth/confirm-subscription", async (req, res) => {
     const { email } = req.body;
     const cleanEmail = email ? email.trim().toLowerCase() : "";
@@ -1254,7 +1270,7 @@ async function startServer() {
       return res.status(500).json({ success: false, message: "Failed to confirm subscription." });
     }
 
-    console.log(`[Server Auth] Subscription $80 confirmed for user: ${cleanEmail}`);
+    console.log(`[Server Auth] Subscription $99 confirmed for user: ${cleanEmail}`);
     return res.json({
       success: true,
       message: "Subscription successfully verified. Your account is fully unlocked!",
@@ -1432,7 +1448,7 @@ async function startServer() {
   app.post("/api/payments/create-yoco-checkout", async (req, res) => {
     const { email, amount } = req.body || {};
     const cleanEmail = email ? email.trim().toLowerCase() : "";
-    const amountUSD = Number(amount) || 80;
+    const amountUSD = Number(amount) || 99;
 
     const result = await createYocoCheckoutSession(cleanEmail, amountUSD, req);
     return res.json(result);
@@ -1488,6 +1504,9 @@ async function startServer() {
       if (Array.isArray(formatted)) {
         formatted = formatted.slice(0, access.leadLimit);
         await deductLeadCredits(email, formatted.length);
+        if (!access.isPaid) {
+          formatted = maskResultsForFreeTier(formatted);
+        }
       }
       return res.json(formatted);
     } catch (error: any) {
@@ -1565,7 +1584,7 @@ async function startServer() {
         },
         {
           name: "checkout_subscription",
-          description: "Generate an official Yoco $80 USD subscription checkout link for a user to pay and unlock full 2026 Signalmerge intelligence access, unmask restricted source links, and clear all limits.",
+          description: "Generate an official Yoco $99 USD subscription checkout link for a user to pay and unlock full 2026 Signalmerge intelligence access, unmask restricted source links, and clear all limits.",
           inputSchema: {
             type: "object",
             properties: {
@@ -1583,7 +1602,7 @@ async function startServer() {
         },
         {
           name: "confirm_subscription",
-          description: "Confirm or verify that a user has paid the $80 subscription fee and immediately activate/unlock their Signalmerge account and Claude MCP access.",
+          description: "Confirm or verify that a user has paid the $99 subscription fee and immediately activate/unlock their Signalmerge account and Claude MCP access.",
           inputSchema: {
             type: "object",
             properties: {
@@ -1605,7 +1624,7 @@ async function startServer() {
     try {
       if (name === "checkout_subscription") {
         const email = ((args?.email as string) || currentRequestContextUser || "").trim().toLowerCase();
-        const amountUSD = Number(args?.amount) || 80;
+        const amountUSD = Number(args?.amount) || 99;
 
         if (!email) {
           return {
@@ -1643,7 +1662,7 @@ async function startServer() {
           };
         }
 
-        console.log(`[MCP Tool: confirm_subscription] Confirming $80 subscription for: ${email}`);
+        console.log(`[MCP Tool: confirm_subscription] Confirming $99 subscription for: ${email}`);
         const { data: profileRow } = await supabaseService
           .from("profiles")
           .select("id")
@@ -1668,7 +1687,7 @@ async function startServer() {
               type: "text",
               text: JSON.stringify({
                 success: true,
-                message: `Subscription successfully confirmed for ${email}! Account upgraded to $80 tier. All source links unlocked.`,
+                message: `Subscription successfully confirmed for ${email}! Account upgraded to $99 tier. All source links unlocked.`,
                 email,
                 unlocked: true
               }, null, 2)
@@ -1702,6 +1721,9 @@ async function startServer() {
         if (Array.isArray(results)) {
           results = results.slice(0, access.leadLimit);
           await deductLeadCredits(email, results.length);
+          if (!access.isPaid) {
+            results = maskResultsForFreeTier(results);
+          }
         }
 
         return {
