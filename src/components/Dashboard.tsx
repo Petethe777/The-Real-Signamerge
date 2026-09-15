@@ -3,6 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { 
   Zap, 
+  Eye,
   Search, 
   Filter, 
   Download, 
@@ -12,8 +13,6 @@ import {
   CheckCircle2,
   Globe,
   Music2,
-  Eye,
-  Heart,
   Twitter,
   Linkedin,
   Youtube,
@@ -174,20 +173,20 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   }, [profile]);
   const [activeTab, setActiveTab] = useState<'discovery' | 'analytics' | 'dataset'>('discovery');
 
-  // --- Free-tier search limiting: unpaid users get 5 searches, 15 leads each. ---
+  // --- Free-tier search limiting: unpaid users get 2 searches, 5 leads each. ---
   const [freeSearchUsed, setFreeSearchUsed] = useState<boolean>(!!profile?.free_search_used);
   useEffect(() => {
     setFreeSearchUsed(!!profile?.free_search_used);
   }, [profile?.free_search_used]);
 
-  // Triggers the real Yoco checkout for the R1,280 / $80 subscription unlock.
+  // Triggers the real Yoco checkout for the R1,600 / $99 subscription unlock.
   const handleYocoCheckout = () => {
     // Always send users straight to the fixed Yoco payment link — no backend round-trip,
     // so there's no "payment system unavailable" failure mode. Appending the user's email
     // as a query param is a best-effort attempt at reconciliation; the reliable match happens
     // server-side in the /api/webhooks/payment handler.
     const email = profile?.email || "";
-    const url = `https://pay.yoco.com/mergemega?amount=1280${email ? `&email=${encodeURIComponent(email)}` : ""}`;
+    const url = `https://pay.yoco.com/mergemega?amount=1600${email ? `&email=${encodeURIComponent(email)}` : ""}`;
     window.location.href = url;
   };
 
@@ -302,8 +301,8 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
           setLiveResults([]);
           setSearchFeedback(
             reason === "free_search_used"
-              ? "You've used your free search. Buy a $80 pack (150 leads) to keep searching."
-              : "You've used all 150 leads in your pack. Purchase another $80 pack to keep searching."
+              ? "You've used your free search. Buy a $99 pack (150 leads) to keep searching."
+              : "You've used all 150 leads in your pack. Purchase another $99 pack to keep searching."
           );
           setIsLoadingResults(false);
           return;
@@ -378,9 +377,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
         id: `client-${client.id}`,
         platform: client.platform as any,
         content: client.intent,
-        views: `${client.score}% Match`,
-        likes: 'Direct Lead',
-        hashtags: [],
+        hashtags: [`${client.score}% Match`],
         location: client.location,
         contactStatus: 'Hot Prospect',
         time: '2026',
@@ -1343,12 +1340,6 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                   {scrubLocationFromContent(result.content, result.location)}
                                 </p>
                                 <div className="flex items-center gap-4 text-[10px] font-bold text-gray-400">
-                                  <span className="flex items-center gap-1">
-                                    <Eye className="w-3 h-3" /> {result.views}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Heart className="w-3 h-3" /> {result.likes}
-                                  </span>
                                   <div className="flex gap-1">
                                     {result.hashtags && result.hashtags.filter(tag => !isLocationHashtag(tag, result.location)).map(tag => (
                                       <span key={tag} className="text-primary font-bold">{tag}</span>
@@ -1368,14 +1359,24 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                                 </span>
                               </td>
                               <td className="px-8 py-6 text-right">
-                                <a 
-                                  href={result.sourceUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center rounded-xl border border-primary/25 bg-orange-50 text-primary hover:bg-primary hover:text-white transition-all gap-2 text-[10px] font-black uppercase px-4 py-2 transform hover:scale-[1.03]"
-                                >
-                                  Open Source <ExternalLink className="w-3 h-3" />
-                                </a>
+                                {result.locked || !result.sourceUrl ? (
+                                  <button
+                                    disabled
+                                    className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 text-gray-400 gap-2 text-[10px] font-black uppercase px-4 py-2 cursor-not-allowed select-none"
+                                    title="Buy a $99 pack to unlock source links"
+                                  >
+                                    🔒 Locked
+                                  </button>
+                                ) : (
+                                  <a 
+                                    href={result.sourceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center rounded-xl border border-primary/25 bg-orange-50 text-primary hover:bg-primary hover:text-white transition-all gap-2 text-[10px] font-black uppercase px-4 py-2 transform hover:scale-[1.03]"
+                                  >
+                                    Open Source <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                )}
                               </td>
                             </motion.tr>
                           ); })
@@ -1403,7 +1404,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                           You've seen your 15 free leads
                         </h3>
                         <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
-                          Buy credits (<strong className="text-primary font-black text-orange-600">R1,280</strong>) to unlock unlimited searches, 150 monthly credits, and every locked source link.
+                          Buy credits (<strong className="text-primary font-black text-orange-600">R1,600</strong>) to unlock unlimited searches, 150 monthly credits, and every locked source link.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                           <Button 
@@ -1497,18 +1498,16 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Estimated Views</p>
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Platform</p>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                        <Eye className="w-3.5 h-3.5 text-primary" />
-                        {selectedIntent.views}
+                        {selectedIntent.platform}
                       </div>
                     </div>
 
                     <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Estimated Engagement</p>
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Status</p>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                        <Heart className="w-3.5 h-3.5 text-primary" />
-                        {selectedIntent.likes}
+                        {selectedIntent.contactStatus}
                       </div>
                     </div>
                   </div>
@@ -1545,6 +1544,27 @@ export default function Dashboard() {
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 160) + "px"; // smaller max — this is a compact header bar
   };
+
+  // Lets free users download their search results as a CSV. Deliberately never touches
+  // sourceUrl at all — only platform/content/location/time are exported — so a locked
+  // result can't leak its real link through the download even by accident.
+  const downloadResultsAsCSV = (results: DemandResult[]) => {
+    if (!results || results.length === 0) return;
+    const headers = ["Platform", "Content", "Location", "Time"];
+    const escapeCsv = (val: string) => `"${String(val ?? "").replace(/"/g, '""')}"`;
+    const rows = results.map(r => [r.platform, r.content, r.location, r.time].map(escapeCsv).join(","));
+    const csvContent = [headers.map(escapeCsv).join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `signalmerge-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const [liveResults, setLiveResults] = useState<DemandResult[]>([]);
   const [selectedIntent, setSelectedIntent] = useState<DemandResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -1552,13 +1572,13 @@ export default function Dashboard() {
   const [correctedQuery, setCorrectedQuery] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
 
-  // --- Guest (not-signed-up) search limiting: 5 free searches, 15 leads each. ---
+  // --- Guest (not-signed-up) search limiting: 2 free searches, 5 leads each. ---
   // No account exists yet for a guest, so there's nothing server-side to tie a counter
   // to — this is tracked in localStorage instead. It's a soft limit (clearing storage
   // resets it), which is the right trade-off for a pre-signup trust-building preview,
   // not the actual paid-tier enforcement (that happens server-side once someone has an
   // account — see checkLeadAccessAndGetLimit in server.ts).
-  const GUEST_SEARCH_LIMIT = 5;
+  const GUEST_SEARCH_LIMIT = 2;
   const GUEST_STORAGE_KEY = "sm_guest_searches_used";
   // Read synchronously from localStorage at decision time (not from React state) for the
   // actual gate check — state can be stale for a moment if a new search fires before a
@@ -1749,8 +1769,8 @@ export default function Dashboard() {
           setLiveResults([]);
           setError(
             reason === "free_searches_exhausted"
-              ? "You've used all 5 free searches. Buy a $80 pack (150 leads) to keep searching."
-              : "You've used all 150 leads in your pack. Purchase another $80 pack to keep searching."
+              ? "You've used both free searches. Buy a $99 pack (150 leads) to keep searching."
+              : "You've used all 150 leads in your pack. Purchase another $99 pack to keep searching."
           );
           setIsLoading(false);
           return;
@@ -1805,9 +1825,7 @@ export default function Dashboard() {
         id: `client-${client.id}`,
         platform: client.platform as any,
         content: client.intent,
-        views: `${client.score}% Match`,
-        likes: 'Direct Lead',
-        hashtags: [],
+        hashtags: [`${client.score}% Match`],
         location: client.location,
         contactStatus: 'Hot Prospect',
         time: '2026',
@@ -1909,8 +1927,7 @@ export default function Dashboard() {
                 ${displayContent}
               </p>
               <div style="font-size: 10px; color: #9ca3af; font-weight: 700; display: flex; gap: 8px;">
-                <span>👁️ ${result.views}</span>
-                <span>❤️ ${result.likes}</span>
+                <span>${result.time}</span>
                 <span>${hashtagsHtml}</span>
               </div>
             </div>
@@ -2525,11 +2542,11 @@ export default function Dashboard() {
 
   const [startedSignup, setStartedSignup] = useState(false);
 
-  // Sends the user straight to the fixed Yoco payment link (R1,280 / 150 leads unlock).
+  // Sends the user straight to the fixed Yoco payment link (R1,600 / 150 leads unlock).
   // Used by all "Buy Credits"/"Unlock" buttons across the dashboard.
   const handleYocoCheckout = () => {
     const targetEmail = onboardingData.email || session?.user?.email || "";
-    const url = `https://pay.yoco.com/mergemega?amount=1280${targetEmail ? `&email=${encodeURIComponent(targetEmail)}` : ""}`;
+    const url = `https://pay.yoco.com/mergemega?amount=1600${targetEmail ? `&email=${encodeURIComponent(targetEmail)}` : ""}`;
     window.location.href = url;
   };
 
@@ -3155,7 +3172,7 @@ export default function Dashboard() {
                     Your custom intelligence workspace is fully configured for <strong>{onboardingData.companyName}</strong> using <strong>{onboardingData.customerKeywords.slice(0, 3).filter(k => k).join(', ') || 'AI'}</strong> tracking nodes.
                   </p>
                   <p className="text-xs text-gray-500 leading-relaxed font-semibold">
-                    To activate your 2026 Crawford crawling servers and connect full platform feeds without limitation, please authorize your recurring monthly subscription fee of <strong>$80 USD</strong> (which unlocks 100 lists of potential clients) using our secure payment gateway.
+                    To activate your 2026 Crawford crawling servers and connect full platform feeds without limitation, please authorize your recurring monthly subscription fee of <strong>$99 USD</strong> (which unlocks 100 lists of potential clients) using our secure payment gateway.
                   </p>
                 </div>
 
@@ -3167,7 +3184,7 @@ export default function Dashboard() {
                     }}
                     className="w-full h-14 bg-primary hover:bg-orange-650 rounded-2xl text-white font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 text-xs transition-colors"
                   >
-                    Pay Setup Fee ($80 USD) with Yoco <ExternalLink className="w-4 h-4" />
+                    Pay Setup Fee ($99 USD) with Yoco <ExternalLink className="w-4 h-4" />
                   </Button>
 
                   {isVerifyingPayment ? (
@@ -3403,15 +3420,24 @@ export default function Dashboard() {
               <div className="mb-6 bg-orange-50/60 border border-orange-100 rounded-3xl px-6 py-4 flex flex-col sm:flex-row items-center gap-2 sm:gap-3 max-w-4xl mx-auto text-center justify-center">
                 <Zap className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-xs font-bold text-orange-900">
-                  Free preview: <strong>{Math.max(0, GUEST_SEARCH_LIMIT - guestSearchesUsed)} of {GUEST_SEARCH_LIMIT} searches left</strong> (up to 15 leads each), no signup required. Sign up anytime to keep exploring — no payment until you choose to buy a 150-lead pack for $80.
+                  Free preview: <strong>{Math.max(0, GUEST_SEARCH_LIMIT - guestSearchesUsed)} of {GUEST_SEARCH_LIMIT} searches left</strong> (up to 5 leads each), no signup required. Sign up anytime to keep exploring — no payment until you choose to buy a 150-lead pack for $99.
                 </p>
               </div>
             )}
 
             {/* Results Table */}
             <div className="bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-orange-500/5 overflow-hidden relative">
-              {/* Preview Mode Badge */}
-              <div className="absolute top-6 right-8 z-10">
+              {/* Preview Mode Badge + Download */}
+              <div className="absolute top-6 right-8 z-10 flex items-center gap-2">
+                {filteredResults.length > 0 && (
+                  <button
+                    onClick={() => downloadResultsAsCSV(filteredResults)}
+                    className="flex items-center gap-1.5 bg-white text-gray-600 hover:text-primary hover:border-primary font-black px-3 py-1 rounded-full text-[9px] uppercase tracking-widest border border-gray-200 shadow-sm transition-colors"
+                    title="Download these results as a CSV — source links are not included in unpaid downloads"
+                  >
+                    <Download className="w-3 h-3" /> Download
+                  </button>
+                )}
                 <div className="bg-gray-100 text-gray-500 font-black px-3 py-1 rounded-full text-[9px] uppercase tracking-widest border border-gray-200 shadow-sm">
                   Preview mode
                 </div>
@@ -3428,7 +3454,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {/* Guest preview: capped to 15 leads for consistency with the logged-in free-search limit. */}
+                {/* Guest preview: capped to 5 leads for consistency with the logged-in free-search limit. */}
                 {filteredResults.length > 0 && !isScanning ? (
                   filteredResults.slice(0, 3).map((result, idx) => {
                     const isActuallyBlurred = false;
@@ -3457,12 +3483,6 @@ export default function Dashboard() {
                                   {scrubLocationFromContent(result.content, result.location)}
                                 </p>
                         <div className="flex items-center gap-4 text-[10px] font-bold text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" /> {result.views}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Heart className="w-3 h-3" /> {result.likes}
-                          </span>
                           <div className="flex gap-1">
                             {result.hashtags && result.hashtags.filter(tag => !isLocationHashtag(tag, result.location)).map(tag => (
                               <span key={tag} className="text-primary">{tag}</span>
@@ -3482,14 +3502,24 @@ export default function Dashboard() {
                         </span>
                       </td>
                       <td className="px-8 py-6 text-right">
-                        <a
-                          href={result.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center rounded-xl border gap-2 text-[10px] font-black uppercase px-4 py-2 transition-all transform hover:scale-105 active:scale-95 bg-[#111] text-white border-[#111] hover:bg-primary hover:border-primary"
-                        >
-                          Open Source <ExternalLink className="w-3 h-3" />
-                        </a>
+                        {result.locked || !result.sourceUrl ? (
+                          <button
+                            disabled
+                            className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 text-gray-400 gap-2 text-[10px] font-black uppercase px-4 py-2 cursor-not-allowed select-none"
+                            title="Buy a $99 pack to unlock source links"
+                          >
+                            🔒 Locked
+                          </button>
+                        ) : (
+                          <a
+                            href={result.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center rounded-xl border gap-2 text-[10px] font-black uppercase px-4 py-2 transition-all transform hover:scale-105 active:scale-95 bg-[#111] text-white border-[#111] hover:bg-primary hover:border-primary"
+                          >
+                            Open Source <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
                       </td>
                     </motion.tr>
                   ); })
@@ -3535,7 +3565,7 @@ export default function Dashboard() {
                 {!session ? (
                   <>
                     <h3 className="text-base font-black text-gray-950 mb-3 mt-2 leading-snug uppercase tracking-tight">
-                      You've used all 5 free searches
+                      You've used both free searches
                     </h3>
                     <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
                       Please <strong>sign up</strong> or <strong>log in</strong> now to unlock more live customer leads and access their identity paths!
@@ -3561,7 +3591,7 @@ export default function Dashboard() {
                       Unlock 100 Lists of Potential Clients
                     </h3>
                     <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
-                 Pay <strong className="text-primary font-black text-orange-600">R1,280</strong> to unlock 100 lists of premium potential clients. </p>
+                 Pay <strong className="text-primary font-black text-orange-600">R1,600</strong> to unlock 100 lists of premium potential clients. </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                       <Button 
                         onClick={() => handleYocoCheckout()}
@@ -3702,7 +3732,7 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Guest Free-Search-Limit Modal — shown once a not-signed-up visitor hits their
-          5th free search (15 leads each). Encourages signup + the $80 / 150-lead plan. */}
+          2nd free search (5 leads each). Encourages signup + the $99 / 150-lead plan. */}
       <AnimatePresence>
         {showGuestLimitModal && (
           <div className="fixed inset-0 z-[105] flex items-center justify-center p-4">
@@ -3733,10 +3763,10 @@ export default function Dashboard() {
                 </div>
 
                 <h3 className="text-xl font-black text-[#111] tracking-tight mb-3">
-                  You've used all 5 free searches
+                  You've used both free searches
                 </h3>
                 <p className="text-gray-500 font-medium text-sm mb-8 leading-relaxed">
-                  Sign up for a free Workspace to keep going, or subscribe now for <strong className="text-primary">$80</strong> to unlock 150 real leads, unlimited searches, and full source details.
+                  Sign up for a free Workspace to keep going, or subscribe now for <strong className="text-primary">$99</strong> to unlock 150 real leads, unlimited searches, and full source details.
                 </p>
 
                 <div className="space-y-3.5">
@@ -3748,7 +3778,7 @@ export default function Dashboard() {
                     className="w-full h-14 bg-primary hover:bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-200 shadow-lg shadow-orange-500/10 hover:shadow-orange-500/20 flex items-center justify-center gap-2"
                   >
                     <Zap className="w-4 h-4 fill-white text-white" />
-                    Sign Up & Subscribe — $80
+                    Sign Up & Subscribe — $99
                   </button>
 
                   <button
@@ -4061,18 +4091,16 @@ export default function Dashboard() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Estimated Views</p>
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Platform</p>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                        <Eye className="w-3.5 h-3.5 text-primary" />
-                        {selectedIntent.views}
+                        {selectedIntent.platform}
                       </div>
                     </div>
 
                     <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Estimated Engagement</p>
+                      <p className="text-[9px] font-black uppercase tracking-wider text-gray-400 mb-1">Status</p>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                        <Heart className="w-3.5 h-3.5 text-primary" />
-                        {selectedIntent.likes}
+                        {selectedIntent.contactStatus}
                       </div>
                     </div>
                   </div>
