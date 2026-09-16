@@ -536,7 +536,14 @@ async function performLeadsSearch(query: string, targetCount: number = 20): Prom
   // Only request a small buffer above what's actually needed (free search shows 3 → ask
   // for ~8, not 20) — fetching+processing full page content for 20 results when only 3
   // will ever be shown is the main source of unnecessary latency.
-  const requestedResults = Math.min(20, Math.max(targetCount + 5, 8));
+  // Always request a healthy buffer regardless of how few leads will actually be shown
+  // (targetCount). The classification filter below can legitimately drop a meaningful
+  // share of raw results (provider pages, tender aggregators, etc.) — with the free tier
+  // now showing only 5 leads, a buffer scaled tightly to that number risks ending up with
+  // fewer than 5 GOOD results even when Exa found plenty. 20 is Exa's practical max here
+  // and costs very little extra (content-fetching, not the search itself, is the slow
+  // part, and this is still one Exa call either way).
+  const requestedResults = 20;
 
   console.log(`[Exa Search] Query: "${exaQuery}" | Requesting ${requestedResults} results`);
 
