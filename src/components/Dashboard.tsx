@@ -39,6 +39,7 @@ import { DemandResult } from "@/types";
 import { tiktokDataset, instagramDataset } from "@/data/datasets";
 import { mockClients } from "@/data/mockClients";
 import { searchSocialMedia, detectQueryCountry, scrubLocationFromContent } from "@/services/searchService";
+import SocialAudience from "@/components/SocialAudience";
 import { supabase, isSupabaseConfigured, saveSearchQuery } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { AnimatePresence } from "motion/react";
@@ -157,6 +158,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
   
   // The Admin has full master workspace override capability.
   // Each workspace is loaded from either the current user pool or active profile.
+  const [activeSection, setActiveSection] = useState<'leads' | 'social'>('leads');
   const [activeWorkspace, setActiveWorkspace] = useState<any>(profile);
   useEffect(() => {
     if (profile) {
@@ -565,9 +567,22 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
           {/* Main Workspace Navigation */}
           <div className="bg-gray-100 p-1.5 rounded-2xl flex gap-1 border border-gray-200/50">
-            <span className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-white text-[#111] shadow-sm select-none">
+            <button
+              onClick={() => setActiveSection('leads')}
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                activeSection === 'leads' ? 'bg-white text-[#111] shadow-sm' : 'text-gray-500 hover:text-[#111]'
+              }`}
+            >
               Lead Hub (Leads)
-            </span>
+            </button>
+            <button
+              onClick={() => setActiveSection('social')}
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                activeSection === 'social' ? 'bg-white text-[#111] shadow-sm' : 'text-gray-500 hover:text-[#111]'
+              }`}
+            >
+              Social Audience
+            </button>
           </div>
 
           {/* Admin Switch Board */}
@@ -618,12 +633,12 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
           </div>
 
           {!hasPaid && (
-            <Button
-              onClick={() => handleYocoCheckout()}
-              className="rounded-xl h-11 bg-primary hover:bg-orange-650 text-white text-xs font-black uppercase tracking-wider px-5 flex items-center gap-2 shadow-lg shadow-orange-500/10"
+            <Link
+              to="/pricing"
+              className="rounded-xl h-11 bg-primary hover:bg-orange-650 text-white text-xs font-black uppercase tracking-wider px-5 flex items-center gap-2 shadow-lg shadow-orange-500/10 transition-colors"
             >
-              Buy Credits <Zap className="w-3.5 h-3.5 fill-white" />
-            </Button>
+              View Pricing <Zap className="w-3.5 h-3.5 fill-white" />
+            </Link>
           )}
 
           <Button 
@@ -941,6 +956,13 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
       )}
 
       {/* Main Panel Viewport */}
+      {activeSection === 'social' && (
+        <main className="p-4 sm:p-8 max-w-7xl mx-auto w-full text-[#1A1A1A]">
+          <SocialAudience profile={profile} />
+        </main>
+      )}
+
+      <div className={activeSection === 'social' ? 'hidden' : ''}>
       {activeTab === 'analytics' ? (
         /* ANALYTICAL DASHBOARD PAGE */
         <div className="relative w-full">
@@ -969,6 +991,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
               </div>
             </div>
           )}
+
 
           <main className={`p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-8 text-[#1A1A1A] transition-all duration-300 ${!isApproved ? 'blur-md pointer-events-none select-none filter' : ''}`}>
           {/* Main Key metrics (Stats Grid) */}
@@ -1407,12 +1430,12 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
                           Buy credits (<strong className="text-primary font-black text-orange-600">R1,600</strong>) to unlock unlimited searches, 150 monthly credits, and every locked source link.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                          <Button 
-  onClick={() => handleYocoCheckout()}
+                          <Link
+  to="/pricing"
   className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
 >
-  Buy Credits <Zap className="w-3.5 h-3.5 fill-white" />
-</Button>
+  View Plans <Zap className="w-3.5 h-3.5 fill-white" />
+</Link>
                           <Link 
                             to="/digital-consulting-pros#payment-section"
                             className="w-full sm:w-auto text-center rounded-xl bg-gray-50 hover:bg-gray-150 text-gray-550 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border border-gray-200"
@@ -1436,6 +1459,7 @@ const BIDashboard = ({ profile, handleLogout }: { profile: any, handleLogout: ()
           <DatasetViewer />
         </main>
       )}
+      </div>
 
       {/* Demand Intent Detail Popup */}
       <AnimatePresence>
@@ -1604,6 +1628,7 @@ export default function Dashboard() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isUnlockChoiceModalOpen, setIsUnlockChoiceModalOpen] = useState(false);
+  const [socialPlanJustPurchased, setSocialPlanJustPurchased] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authStep, setAuthStep] = useState<'input' | 'sent' | 'loading'>('input');
@@ -1655,10 +1680,40 @@ export default function Dashboard() {
     const action = searchParams.get("action");
     const paymentStatus = searchParams.get("payment");
     const paymentEmail = searchParams.get("email");
+    const paymentPlan = searchParams.get("plan"); // "299" or "99" — set by Yoco's redirectOnPaymentSuccess, not browser storage
 
     if (paymentStatus === "success") {
       const emailToConfirm = paymentEmail || session?.user?.email;
-      if (emailToConfirm) {
+
+      // Which plan was bought travels in the URL Yoco redirects back to (see
+      // startCheckout in PricingPage.tsx), not in localStorage — so this works
+      // correctly no matter which device actually completes the Yoco payment,
+      // including a different device than the one that started checkout.
+      const pendingPlan = paymentPlan === "299" ? "plan_299" : "plan_99";
+
+      if (emailToConfirm && pendingPlan === "plan_299") {
+        fetch('/api/auth/confirm-social-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailToConfirm })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.success) {
+              setAuditCompleted(true);
+              setSignupSuccess(true);
+              setUserProfile((prev: any) => ({
+                ...prev,
+                hasPaid80: true,
+                has_social_plan: true,
+                is_approved: true,
+                lead_credits: data.user?.leadCredits ?? prev?.lead_credits,
+              }));
+              setSocialPlanJustPurchased(true);
+            }
+          })
+          .catch(() => {});
+      } else if (emailToConfirm) {
         fetch('/api/auth/confirm-subscription', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1677,6 +1732,7 @@ export default function Dashboard() {
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("payment");
       newParams.delete("email");
+      newParams.delete("plan");
       setSearchParams(newParams);
     }
 
@@ -3593,12 +3649,12 @@ export default function Dashboard() {
                     <p className="text-gray-650 text-xs font-bold leading-relaxed mb-6">
                  Pay <strong className="text-primary font-black text-orange-600">R1,600</strong> to unlock 100 lists of premium potential clients. </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                      <Button 
-                        onClick={() => handleYocoCheckout()}
+                      <Link
+                        to="/pricing"
                         className="w-full sm:w-auto text-center rounded-xl bg-primary hover:bg-orange-650 text-white px-6 py-3.5 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2"
                       >
-                        Buy Credits <Zap className="w-3.5 h-3.5 fill-white" />
-                      </Button>
+                        View Plans <Zap className="w-3.5 h-3.5 fill-white" />
+                      </Link>
                       <Link 
                         to="/digital-consulting-pros#payment-section"
                         className="w-full sm:w-auto text-center rounded-xl bg-gray-50 hover:bg-gray-150 text-gray-550 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border border-gray-200"
@@ -3725,6 +3781,52 @@ export default function Dashboard() {
                     Sign up & Build Workspace
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* $299 Social Audience post-purchase confirmation — sets the 1-3 business day expectation */}
+      <AnimatePresence>
+        {socialPlanJustPurchased && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-orange-200"
+            >
+              <div className="p-10 text-center">
+                <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-orange-100">
+                  <Clock className="text-primary w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-black text-[#111] tracking-tight mb-3">
+                  Your $299 plan is active
+                </h3>
+                <p className="text-gray-500 font-medium text-sm mb-4 leading-relaxed">
+                  500 credits have been added to your account, along with everything in the $99 plan.
+                </p>
+                <div className="bg-orange-50/50 border border-orange-100 rounded-2xl px-5 py-4 mb-8">
+                  <p className="text-xs text-gray-700 font-bold leading-relaxed">
+                    Your Social Audience setup is being prepared. Because your account requires additional
+                    data processing and configuration, your results will be ready within{" "}
+                    <strong className="text-primary">1-3 business days</strong>. We'll let you know as soon
+                    as your setup is complete.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSocialPlanJustPurchased(false)}
+                  className="w-full h-14 bg-primary hover:bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-lg shadow-orange-500/10"
+                >
+                  Got it
+                </button>
               </div>
             </motion.div>
           </div>
