@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import AboutPage from "@/app/about/page";
 import Dashboard from "@/components/Dashboard";
+import PricingPage from "@/components/PricingPage";
 import { TermsModal } from "@/components/TermsModal";
 import DigitalConsultingAudit from "@/components/DigitalConsultingAudit";
 import ConnectClaude from "@/components/ConnectClaude";
@@ -231,6 +232,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/digital-consulting-pros" element={<DigitalConsultingAudit />} />
         <Route path="/connect-claude" element={<ConnectClaude />} />
