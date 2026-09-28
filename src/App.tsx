@@ -10,6 +10,8 @@ import AboutPage from "@/app/about/page";
 import Dashboard from "@/components/Dashboard";
 import PricingPage from "@/components/PricingPage";
 import { TermsModal } from "@/components/TermsModal";
+import { supabase } from "@/lib/supabase";
+import { SignupGateModal, SIGNUP_KEY } from "@/components/SignupGateModal";
 import DigitalConsultingAudit from "@/components/DigitalConsultingAudit";
 import ConnectClaude from "@/components/ConnectClaude";
 import Consulting from "@/components/Consulting";
@@ -43,6 +45,16 @@ function HomePage() {
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const [isGateOpen, setIsGateOpen] = useState(false);
+  // A logged-in Supabase user is already signed up — never show them the gate
+  useEffect(() => {
+    try {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) { try { localStorage.setItem(SIGNUP_KEY, "1"); } catch {} }
+      });
+    } catch {}
+  }, []);
+  const hasSignedUp = () => { try { return localStorage.getItem(SIGNUP_KEY) === "1"; } catch { return false; } };
 
   // Typewriter effect for the tagline under the search bar: types the sentence out
   // character by character, holds briefly, erases it the same way, then loops forever.
@@ -92,6 +104,7 @@ function HomePage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasSignedUp()) { setIsGateOpen(true); return; }
     if (searchValue.trim()) {
       navigate(`/dashboard?q=${encodeURIComponent(searchValue)}`);
     }
@@ -129,6 +142,7 @@ function HomePage() {
                 className="border-none shadow-none focus-visible:ring-0 text-sm md:text-lg h-auto py-3.5 md:py-7 px-3 md:px-8 bg-transparent placeholder:text-[#9CA3AF] flex-grow"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
+                onFocus={() => { if (!hasSignedUp()) setIsGateOpen(true); }}
               />
               <Button type="submit" className="rounded-xl bg-primary hover:bg-orange-700 text-white px-4 md:px-10 h-auto py-3 md:py-7 text-xs md:text-base font-bold gap-1 md:gap-2 transition-all shadow-lg shadow-orange-200 shrink-0">
                 Agents <Zap className="w-3.5 h-3.5 md:w-5 md:h-5 fill-white" />
@@ -207,6 +221,9 @@ function HomePage() {
           <Link to="/about" className="hover:text-primary transition-colors uppercase">
             About
           </Link>
+          <Link to="/pricing" className="hover:text-primary transition-colors uppercase">
+            Pricing
+          </Link>
           <Link to="/consulting" className="hover:text-primary transition-colors uppercase font-bold text-primary">
             Consulting
           </Link>
@@ -221,6 +238,15 @@ function HomePage() {
         </div>
       </footer>
 
+      <SignupGateModal
+        isOpen={isGateOpen}
+        firstSearch={searchValue}
+        onOpenTerms={() => setIsTermsModalOpen(true)}
+        onComplete={() => {
+          setIsGateOpen(false);
+          if (searchValue.trim()) navigate(`/dashboard?q=${encodeURIComponent(searchValue)}`);
+        }}
+      />
       <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
     </div>
   );
