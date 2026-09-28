@@ -104,6 +104,7 @@ function HomePage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!searchValue.trim()) return;
     if (!hasSignedUp()) { setIsGateOpen(true); return; }
     if (searchValue.trim()) {
       navigate(`/dashboard?q=${encodeURIComponent(searchValue)}`);
@@ -142,7 +143,6 @@ function HomePage() {
                 className="border-none shadow-none focus-visible:ring-0 text-sm md:text-lg h-auto py-3.5 md:py-7 px-3 md:px-8 bg-transparent placeholder:text-[#9CA3AF] flex-grow"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                onFocus={() => { if (!hasSignedUp()) setIsGateOpen(true); }}
               />
               <Button type="submit" className="rounded-xl bg-primary hover:bg-orange-700 text-white px-4 md:px-10 h-auto py-3 md:py-7 text-xs md:text-base font-bold gap-1 md:gap-2 transition-all shadow-lg shadow-orange-200 shrink-0">
                 Agents <Zap className="w-3.5 h-3.5 md:w-5 md:h-5 fill-white" />
