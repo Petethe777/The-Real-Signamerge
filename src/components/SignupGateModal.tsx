@@ -136,20 +136,12 @@ export function SignupGateModal({ isOpen, firstSearch, onComplete, onOpenTerms }
               <Input type="password" className={field} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" />
             </div>
 
-            <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 text-xs text-gray-600 text-left space-y-2">
-              <p className="font-black text-[#111] uppercase tracking-wider text-[10px]">Terms &amp; Pricing</p>
-              <p>
-                Pricing: the weekly customer email is included when you sign up. Paid lead plans are one-time purchases —
-                <strong> $99 Starter</strong> (150 lead credits) and <strong>$299 Audience</strong> (500 lead credits).
-                Credits never expire and never renew monthly. See the{" "}
-                <a href="/pricing" target="_blank" rel="noreferrer" className="text-primary font-bold underline">Pricing page</a>.
-              </p>
+            <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 text-xs text-gray-600 text-left">
               <label className="flex items-start gap-2 cursor-pointer">
                 <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 h-4 w-4 accent-orange-600" />
                 <span>
                   I have read and agree to the{" "}
-                  <button type="button" onClick={onOpenTerms} className="text-primary font-bold underline">Terms</button>{" "}
-                  including the pricing above, and I agree to receive weekly emails.
+                  <button type="button" onClick={onOpenTerms} className="text-primary font-bold underline">Terms</button>
                 </span>
               </label>
             </div>
