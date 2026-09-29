@@ -19,6 +19,7 @@ export function SignupGateModal({ isOpen, firstSearch, onComplete, onOpenTerms }
   const [customerType, setCustomerType] = useState("");
   const [location, setLocation] = useState("");
   const [offeringType, setOfferingType] = useState<"product" | "service" | "">("");
+  const [industry, setIndustry] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [terms, setTerms] = useState(false);
@@ -30,7 +31,7 @@ export function SignupGateModal({ isOpen, firstSearch, onComplete, onOpenTerms }
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!customerType.trim() || !location.trim() || !offeringType || !email.trim() || !password) {
+    if (!customerType.trim() || !location.trim() || !offeringType || !industry || !email.trim() || !password) {
       return setError("Please complete every field.");
     }
     if (password.length < 6) return setError("Password must be at least 6 characters.");
@@ -66,6 +67,7 @@ export function SignupGateModal({ isOpen, firstSearch, onComplete, onOpenTerms }
         customer_type: customerType.trim(),
         location: location.trim(),
         offering_type: offeringType,
+        industry,
         terms_accepted: true,
         terms_accepted_at: new Date().toISOString(),
         pricing_acknowledged: true,
@@ -113,6 +115,20 @@ export function SignupGateModal({ isOpen, firstSearch, onComplete, onOpenTerms }
             <div>
               <label className={label}>Where are you from?</label>
               <Input className={field} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City / country" />
+            </div>
+            <div>
+              <label className={label}>What industry are you in?</label>
+              <div className="grid grid-cols-1 gap-2">
+                {(["Digital Marketing", "Web/Software Development", "Ecommerce"] as const).map((ind) => (
+                  <button
+                    key={ind} type="button" onClick={() => setIndustry(ind)}
+                    className={`rounded-xl border px-4 py-3 text-sm font-bold text-left transition-all ${
+                      industry === ind ? "border-primary bg-orange-50 text-primary" : "border-gray-200 text-gray-600"
+                    }`}
+                  >{ind}</button>
+                ))}
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1">Signalmerge currently only serves these industries.</p>
             </div>
             <div>
               <label className={label}>Are you selling a…</label>
