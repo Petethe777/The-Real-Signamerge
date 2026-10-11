@@ -56,42 +56,6 @@ function HomePage() {
   }, []);
   const hasSignedUp = () => { try { return localStorage.getItem(SIGNUP_KEY) === "1"; } catch { return false; } };
 
-  // Typewriter effect for the tagline under the search bar: types the sentence out
-  // character by character, holds briefly, erases it the same way, then loops forever.
-  const TYPEWRITER_TEXT = "Find your ideal customer in one click";
-  const [typedText, setTypedText] = useState("");
-
-  useEffect(() => {
-    let charIndex = 0;
-    let isDeleting = false;
-    let timeoutId: ReturnType<typeof setTimeout>;
-
-    const tick = () => {
-      if (!isDeleting) {
-        charIndex++;
-        setTypedText(TYPEWRITER_TEXT.slice(0, charIndex));
-        if (charIndex >= TYPEWRITER_TEXT.length) {
-          isDeleting = true;
-          timeoutId = setTimeout(tick, 2200); // hold on the full sentence before erasing
-          return;
-        }
-        timeoutId = setTimeout(tick, 45); // typing speed
-      } else {
-        charIndex--;
-        setTypedText(TYPEWRITER_TEXT.slice(0, charIndex));
-        if (charIndex <= 0) {
-          isDeleting = false;
-          timeoutId = setTimeout(tick, 500); // brief pause before retyping
-          return;
-        }
-        timeoutId = setTimeout(tick, 25); // erasing is a bit faster than typing
-      }
-    };
-
-    timeoutId = setTimeout(tick, 45);
-    return () => clearTimeout(timeoutId);
-  }, []);
-
   useEffect(() => {
     const testimonialTimer = setInterval(() => {
       setTestimonialIndex((prev) => (prev + 1) % testimonials.length);
@@ -151,12 +115,14 @@ function HomePage() {
           </form>
         </div>
 
-        {/* Features List - Horizontal */}
-        <div className="flex flex-wrap justify-center gap-8 mb-20 text-[10px] font-black tracking-[0.2em] text-[#9CA3AF] uppercase">
-          <div className="flex items-center gap-1">
-            <span>{typedText}</span>
-            <span className="inline-block w-[2px] h-3 bg-primary animate-pulse" />
-          </div>
+        {/* Mode buttons under the search bar */}
+        <div className="flex flex-wrap justify-center gap-3 mb-20">
+          <button type="button" className="rounded-lg border border-gray-200 bg-white hover:border-primary hover:text-primary text-[#111] px-6 py-2.5 text-sm font-bold transition-all">
+            Find customers
+          </button>
+          <button type="button" className="rounded-lg border border-gray-200 bg-white hover:border-primary hover:text-primary text-[#111] px-6 py-2.5 text-sm font-bold transition-all">
+            Find local businesses
+          </button>
         </div>
 
         {/* Testimonial Slider - Smaller and Centered */}
