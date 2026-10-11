@@ -15,7 +15,7 @@ import { SignupGateModal, SIGNUP_KEY } from "@/components/SignupGateModal";
 import DigitalConsultingAudit from "@/components/DigitalConsultingAudit";
 import ConnectClaude from "@/components/ConnectClaude";
 import Consulting from "@/components/Consulting";
-import ReviewDirectoryPage from "@/app/reviews/page";
+import ReviewDirectoryPage from "@/app/about/reviews/page";
 
 const testimonials = [
   { name: "Chris B.", role: "Freelancer", text: "Went from struggling to find clients to having a waitlist. Unreal results.", initials: "CB" },
