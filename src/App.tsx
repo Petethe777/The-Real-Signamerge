@@ -15,6 +15,7 @@ import { SignupGateModal, SIGNUP_KEY } from "@/components/SignupGateModal";
 import DigitalConsultingAudit from "@/components/DigitalConsultingAudit";
 import ConnectClaude from "@/components/ConnectClaude";
 import Consulting from "@/components/Consulting";
+import ReviewDirectoryPage from "@/app/reviews/page";
 
 const testimonials = [
   { name: "Chris B.", role: "Freelancer", text: "Went from struggling to find clients to having a waitlist. Unreal results.", initials: "CB" },
@@ -120,7 +121,7 @@ function HomePage() {
           <button type="button" className="rounded-lg border border-gray-200 bg-white hover:border-primary hover:text-primary text-[#111] px-6 py-2.5 text-sm font-bold transition-all">
             Find customers
           </button>
-          <button type="button" className="rounded-lg border border-gray-200 bg-white hover:border-primary hover:text-primary text-[#111] px-6 py-2.5 text-sm font-bold transition-all">
+          <button type="button" onClick={() => navigate("/reviews")} className="rounded-lg border border-gray-200 bg-white hover:border-primary hover:text-primary text-[#111] px-6 py-2.5 text-sm font-bold transition-all">
             Find local businesses
           </button>
         </div>
@@ -229,6 +230,7 @@ export default function App() {
         <Route path="/digital-consulting-pros" element={<DigitalConsultingAudit />} />
         <Route path="/connect-claude" element={<ConnectClaude />} />
         <Route path="/consulting" element={<Consulting />} />
+        <Route path="/reviews" element={<ReviewDirectoryPage />} />
       </Routes>
     </Router>
   );
