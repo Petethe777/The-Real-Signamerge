@@ -23,6 +23,9 @@ export const COUNTRIES: string[] = [...EUROPE, ...AFRICA, ...NORTH_AMERICA, ...S
   a.localeCompare(b),
 );
 
+// The social media platforms an account can be on.
+export const PLATFORMS: string[] = ["Facebook", "Instagram", "Reddit", "TikTok", "X", "YouTube"];
+
 // What the account posts about.
 export const INTERESTS: string[] = [
   "Art & Design", "Beauty & Makeup", "Business & Finance", "Cars & Motorsport", "Comedy & Entertainment",
