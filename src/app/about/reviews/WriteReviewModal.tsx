@@ -3,11 +3,12 @@ import { X, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
-import { COUNTRIES, INTERESTS, MAX_INTERESTS } from "./categories";
+import { COUNTRIES, INTERESTS, MAX_INTERESTS, PLATFORMS } from "./categories";
 
 export interface AccountLite {
   id: string;
   name: string;
+  platform: string;
   country: string;
   location: string | null;
 }
@@ -60,6 +61,7 @@ export function WriteReviewModal({ isOpen, onClose, accounts, presetAccount, sig
   const [query, setQuery] = useState("");
   const [picked, setPicked] = useState<AccountLite | null>(null);
   const [newName, setNewName] = useState("");
+  const [newPlatform, setNewPlatform] = useState("");
   const [newLink, setNewLink] = useState("");
   const [newCountry, setNewCountry] = useState("");
   const [newLocation, setNewLocation] = useState("");
@@ -107,6 +109,7 @@ export function WriteReviewModal({ isOpen, onClose, accounts, presetAccount, sig
     if (mode === "existing" && !picked) return setError("Choose the account you're reviewing, or add a new one.");
     if (mode === "new") {
       if (newName.trim().length < 2) return setError("Enter the account name.");
+      if (!PLATFORMS.includes(newPlatform)) return setError("Choose which social media platform the account is on.");
       if (!COUNTRIES.includes(newCountry)) return setError("Choose the account's country.");
       if (newInterests.length === 0) return setError("Pick at least one thing the account posts about.");
     }
@@ -148,6 +151,7 @@ export function WriteReviewModal({ isOpen, onClose, accounts, presetAccount, sig
           .from("businesses")
           .insert({
             name: newName.trim(),
+            platform: newPlatform,
             country: newCountry,
             location: newLocation.trim() || null,
             link: newLink.trim() || null,
@@ -246,7 +250,7 @@ export function WriteReviewModal({ isOpen, onClose, accounts, presetAccount, sig
               {mode === "existing" ? (
                 picked ? (
                   <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm">
-                    <span className="font-bold text-[#111]">{picked.name}<span className="font-medium text-gray-400"> · {picked.country}</span></span>
+                    <span className="font-bold text-[#111]">{picked.name}<span className="font-medium text-gray-400"> · {picked.platform} · {picked.country}</span></span>
                     <button type="button" onClick={() => { setPicked(null); setQuery(""); }} className="text-primary font-bold text-xs">Change</button>
                   </div>
                 ) : (
@@ -257,7 +261,7 @@ export function WriteReviewModal({ isOpen, onClose, accounts, presetAccount, sig
                         {matches.map((a) => (
                           <button key={a.id} type="button" onClick={() => setPicked(a)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50">
                             <span className="font-bold">{a.name}</span>
-                            <span className="text-gray-400"> · {a.country}{a.location ? ` · ${a.location}` : ""}</span>
+                            <span className="text-gray-400"> · {a.platform} · {a.country}{a.location ? ` · ${a.location}` : ""}</span>
                           </button>
                         ))}
                       </div>
@@ -272,6 +276,13 @@ export function WriteReviewModal({ isOpen, onClose, accounts, presetAccount, sig
                   <div>
                     <label className={label}>Account name</label>
                     <Input className={field} value={newName} onChange={(e) => setNewName(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={label}>Platform</label>
+                    <select value={newPlatform} onChange={(e) => setNewPlatform(e.target.value)} className={`${field} w-full bg-white`}>
+                      <option value="">Select a platform</option>
+                      {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+                    </select>
                   </div>
                   <div>
                     <label className={label}>Handle or link <span className="normal-case font-medium text-gray-400">(optional)</span></label>
