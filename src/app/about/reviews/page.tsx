@@ -7,7 +7,7 @@ import { Logo } from "@/components/Logo";
 import { Footer } from "@/components/Footer";
 import { TermsModal } from "@/components/TermsModal";
 import { supabase } from "@/lib/supabase";
-import { COUNTRIES, INTERESTS } from "./categories";
+import { COUNTRIES, INTERESTS, PLATFORMS } from "./categories";
 import { WriteReviewModal, type AccountLite } from "./WriteReviewModal";
 
 interface Account extends AccountLite {
@@ -36,7 +36,8 @@ interface Review {
 
 const avg = (a: Account) => (a.reviews.length ? a.reviews.reduce((s, r) => s + r.rating, 0) / a.reviews.length : 0);
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-const where = (a: { country: string; location: string | null }) => [a.country, a.location].filter(Boolean).join(" · ");
+const where = (a: { platform: string; country: string; location: string | null }) =>
+  [a.platform, a.country, a.location].filter(Boolean).join(" · ");
 const plural = (n: number) => `${n} ${n === 1 ? "review" : "reviews"}`;
 
 function UnverifiedBadge() {
@@ -80,6 +81,7 @@ export default function ReviewDirectoryPage() {
   const [feed, setFeed] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [platform, setPlatform] = useState("all");
   const [country, setCountry] = useState("all");
   const [interest, setInterest] = useState("all");
   const [query, setQuery] = useState("");
@@ -106,12 +108,12 @@ export default function ReviewDirectoryPage() {
     const [feedRes, acctRes] = await Promise.all([
       supabase
         .from("reviews")
-        .select("id,rating,title,body,author_name,is_guest,created_at,business_id,businesses(id,name,country,location,link,interests,verified)")
+        .select("id,rating,title,body,author_name,is_guest,created_at,business_id,businesses(id,name,platform,country,location,link,interests,verified)")
         .order("created_at", { ascending: false })
         .limit(150),
       supabase
         .from("businesses")
-        .select("id,name,country,location,link,interests,verified,created_at,reviews(rating)")
+        .select("id,name,platform,country,location,link,interests,verified,created_at,reviews(rating)")
         .order("created_at", { ascending: false })
         .limit(300),
     ]);
@@ -158,8 +160,10 @@ export default function ReviewDirectoryPage() {
   };
 
   const q = query.trim().toLowerCase();
-  const matchesFilters = (a: { country: string; interests: string[] }) =>
-    (country === "all" || a.country === country) && (interest === "all" || a.interests.includes(interest));
+  const matchesFilters = (a: { platform: string; country: string; interests: string[] }) =>
+    (platform === "all" || a.platform === platform) &&
+    (country === "all" || a.country === country) &&
+    (interest === "all" || a.interests.includes(interest));
 
   const visibleReviews = useMemo(
     () => feed.filter((r) => {
@@ -174,7 +178,7 @@ export default function ReviewDirectoryPage() {
       );
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [feed, country, interest, q],
+    [feed, platform, country, interest, q],
   );
 
   const forYou = useMemo(
@@ -188,7 +192,7 @@ export default function ReviewDirectoryPage() {
       .sort((a, b) => b.reviews.length - a.reviews.length)
       .slice(0, 10),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [accounts, country, interest, q],
+    [accounts, platform, country, interest, q],
   );
 
   return (
@@ -209,6 +213,10 @@ export default function ReviewDirectoryPage() {
             className="pl-12 border-2 border-orange-100 rounded-2xl h-auto py-4 text-base focus-visible:ring-0 focus-visible:border-primary" />
         </div>
         <div className="flex flex-wrap justify-center gap-3 mt-4">
+          <select value={platform} onChange={(e) => setPlatform(e.target.value)} className={selectCls} aria-label="Platform">
+            <option value="all">All platforms</option>
+            {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
           <select value={country} onChange={(e) => setCountry(e.target.value)} className={selectCls} aria-label="Country">
             <option value="all">All countries</option>
             {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
