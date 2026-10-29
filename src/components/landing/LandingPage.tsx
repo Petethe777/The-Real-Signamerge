@@ -14,7 +14,11 @@ export interface LandingPageProps {
   onSignUp?: () => void;
   /** Called when someone clicks "Contact sales". Defaults to going to /contact. */
   onContactSales?: () => void;
-  /** Called when someone clicks "Get started" in the demo. Receives the segment and query they were viewing. */
+  /**
+   * Called when someone clicks "Get started" in the demo. Receives the segment, a plain-English
+   * description of the search (including the city), and, for "Find customers", the sales
+   * specialist and lead count they picked.
+   */
   onGetStarted?: (ctx: GetStartedContext) => void;
   /** Real customer quotes. The proof section only appears when you pass at least one. */
   proof?: ProofItem[];
@@ -45,21 +49,6 @@ function DefaultLogo() {
     </>
   );
 }
-
-const STEPS = [
-  {
-    title: 'Say who you are after',
-    body: 'Choose customers or local businesses, then describe what you are looking for in plain words.',
-  },
-  {
-    title: 'See who is asking',
-    body: 'Signalmerge shows people publicly asking for it, with what they said and how recent it is.',
-  },
-  {
-    title: 'Reach out, or hand it off',
-    body: 'Contact them yourself, or get matched with a sales specialist who books the conversations for you.',
-  },
-];
 
 const DETAILS = [
   {
@@ -95,8 +84,8 @@ export default function LandingPage({
   const [request, setRequest] = useState<DemoRequest | null>(null);
   const demoRef = useRef<HTMLElement>(null);
 
-  const showDemo = useCallback((exampleId?: string) => {
-    setRequest((prev) => ({ exampleId, nonce: (prev?.nonce ?? 0) + 1 }));
+  const showDemo = useCallback((topicId?: string) => {
+    setRequest((prev) => ({ topicId, nonce: (prev?.nonce ?? 0) + 1 }));
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     demoRef.current?.scrollIntoView({
       behavior: reduceMotion ? 'auto' : 'smooth',
@@ -122,8 +111,8 @@ export default function LandingPage({
             {logo ?? <DefaultLogo />}
           </a>
           <nav className="sm-nav-links" aria-label="Page sections">
-            <a href="#how">How it works</a>
             <a href="#who">Who it is for</a>
+            <a href="#what">What you get</a>
             <a href="#pricing">Pricing</a>
           </nav>
           <div className="sm-nav-actions">
@@ -142,14 +131,16 @@ export default function LandingPage({
         <section className="sm-hero">
           <h1 className="sm-h1">Find people who are ready to buy from you.</h1>
           <p className="sm-hero-sub">
-            Signalmerge finds people publicly asking for what you sell, and shows you who they are,
-            what they said and when.
+            Signalmerge finds people publicly asking for what you sell in any US city, and shows you
+            who they are, what they said and when.
           </p>
           <div className="sm-hero-actions">
             <button type="button" className="sm-btn sm-btn-primary sm-btn-lg" onClick={() => showDemo()}>
               Try a demo
             </button>
-            <p className="sm-hero-note">The demo is free. Real searches are charged from the first one.</p>
+            <p className="sm-hero-note">
+              Type any US city below. The demo is free. Real searches are charged from the first one.
+            </p>
           </div>
         </section>
 
@@ -157,24 +148,26 @@ export default function LandingPage({
           <DemoPanel request={request} onGetStarted={onGetStarted} />
         </section>
 
-        <section className="sm-section" id="how">
+        <section className="sm-section" id="who">
           <div className="sm-wrap">
-            <h2 className="sm-h2">How it works</h2>
-            <ol className="sm-steps">
-              {STEPS.map((step, i) => (
-                <li className="sm-step" key={step.title}>
-                  <span className="sm-step-n" aria-hidden="true">
-                    {i + 1}
-                  </span>
-                  <h3 className="sm-h3">{step.title}</h3>
-                  <p className="sm-muted">{step.body}</p>
-                </li>
+            <h2 className="sm-h2">Who it is for</h2>
+            <div className="sm-aud-list">
+              {VERTICALS.map((v) => (
+                <div className="sm-aud" key={v.id}>
+                  <div>
+                    <h3 className="sm-h3 sm-h3-serif">{v.title}</h3>
+                    <p className="sm-muted">{v.body}</p>
+                  </div>
+                  <button type="button" className="sm-btn sm-btn-ghost" onClick={() => showDemo(v.topicId)}>
+                    See an example
+                  </button>
+                </div>
               ))}
-            </ol>
+            </div>
           </div>
         </section>
 
-        <section className="sm-section sm-section-tint">
+        <section className="sm-section sm-section-tint" id="what">
           <div className="sm-wrap sm-split">
             <div>
               <h2 className="sm-h2">What every result tells you</h2>
@@ -194,27 +187,8 @@ export default function LandingPage({
           </div>
         </section>
 
-        <section className="sm-section" id="who">
-          <div className="sm-wrap">
-            <h2 className="sm-h2">Who it is for</h2>
-            <div className="sm-aud-list">
-              {VERTICALS.map((v) => (
-                <div className="sm-aud" key={v.id}>
-                  <div>
-                    <h3 className="sm-h3 sm-h3-serif">{v.title}</h3>
-                    <p className="sm-muted">{v.body}</p>
-                  </div>
-                  <button type="button" className="sm-btn sm-btn-ghost" onClick={() => showDemo(v.exampleId)}>
-                    See an example
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {proof.length > 0 && (
-          <section className="sm-section sm-section-tint">
+          <section className="sm-section">
             <div className="sm-wrap">
               <h2 className="sm-h2">What customers say</h2>
               <div className="sm-proof">
@@ -232,17 +206,22 @@ export default function LandingPage({
           </section>
         )}
 
-        <section className="sm-section" id="pricing">
+        <section className="sm-section sm-section-ruled" id="pricing">
           <div className="sm-wrap sm-center">
-            <h2 className="sm-h2">Pricing built around your business</h2>
+            <h2 className="sm-h2">Pricing that follows your choices</h2>
             <p className="sm-lede">
-              There is no price list. What you pay depends on what you need and which sales
-              specialist you are matched with. Tell us who you are after and we will come back with
-              a plan.
+              Your price depends on how many leads you want and which sales specialist you pick.
+              Choose one in the demo to see the numbers, or tell us what you need and we will build
+              a custom plan.
             </p>
-            <button type="button" className="sm-btn sm-btn-primary sm-btn-lg" onClick={onContactSales}>
-              Contact sales
-            </button>
+            <div className="sm-actions">
+              <button type="button" className="sm-btn sm-btn-ghost sm-btn-lg" onClick={() => showDemo()}>
+                Try the pricing demo
+              </button>
+              <button type="button" className="sm-btn sm-btn-primary sm-btn-lg" onClick={onContactSales}>
+                Contact sales
+              </button>
+            </div>
           </div>
         </section>
 
