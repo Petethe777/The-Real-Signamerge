@@ -70,7 +70,6 @@ function HomePage() {
         footerLinks={
           <>
             <Link to="/about">About</Link>
-            <Link to="/pricing">Pricing</Link>
             <Link to="/consulting">Consulting</Link>
             <Link to="/connect-claude">Connect with Claude</Link>
             <button type="button" onClick={() => setIsTermsModalOpen(true)}>
