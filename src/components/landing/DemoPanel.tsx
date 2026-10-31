@@ -11,6 +11,7 @@ import {
   type LeadResult,
   type Segment,
 } from './demoData';
+import { CITY_OPTIONS, parseUsLocation } from '@/lib/usLocations';
 
 export interface DemoRequest {
   /** Topic to load. If omitted, the current topic is replayed. */
@@ -48,10 +49,6 @@ const INTENT_KEY: Record<Intent, string> = {
   'Comparing options': 'comparing',
   'Asking around': 'asking',
 };
-
-function cleanCity(raw: string) {
-  return raw.replace(/\s+/g, ' ').trim().slice(0, 60);
-}
 
 function initials(name: string) {
   return name
@@ -170,6 +167,7 @@ function SkeletonCard() {
 
 export function DemoPanel({ request, onGetStarted }: DemoPanelProps) {
   const inputId = useId();
+  const listId = useId();
   const errorId = useId();
 
   const [topicId, setTopicId] = useState(TOPICS[0].id);
@@ -194,16 +192,16 @@ export function DemoPanel({ request, onGetStarted }: DemoPanelProps) {
   const total = specialist.ratePerLead * quantity;
 
   const run = useCallback((nextTopicId: string, rawCity: string) => {
-    const cleaned = cleanCity(rawCity);
-    if (!cleaned) {
-      setError('Type a city to see sample results, like Austin, TX.');
+    const parsed = parseUsLocation(rawCity);
+    if (!parsed.ok) {
+      setError(parsed.message);
       return;
     }
     setError('');
     window.clearTimeout(timer.current);
     setTopicId(nextTopicId);
-    setCity(cleaned);
-    setCityInput(cleaned);
+    setCity(parsed.label);
+    setCityInput(parsed.label);
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) {
       setRunning(false);
@@ -250,11 +248,17 @@ export function DemoPanel({ request, onGetStarted }: DemoPanelProps) {
             autoComplete="off"
             maxLength={60}
             value={cityInput}
-            placeholder="Type a US city, like Austin, TX"
+            placeholder="Type a US city and state, like Austin, TX"
+            list={listId}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             onChange={(e) => setCityInput(e.target.value)}
           />
+          <datalist id={listId}>
+            {CITY_OPTIONS.map((option) => (
+              <option key={option} value={option} />
+            ))}
+          </datalist>
           <button type="submit" className="sm-run" aria-label="Show sample results for this city">
             <ArrowUpIcon />
           </button>
