@@ -11,7 +11,7 @@ import {
   type LeadResult,
   type Segment,
 } from './demoData';
-import { CITY_OPTIONS, parseUsLocation } from '@/lib/usLocations';
+import { CITY_OPTIONS, parseUsLocation } from './usLocations';
 
 export interface DemoRequest {
   /** Topic to load. If omitted, the current topic is replayed. */
