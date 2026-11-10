@@ -7,21 +7,20 @@ import Dashboard from "@/components/Dashboard";
 import PricingPage from "@/components/PricingPage";
 import { TermsModal } from "@/components/TermsModal";
 import { supabase } from "@/lib/supabase";
-import { SignupGateModal, SIGNUP_KEY } from "@/components/SignupGateModal";
+import { SIGNUP_KEY } from "@/components/SignupGateModal";
 import DigitalConsultingAudit from "@/components/DigitalConsultingAudit";
 import ConnectClaude from "@/components/ConnectClaude";
 import Consulting from "@/components/Consulting";
 import ReviewDirectoryPage from "@/app/about/reviews/page";
 import LandingPage from "@/components/landing/LandingPage";
+import ContactSalesPage from "@/components/account/ContactSalesPage";
+import LoginPage from "@/components/account/LoginPage";
 
 function HomePage() {
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
-  const [isGateOpen, setIsGateOpen] = useState(false);
-  // The demo query the visitor was looking at when they clicked "Get started" (empty for plain sign up)
-  const [pendingQuery, setPendingQuery] = useState("");
   const navigate = useNavigate();
 
-  // A logged-in Supabase user is already signed up — never show them the gate
+  // Keep the older "signed up" flag in step with a real Supabase session (other pages may still read it)
   useEffect(() => {
     try {
       supabase.auth.getSession().then(({ data }) => {
@@ -29,28 +28,26 @@ function HomePage() {
       });
     } catch {}
   }, []);
-  const hasSignedUp = () => { try { return localStorage.getItem(SIGNUP_KEY) === "1"; } catch { return false; } };
-
-  const openDashboard = (query: string) => {
-    navigate(query ? `/dashboard?q=${encodeURIComponent(query)}` : "/dashboard");
-  };
-
-  const startSignup = (query = "") => {
-    if (hasSignedUp()) { openDashboard(query); return; }
-    setPendingQuery(query);
-    setIsGateOpen(true);
-  };
 
   return (
     <>
       <LandingPage
         onHome={() => navigate("/")}
-        onSignUp={() => startSignup()}
-        onContactSales={() => navigate("/pricing")}
-        onGetStarted={({ segment, query }) => {
+        // Both buttons always open the contact sales page, where the real account is created
+        onSignUp={() => navigate("/contact-sales")}
+        onContactSales={() => navigate("/contact-sales")}
+        onGetStarted={async ({ segment, query, salespersonId, quantity }) => {
           // "Find local businesses" has always gone to the review directory
           if (segment === "businesses") { navigate("/reviews"); return; }
-          startSignup(query);
+          // Only a real Supabase session counts as signed in (not a saved browser flag)
+          let signedIn = false;
+          try {
+            const { data } = await supabase.auth.getSession();
+            signedIn = !!data.session;
+          } catch {}
+          if (signedIn) { navigate(`/dashboard?q=${encodeURIComponent(query)}`); return; }
+          // Carry the demo choices over so the form can start from them
+          navigate("/contact-sales", { state: { demo: { query, salespersonId, quantity } } });
         }}
         logo={
           <>
@@ -61,17 +58,23 @@ function HomePage() {
           </>
         }
         navExtra={
-          <Link to="/connect-claude">
-            <Button className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-orange-100">
-              Connect with Claude
-            </Button>
-          </Link>
+          <>
+            <Link to="/login" className="mr-3 text-sm font-semibold text-[#6b6560] hover:text-[#1b1816]">
+              Log in
+            </Link>
+            <Link to="/connect-claude">
+              <Button className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-orange-100">
+                Connect with Claude
+              </Button>
+            </Link>
+          </>
         }
         footerLinks={
           <>
             <Link to="/about">About</Link>
             <Link to="/consulting">Consulting</Link>
             <Link to="/connect-claude">Connect with Claude</Link>
+            <Link to="/login">Log in</Link>
             <button type="button" onClick={() => setIsTermsModalOpen(true)}>
               Terms
             </button>
@@ -79,15 +82,6 @@ function HomePage() {
         }
       />
 
-      <SignupGateModal
-        isOpen={isGateOpen}
-        firstSearch={pendingQuery}
-        onOpenTerms={() => setIsTermsModalOpen(true)}
-        onComplete={() => {
-          setIsGateOpen(false);
-          openDashboard(pendingQuery);
-        }}
-      />
       <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
     </>
   );
@@ -98,6 +92,8 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/contact-sales" element={<ContactSalesPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
