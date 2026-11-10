@@ -1,10 +1,10 @@
-import { useId, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { SIGNUP_KEY } from '@/components/SignupGateModal';
 import { TermsModal } from '@/components/TermsModal';
 import { AccountShell } from './AccountShell';
-import { CITIES_BY_STATE, US_STATES } from '@/lib/usLocations';
+import { CITIES_BY_STATE, US_STATES } from '../landing/demoData';
 
 const BUSINESS_TYPES = [
   'Digital marketing agency',
@@ -92,6 +92,17 @@ export default function ContactSalesPage() {
   const [confirmEmail, setConfirmEmail] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
 
+  // If someone who is already logged in lands here, point them to the dashboard instead of the form
+  const [alreadySignedIn, setAlreadySignedIn] = useState(false);
+  useEffect(() => {
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (data.session) setAlreadySignedIn(true);
+      })
+      .catch(() => {});
+  }, []);
+
   const validate = (): Errors => {
     const found: Errors = {};
     if (fullName.trim().length < 2) found.fullName = 'Enter your full name.';
@@ -178,6 +189,20 @@ export default function ContactSalesPage() {
       Log in
     </Link>
   );
+
+  if (alreadySignedIn) {
+    return (
+      <AccountShell navAction={navAction}>
+        <div className="sm-form-card sm-form-card-narrow sm-done">
+          <h2>You are already signed in</h2>
+          <p>Your account is ready. Head to your dashboard to continue.</p>
+          <Link to="/dashboard" className="sm-btn sm-btn-primary">
+            Go to dashboard
+          </Link>
+        </div>
+      </AccountShell>
+    );
+  }
 
   if (confirmEmail) {
     return (
