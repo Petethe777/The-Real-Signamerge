@@ -185,7 +185,14 @@
 
 /* ---------- Hero ---------- */
 
+.sm-hero-wrap {
+  position: relative;
+  overflow: hidden; /* clips the radar rings so they never cause horizontal scroll */
+}
+
 .sm-hero {
+  position: relative;
+  z-index: 1;
   max-width: 1120px;
   margin: 0 auto;
   padding: 80px 24px 56px;
@@ -924,6 +931,304 @@
   color: var(--sm-ink);
 }
 
+/* ---------- Radar behind the hero heading ---------- */
+
+.sm-hero-radar {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.sm-hero-radar span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(1500px, 170vw);
+  aspect-ratio: 1;
+  border: 1px solid #e8591f;
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.08);
+}
+
+@keyframes sm-radar {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.08);
+  }
+  15% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* ---------- Live signals band ---------- */
+
+.sm-live {
+  padding: 30px 0 34px;
+  background: #1b1613;
+  overflow: hidden; /* the marquee can never cause horizontal scroll */
+}
+
+.sm-live-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #ffd9bf;
+}
+
+.sm-live-dot {
+  position: relative;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e8591f;
+}
+.sm-live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #e8591f;
+  opacity: 0;
+}
+
+@keyframes sm-pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.4);
+  }
+}
+
+.sm-ticker {
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+/* Default (and reduced motion): a calm, wrapped row with no movement */
+.sm-ticker-track {
+  display: flex;
+  justify-content: center;
+  padding: 0 24px;
+}
+.sm-ticker-set {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sm-ticker-set[aria-hidden='true'] {
+  display: none;
+}
+
+.sm-signal {
+  padding: 8px 18px;
+  border: 1px solid #4a3a30;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: #f3e7dd;
+  white-space: nowrap;
+}
+
+@keyframes sm-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- Who it is for: two cards ---------- */
+
+.sm-who-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.sm-who-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  min-height: 300px;
+  padding: 44px;
+  border: 1px solid transparent;
+  border-radius: 28px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sm-who-peach {
+  background: #ffe9d8;
+  border-color: #f7c9a8;
+  color: var(--sm-ink);
+}
+.sm-who-dark {
+  background: #1b1613;
+  border-color: #1b1613;
+  color: #fff;
+}
+
+.sm-who-title {
+  font-family: var(--sm-serif);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+.sm-who-body {
+  max-width: 30rem;
+  margin-top: 14px;
+  font-size: 1.0625rem;
+}
+.sm-who-peach .sm-who-body {
+  color: #5b4a3f;
+}
+.sm-who-dark .sm-who-body {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.sm-who-btn {
+  align-self: flex-start;
+}
+
+/* ---------- Motion: logo, buttons, hovers, radar, marquee ---------- */
+
+/* Smooth transitions for everything that lifts (the movement itself is gated below) */
+.sm-btn,
+.sm-chip,
+.sm-example,
+.sm-run,
+.sm-nav-extra button {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, color 0.2s ease;
+}
+.sm-panel,
+.sm-card,
+.sm-person,
+.sm-quote,
+.sm-def {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease,
+    background-color 0.25s ease;
+}
+.sm-def {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 1. Logo wobble */
+  .sm-logo > :first-child {
+    animation: sm-wobble 3s ease-in-out infinite;
+  }
+
+  /* 4. Radar rings, one every 1.3s */
+  .sm-hero-radar span {
+    animation: sm-radar 4s ease-out infinite;
+  }
+  .sm-hero-radar span:nth-child(2) {
+    animation-delay: 1.3s;
+  }
+  .sm-hero-radar span:nth-child(3) {
+    animation-delay: 2.6s;
+  }
+
+  /* 5. Pulsing dot and scrolling marquee */
+  .sm-live-dot::after {
+    animation: sm-pulse 1.8s ease-out infinite;
+  }
+  .sm-ticker-track {
+    justify-content: flex-start;
+    width: max-content;
+    padding: 0;
+    animation: sm-marquee 45s linear infinite;
+  }
+  .sm-ticker-set {
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding-right: 12px;
+  }
+  .sm-ticker-set[aria-hidden='true'] {
+    display: flex;
+  }
+  .sm-ticker:hover .sm-ticker-track {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes sm-wobble {
+  0% {
+    transform: rotate(-8deg) scale(1);
+  }
+  50% {
+    transform: rotate(8deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(-8deg) scale(1);
+  }
+}
+
+/* Hover lifts: only on devices with a real hover, and never for reduced motion */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  /* 2. Buttons */
+  .sm-btn:not(:disabled):hover,
+  .sm-chip:hover,
+  .sm-example:hover,
+  .sm-run:hover,
+  .sm-nav-extra button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(201, 68, 22, 0.3);
+  }
+
+  /* 3. Panels and cards */
+  .sm-panel:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 1px 2px rgba(27, 24, 22, 0.04), 0 36px 80px -32px rgba(27, 24, 22, 0.36);
+  }
+  .sm-card:not(.sm-skeleton):hover,
+  .sm-person:hover,
+  .sm-quote:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 40px -16px rgba(27, 24, 22, 0.28);
+  }
+  .sm-def:hover {
+    z-index: 1;
+    transform: translateY(-6px);
+    background: #fff;
+    border-top-color: transparent;
+    border-radius: 14px;
+    /* the white spread gives the row breathing room without changing the layout */
+    box-shadow: 0 0 0 14px #fff, 0 22px 44px -14px rgba(27, 24, 22, 0.28);
+  }
+
+  /* 6. Who it is for cards */
+  .sm-who-card:hover {
+    transform: translateY(-10px) rotate(-1deg);
+    box-shadow: 0 32px 64px -20px rgba(27, 24, 22, 0.38);
+  }
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 900px) {
@@ -953,6 +1258,9 @@
 }
 
 @media (max-width: 720px) {
+  .sm-who-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .sm-people {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1000,6 +1308,9 @@
   }
   .sm-demo {
     padding: 0 16px 72px;
+  }
+  .sm-who-card {
+    padding: 32px;
   }
   .sm-bar,
   .sm-main,
