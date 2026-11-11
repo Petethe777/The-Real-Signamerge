@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { SIGNUP_KEY } from '@/components/SignupGateModal';
@@ -89,7 +90,6 @@ export default function ContactSalesPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [confirmEmail, setConfirmEmail] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
 
   // If someone who is already logged in lands here, point them to the dashboard instead of the form
@@ -171,11 +171,12 @@ export default function ContactSalesPage() {
         try {
           localStorage.setItem(SIGNUP_KEY, '1');
         } catch {}
-        navigate('/dashboard');
+        navigate('/thank-you');
         return;
       }
 
-      setConfirmEmail(cleanEmail);
+      // Email confirmation is on: the thank you page reminds them to open the link we sent
+      navigate('/thank-you', { state: { confirmEmail: cleanEmail } });
     } catch (err) {
       console.error(err);
       setFormError('Something went wrong. Please try again.');
@@ -198,23 +199,6 @@ export default function ContactSalesPage() {
           <p>Your account is ready. Head to your dashboard to continue.</p>
           <Link to="/dashboard" className="sm-btn sm-btn-primary">
             Go to dashboard
-          </Link>
-        </div>
-      </AccountShell>
-    );
-  }
-
-  if (confirmEmail) {
-    return (
-      <AccountShell navAction={navAction}>
-        <div className="sm-form-card sm-form-card-narrow sm-done">
-          <h2>Check your email</h2>
-          <p>
-            We sent a confirmation link to <strong>{confirmEmail}</strong>. Open it to activate your
-            account, then log in with the email and password you just chose.
-          </p>
-          <Link to="/login" className="sm-btn sm-btn-primary">
-            Go to log in
           </Link>
         </div>
       </AccountShell>
@@ -493,6 +477,215 @@ export default function ContactSalesPage() {
       </div>
 
       <TermsModal isOpen={termsOpen} onClose={() => setTermsOpen(false)} />
+    </AccountShell>
+  );
+}
+
+/* ---------- Thank you page (opened right after the form is submitted) ---------- */
+
+const ORANGE = '#E8590C';
+const ORANGE_DEEP = '#CC4400';
+const ORANGE_LIGHT = '#F2762F';
+const PEACH = '#FFE9D8';
+const PEACH_EDGE = '#F3C4A3';
+const CHEEK = '#FFB48A';
+const INK = '#1B1816';
+
+interface FluffProps {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  n: number;
+  r: number;
+  fill: string;
+  /** Soft outline colour, used on white fur so it stays visible on a white page */
+  edge?: string;
+}
+
+/** A fluffy blob: an ellipse ringed with overlapping circles, so the outline looks like fur. */
+function Fluff({ cx, cy, rx, ry, n, r, fill, edge }: FluffProps) {
+  const dots = Array.from({ length: n }, (_, i) => {
+    const a = (i / n) * Math.PI * 2;
+    return { x: +(cx + rx * Math.cos(a)).toFixed(1), y: +(cy + ry * Math.sin(a)).toFixed(1) };
+  });
+  return (
+    <g>
+      {edge && (
+        <g fill={edge}>
+          <ellipse cx={cx} cy={cy} rx={rx + 1.6} ry={ry + 1.6} />
+          {dots.map((d, i) => (
+            <circle key={i} cx={d.x} cy={d.y} r={r + 1.6} />
+          ))}
+        </g>
+      )}
+      <g fill={fill}>
+        <ellipse cx={cx} cy={cy} rx={rx} ry={ry} />
+        {dots.map((d, i) => (
+          <circle key={i} cx={d.x} cy={d.y} r={r} />
+        ))}
+      </g>
+    </g>
+  );
+}
+
+function Sparkle({ x, y, scale, delay }: { x: number; y: number; scale: number; delay: string }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${scale})`}>
+      <path
+        className="sm-ty-spark"
+        style={{ animationDelay: delay }}
+        d="M0 -12 L3 -3 L12 0 L3 3 L0 12 L-3 3 L-12 0 L-3 -3 Z"
+        fill={ORANGE}
+      />
+    </g>
+  );
+}
+
+/** The fluffy orange and white character. It waves, blinks and bobs (see account.css). */
+export function Mascot() {
+  return (
+    <svg
+      className="sm-ty-svg"
+      viewBox="0 0 360 440"
+      role="img"
+      aria-label="A friendly fluffy orange and white character smiling and waving hello"
+    >
+      <ellipse cx="180" cy="424" rx="92" ry="11" fill="rgba(27,24,22,0.10)" />
+
+      <Sparkle x={62} y={96} scale={1.1} delay="0s" />
+      <Sparkle x={308} y={58} scale={0.8} delay="0.6s" />
+      <Sparkle x={326} y={250} scale={1} delay="1.1s" />
+      <Sparkle x={40} y={262} scale={0.7} delay="1.6s" />
+
+      <g className="sm-ty-bob">
+        {/* legs and feet */}
+        <rect x="131" y="326" width="38" height="72" rx="19" fill={ORANGE_DEEP} />
+        <rect x="191" y="326" width="38" height="72" rx="19" fill={ORANGE_DEEP} />
+        <Fluff cx={150} cy={402} rx={22} ry={9} n={10} r={11} fill="#fff" edge={PEACH_EDGE} />
+        <Fluff cx={210} cy={402} rx={22} ry={9} n={10} r={11} fill="#fff" edge={PEACH_EDGE} />
+
+        {/* resting arm */}
+        <g transform="rotate(10 112 238)">
+          <Fluff cx={98} cy={282} rx={17} ry={46} n={12} r={11} fill={ORANGE_LIGHT} />
+          <Fluff cx={98} cy={338} rx={13} ry={10} n={8} r={10} fill="#fff" edge={PEACH_EDGE} />
+        </g>
+
+        {/* body, belly and lightning bolt */}
+        <Fluff cx={180} cy={276} rx={70} ry={66} n={16} r={18} fill={ORANGE} />
+        <Fluff cx={180} cy={290} rx={40} ry={44} n={12} r={10} fill="#fff" edge={PEACH_EDGE} />
+        <path d="M187 262 L163 294 H179 L172 318 L198 282 H182 Z" fill={ORANGE} />
+
+        {/* head */}
+        <circle cx="102" cy="148" r="17" fill={ORANGE} />
+        <circle cx="102" cy="148" r="8" fill={PEACH} />
+        <circle cx="258" cy="148" r="17" fill={ORANGE} />
+        <circle cx="258" cy="148" r="8" fill={PEACH} />
+        <Fluff cx={180} cy={150} rx={76} ry={64} n={18} r={19} fill={ORANGE} />
+        <circle cx="166" cy="72" r="11" fill={ORANGE_DEEP} />
+        <circle cx="183" cy="66" r="13" fill={ORANGE_DEEP} />
+        <circle cx="200" cy="74" r="10" fill={ORANGE_DEEP} />
+
+        {/* face */}
+        <Fluff cx={180} cy={160} rx={50} ry={40} n={14} r={9} fill="#fff" edge={PEACH_EDGE} />
+        <g className="sm-ty-eye">
+          <ellipse cx="160" cy="150" rx="8" ry="11" fill={INK} />
+          <circle cx="163" cy="145" r="3" fill="#fff" />
+        </g>
+        <g className="sm-ty-eye">
+          <ellipse cx="200" cy="150" rx="8" ry="11" fill={INK} />
+          <circle cx="203" cy="145" r="3" fill="#fff" />
+        </g>
+        <circle cx="140" cy="173" r="9" fill={CHEEK} opacity="0.8" />
+        <circle cx="220" cy="173" r="9" fill={CHEEK} opacity="0.8" />
+        <ellipse cx="180" cy="166" rx="6" ry="4.5" fill={ORANGE_LIGHT} />
+        <path d="M156 180 Q180 206 204 180" fill="none" stroke={INK} strokeWidth="5" strokeLinecap="round" />
+
+        {/* waving arm (rotated around the shoulder by the CSS animation) */}
+        <g transform="rotate(24 252 238)">
+          <g className="sm-ty-wave">
+            <Fluff cx={260} cy={176} rx={17} ry={64} n={14} r={11} fill={ORANGE_LIGHT} />
+            <Fluff cx={262} cy={108} rx={22} ry={18} n={10} r={12} fill="#fff" edge={PEACH_EDGE} />
+          </g>
+        </g>
+      </g>
+    </svg>
+  );
+}
+
+const HEADLINE = ['We', 'can\u2019t', 'wait', 'to', 'bring', 'you', 'customers.'];
+
+const CONFETTI_COLORS = [ORANGE, ORANGE_DEEP, '#F7C9A8', CHEEK];
+const CONFETTI = Array.from({ length: 18 }, (_, i) => ({
+  x: 4 + ((i * 53) % 92),
+  delay: ((i * 7) % 10) * 0.5,
+  duration: 5 + (i % 5) * 0.7,
+  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+  spin: i % 2 === 0 ? 540 : -420,
+}));
+
+export function ThankYouPage() {
+  const location = useLocation();
+  const confirmEmail = (location.state as { confirmEmail?: string } | null)?.confirmEmail;
+
+  return (
+    <AccountShell
+      navAction={
+        <Link to="/login" className="sm-btn sm-btn-ghost">
+          Log in
+        </Link>
+      }
+    >
+      <Link to="/" className="sm-back" aria-label="Back to the home page">
+        <ArrowLeft size={20} aria-hidden="true" />
+        <span>Back to home</span>
+      </Link>
+
+      <div className="sm-ty">
+        <div className="sm-ty-rings" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="sm-ty-confetti" aria-hidden="true">
+          {CONFETTI.map((c, i) => (
+            <span
+              key={i}
+              style={
+                {
+                  '--x': `${c.x}%`,
+                  '--d': `${c.delay}s`,
+                  '--t': `${c.duration}s`,
+                  '--c': c.color,
+                  '--r': `${c.spin}deg`,
+                } as CSSProperties
+              }
+            />
+          ))}
+        </div>
+
+        <div className="sm-ty-figure">
+          <Mascot />
+        </div>
+
+        <h1 className="sm-ty-title">
+          {HEADLINE.map((word, i) => (
+            <span key={i}>
+              <span className="sm-ty-word" style={{ '--i': i } as CSSProperties}>
+                {i === HEADLINE.length - 1 ? <em>{word}</em> : word}
+              </span>{' '}
+            </span>
+          ))}
+        </h1>
+        <p className="sm-ty-sub">We&rsquo;ll be in touch with you soon.</p>
+
+        {confirmEmail && (
+          <p className="sm-ty-note">
+            One last step: we sent a confirmation link to <strong>{confirmEmail}</strong>. Open it
+            to activate your login.
+          </p>
+        )}
+      </div>
     </AccountShell>
   );
 }
