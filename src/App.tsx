@@ -13,7 +13,7 @@ import ConnectClaude from "@/components/ConnectClaude";
 import Consulting from "@/components/Consulting";
 import ReviewDirectoryPage from "@/app/about/reviews/page";
 import LandingPage from "@/components/landing/LandingPage";
-import ContactSalesPage from "@/components/account/ContactSalesPage";
+import ContactSalesPage, { ThankYouPage } from "@/components/account/ContactSalesPage";
 import LoginPage from "@/components/account/LoginPage";
 
 function HomePage() {
@@ -93,6 +93,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/contact-sales" element={<ContactSalesPage />} />
+        <Route path="/thank-you" element={<ThankYouPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/pricing" element={<PricingPage />} />
