@@ -9,6 +9,17 @@ export interface ProofItem {
   role: string;
 }
 
+/** One entry in the live signals band. Feed real SignalMerge signals in through the `signals` prop. */
+export interface LiveSignal {
+  id?: string;
+  /** For example "Austin, TX" */
+  location: string;
+  /** For example "needs ad help" */
+  need: string;
+  /** For example "1 hour ago" */
+  when: string;
+}
+
 export interface LandingPageProps {
   /** Called when someone clicks "Sign up". Defaults to going to /signup. */
   onSignUp?: () => void;
@@ -20,6 +31,11 @@ export interface LandingPageProps {
    * specialist and lead count they picked.
    */
   onGetStarted?: (ctx: GetStartedContext) => void;
+  /**
+   * Real signals for the live band above "What every result tells you". Leave it out and the band
+   * shows a sample feed, clearly labeled "SAMPLE FEED". Pass real signals and the label drops it.
+   */
+  signals?: LiveSignal[];
   /** Real customer quotes. The proof section only appears when you pass at least one. */
   proof?: ProofItem[];
   /** Replace the default wordmark with your own logo. */
@@ -71,11 +87,72 @@ const DETAILS = [
   },
 ];
 
+const SAMPLE_SIGNALS: LiveSignal[] = [
+  { location: 'Austin, TX', need: 'needs ad help', when: '1 hour ago' },
+  { location: 'Chicago, IL', need: 'wants SEO', when: '3 hours ago' },
+  { location: 'Atlanta, GA', need: 'store owner wanting sales', when: 'today' },
+  { location: 'Seattle, WA', need: 'shopper looking to buy', when: '2 hours ago' },
+  { location: 'Denver, CO', need: 'needs ad help', when: '4 hours ago' },
+  { location: 'Miami, FL', need: 'shopper looking to buy', when: '5 hours ago' },
+  { location: 'Phoenix, AZ', need: 'wants SEO', when: 'today' },
+  { location: 'Nashville, TN', need: 'store owner wanting sales', when: '6 hours ago' },
+  { location: 'Portland, OR', need: 'needs ad help', when: 'yesterday' },
+  { location: 'Charlotte, NC', need: 'shopper looking to buy', when: '1 hour ago' },
+  { location: 'Boston, MA', need: 'wants SEO', when: '2 hours ago' },
+  { location: 'Dallas, TX', need: 'store owner wanting sales', when: '3 hours ago' },
+];
+
+/** Each half of the marquee needs enough chips to be wider than a big screen, or the loop shows a gap. */
+const MIN_CHIPS_PER_SET = 12;
+
+function repeatToLength<T>(items: T[], min: number): T[] {
+  const out: T[] = [];
+  while (out.length < min) out.push(...items);
+  return out;
+}
+
+function LiveSignals({ signals }: { signals?: LiveSignal[] }) {
+  const feed = signals && signals.length > 0 ? signals : SAMPLE_SIGNALS;
+  const isSample = feed === SAMPLE_SIGNALS;
+  const label = isSample ? 'Live signals · Sample feed' : 'Live signals';
+  const set = repeatToLength(feed, MIN_CHIPS_PER_SET);
+  const text = (s: LiveSignal) => `${s.location} · ${s.need} · ${s.when}`;
+
+  return (
+    <section className="sm-live" aria-label={label}>
+      <p className="sm-live-head">
+        <span className="sm-live-dot" aria-hidden="true" />
+        {label}
+      </p>
+      <div className="sm-ticker">
+        <div className="sm-ticker-track">
+          <ul className="sm-ticker-set">
+            {set.map((s, i) => (
+              <li className="sm-signal" key={`a-${i}`}>
+                {text(s)}
+              </li>
+            ))}
+          </ul>
+          {/* Second copy makes the loop seamless; hidden from screen readers */}
+          <ul className="sm-ticker-set" aria-hidden="true">
+            {set.map((s, i) => (
+              <li className="sm-signal" key={`b-${i}`}>
+                {text(s)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function LandingPage({
   onSignUp = () => window.location.assign('/signup'),
   onContactSales = () => window.location.assign('/contact'),
   onGetStarted = () => window.location.assign('/signup'),
   proof = [],
+  signals,
   logo,
   onHome,
   navExtra,
@@ -128,7 +205,13 @@ export default function LandingPage({
       </header>
 
       <main>
-        <section className="sm-hero">
+        <section className="sm-hero-wrap">
+          <div className="sm-hero-radar" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="sm-hero">
           <h1 className="sm-h1">Find people who are ready to buy from you.</h1>
           <p className="sm-hero-sub">
             Signalmerge finds people publicly asking for what you sell in any US city, and shows you
@@ -142,6 +225,7 @@ export default function LandingPage({
               Type any US city below. The demo is free. Real searches are charged from the first one.
             </p>
           </div>
+          </div>
         </section>
 
         <section className="sm-demo" ref={demoRef} aria-label="Product demo">
@@ -151,21 +235,26 @@ export default function LandingPage({
         <section className="sm-section" id="who">
           <div className="sm-wrap">
             <h2 className="sm-h2">Who it is for</h2>
-            <div className="sm-aud-list">
-              {VERTICALS.map((v) => (
-                <div className="sm-aud" key={v.id}>
+            <div className="sm-who-grid">
+              {VERTICALS.map((v, i) => (
+                <article
+                  className={i % 2 === 0 ? 'sm-who-card sm-who-peach' : 'sm-who-card sm-who-dark'}
+                  key={v.id}
+                >
                   <div>
-                    <h3 className="sm-h3 sm-h3-serif">{v.title}</h3>
-                    <p className="sm-muted">{v.body}</p>
+                    <h3 className="sm-who-title">{v.title}</h3>
+                    <p className="sm-who-body">{v.body}</p>
                   </div>
-                  <button type="button" className="sm-btn sm-btn-ghost" onClick={() => showDemo(v.topicId)}>
+                  <button type="button" className="sm-btn sm-btn-light sm-who-btn" onClick={() => showDemo(v.topicId)}>
                     See an example
                   </button>
-                </div>
+                </article>
               ))}
             </div>
           </div>
         </section>
+
+        <LiveSignals signals={signals} />
 
         <section className="sm-section sm-section-tint" id="what">
           <div className="sm-wrap sm-split">
