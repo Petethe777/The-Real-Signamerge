@@ -38,6 +38,7 @@ import { Input } from "@/components/ui/input";
 import { DemandResult } from "@/types";
 import { tiktokDataset, instagramDataset } from "@/data/datasets";
 import { mockClients } from "@/data/mockClients";
+import OpportunitiesHub from "@/components/account/OpportunitiesHub";
 import { searchSocialMedia, detectQueryCountry, scrubLocationFromContent } from "@/services/searchService";
 import SocialAudience from "@/components/SocialAudience";
 import { supabase, isSupabaseConfigured, saveSearchQuery } from "@/lib/supabase";
@@ -3312,6 +3313,8 @@ export default function Dashboard() {
   }
 
   if (session && mergedProfile) {
+    // Admins keep the full intelligence hub; everyone else lands on the opportunities list
+    if (mergedProfile.role !== 'admin') return <OpportunitiesHub handleLogout={handleLogout} />;
     return <BIDashboard profile={mergedProfile} handleLogout={handleLogout} />;
   }
 
