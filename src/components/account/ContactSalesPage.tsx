@@ -685,6 +685,10 @@ export function ThankYouPage() {
             to activate your login.
           </p>
         )}
+
+        <Link to="/dashboard" className="sm-btn sm-btn-primary sm-btn-lg" style={{ marginTop: 24 }}>
+          View Opportunities
+        </Link>
       </div>
     </AccountShell>
   );
