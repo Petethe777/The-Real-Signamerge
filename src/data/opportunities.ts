@@ -2,10 +2,13 @@
 // behind a login so they are never shipped in the browser bundle.
 export interface Opportunity {
   id: number;
+  kind: 'web' | 'ecommerce';
+  group: string;
   org: string;
   state: string;
   project: string;
   deadline: string;
+  dateLabel: string;
   scope: string;
   eligibility: string;
   value: string | null;
@@ -20,7 +23,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "30 Nov 2026, 17:00 EST",
     "scope": "Full redesign, CMS, integrations, hosting, cybersecurity, accessibility, maintenance; optional AI customer service.",
     "eligibility": "Not confirmed. Check with the buyer.",
-    "value": null
+    "value": null,
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 30 Nov 2026, 17:00 EST"
   },
   {
     "id": 2,
@@ -30,7 +36,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "8 Dec 2026 (time not stated)",
     "scope": "Hosting, security, updates, monitoring, backups, redundancy, disaster recovery and technical support. One-year term plus four optional renewals.",
     "eligibility": "No foreign-supplier prohibition identified. Confirm with the agency.",
-    "value": "Est. $90,000"
+    "value": "Est. $90,000",
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 8 Dec 2026 (time not stated)"
   },
   {
     "id": 3,
@@ -40,7 +49,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "3 Dec 2026",
     "scope": "Custom website, CMS, iOS/Android apps, live statistics, fan engagement, ticketing and revenue tools.",
     "eligibility": "Not confirmed. Check with the buyer.",
-    "value": null
+    "value": null,
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 3 Dec 2026"
   },
   {
     "id": 4,
@@ -50,7 +62,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "3 Feb 2027, 17:00 EST",
     "scope": "Full-stack website development, tourism website, infrastructure and implementation. Mandatory virtual conference registration closes 4 Dec 2026, 16:00 EST.",
     "eligibility": "Not confirmed. Check with the buyer.",
-    "value": null
+    "value": null,
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 3 Feb 2027, 17:00 EST"
   },
   {
     "id": 5,
@@ -60,7 +75,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "30 Nov 2026",
     "scope": "CRM/database management, help desk, building-owner portals and central web platform.",
     "eligibility": "US-onshore organisation restriction reported. Overseas eligibility appears unlikely.",
-    "value": "Est. $150,000 to $500,000"
+    "value": "Est. $150,000 to $500,000",
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 30 Nov 2026"
   },
   {
     "id": 6,
@@ -70,7 +88,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "4 Dec 2026, 16:30 EST (verify)",
     "scope": "Website redesign, custom CMS, content migration, customer-service integrations, accessibility, security testing and support.",
     "eligibility": "Not confirmed. Check with the buyer.",
-    "value": "Est. $15,000 (third party)"
+    "value": "Est. $15,000 (third party)",
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 4 Dec 2026, 16:30 EST (verify)"
   },
   {
     "id": 7,
@@ -80,7 +101,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "8 Dec 2026, 12:00 EST (verify)",
     "scope": "Responsive website, CMS, hosting, security, maintenance and support. One-year base plus four optional years.",
     "eligibility": "Not confirmed. Check with the buyer.",
-    "value": null
+    "value": null,
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 8 Dec 2026, 12:00 EST (verify)"
   },
   {
     "id": 8,
@@ -90,7 +114,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "15 Dec 2026, 15:00 EST (verify)",
     "scope": "Public and internal websites, CMS, AI chatbot, forms, search, integrations, migration, hosting and maintenance.",
     "eligibility": "Not confirmed. Check with the buyer.",
-    "value": null
+    "value": null,
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 15 Dec 2026, 15:00 EST (verify)"
   },
   {
     "id": 9,
@@ -100,7 +127,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "30 Nov 2026, 17:00 EST",
     "scope": "WordPress redevelopment, UX/UI, responsive design, migration, templates, analytics and staff training; also newsletter/communications support.",
     "eligibility": "Not confirmed. Check with the buyer.",
-    "value": null
+    "value": null,
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 30 Nov 2026, 17:00 EST"
   },
   {
     "id": 10,
@@ -110,7 +140,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "30 Nov 2026, 15:00 PST (verify)",
     "scope": "WordPress accessibility remediation, managed hosting, security, maintenance and support. Two-year term plus three optional years.",
     "eligibility": "Not confirmed. Check with the buyer.",
-    "value": "Est. $55,000"
+    "value": "Est. $55,000",
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 30 Nov 2026, 15:00 PST (verify)"
   },
   {
     "id": 11,
@@ -120,7 +153,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "11 Dec 2026",
     "scope": "Website redesign, accessibility, CMS, navigation and digital experience.",
     "eligibility": "Not confirmed. Check with the buyer.",
-    "value": "Est. $150,000 to $450,000"
+    "value": "Est. $150,000 to $450,000",
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 11 Dec 2026"
   },
   {
     "id": 12,
@@ -130,7 +166,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "15 Dec 2026, 15:00 PST",
     "scope": "WordPress, redesign, migration, library integrations, maps, translation, hosting and maintenance.",
     "eligibility": "Work must be performed in the US by individuals authorised to work there. Overseas delivery appears unsuitable.",
-    "value": "Est. $35,000 to $45,000"
+    "value": "Est. $35,000 to $45,000",
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 15 Dec 2026, 15:00 PST"
   },
   {
     "id": 13,
@@ -140,7 +179,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "7 Dec 2026, 17:00 PST",
     "scope": "WordPress, custom theme, migration, accessibility, staff training and optional hosting.",
     "eligibility": "The City reportedly excludes vendors outside North America.",
-    "value": null
+    "value": null,
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 7 Dec 2026, 17:00 PST"
   },
   {
     "id": 14,
@@ -150,6 +192,529 @@ export const OPPORTUNITIES: Opportunity[] = [
     "deadline": "15 Dec 2026, 23:59 EST",
     "scope": "Redesign, CMS, resource search, document filtering, accessibility, analytics, SEO and staff training.",
     "eligibility": "Vendor must reportedly be registered in the US.",
-    "value": "Est. $50,000 to $75,000"
+    "value": "Est. $50,000 to $75,000",
+    "kind": "web",
+    "group": "Web development",
+    "dateLabel": "Due 15 Dec 2026, 23:59 EST"
+  },
+  {
+    "id": 101,
+    "org": "Mohammed Hammoudeh",
+    "state": "Location not verified",
+    "project": "Apparel / footwear",
+    "deadline": "",
+    "scope": "LOOKING TO CONNECT WITH SUPPLIERS WITH BRANDED CLOTHING LOOKING FOR BULK IN FOLLOWING BRANDS AND MORE SKIMS GARAGE ARITZIA NIKE ADIDAS ALO ANY ACTIVEWEAR ANY PREMIUM CLOTHING BRANDED ONLY Message or comment let’s work! $$$",
+    "eligibility": "Open signal; verify current requirement",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 24 Nov 2026"
+  },
+  {
+    "id": 102,
+    "org": "Sofia Guarnieri",
+    "state": "Location not verified",
+    "project": "Apparel / footwear",
+    "deadline": "",
+    "scope": "Looking for active wear wholesale please? Especially Dyfne, tala, aybl, gymshark etc UK",
+    "eligibility": "Open signal; verify current requirement",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 20 Nov 2026"
+  },
+  {
+    "id": 103,
+    "org": "Fabrikx",
+    "state": "India",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Custom T-shirts, hoodies and streetwear; 50–100 pieces per design",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 13 Nov 2026"
+  },
+  {
+    "id": 104,
+    "org": "RFS Pattern Lab",
+    "state": "Italy (supplier sought)",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Seeking Italian manufacturer for women’s bodycon dresses, bomber jackets, jumpsuits and blazers",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 10 Nov 2026"
+  },
+  {
+    "id": 105,
+    "org": "Rosanna Cee",
+    "state": "Location not verified",
+    "project": "Apparel / footwear",
+    "deadline": "",
+    "scope": "Can I get a bulk quote on both 50–100 poly-cotton blend t-shirts with sizes up s-3xl? We are looking for a soft, stretchy, with our custom logo embroidered on the top right corner. Leave business under comments.",
+    "eligibility": "Open signal; verify current requirement",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 2 Nov 2026"
+  },
+  {
+    "id": 106,
+    "org": "Pathan Fashion Sourcing",
+    "state": "Bangladesh",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Buying large T-shirt, socks and other garment stocklots, export surplus and cancelled orders",
+    "eligibility": "Explicit buying signal; reconfirm before outreach",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 1 Nov 2026"
+  },
+  {
+    "id": 107,
+    "org": "Aadai",
+    "state": "India",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Factories for T-shirts, polos, shirts, dresses, festive wear and activewear",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 28 Oct 2026"
+  },
+  {
+    "id": 108,
+    "org": "Dynamic Distributors Inc",
+    "state": "United States",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Buy bulk overstock men’s sneakers and dress shoes",
+    "eligibility": "Explicit buying signal; reconfirm before outreach",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 28 Oct 2026"
+  },
+  {
+    "id": 109,
+    "org": "Saikasí",
+    "state": "United Kingdom",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Small-batch swimwear and activewear manufacturing, preferably in Bali",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 28 Oct 2026"
+  },
+  {
+    "id": 110,
+    "org": "Brand Monkies",
+    "state": "India",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Client sourcing oversized men’s T-shirts, hoodies and shorts; 30–50 units per size/colour",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 23 Oct 2026"
+  },
+  {
+    "id": 111,
+    "org": "Strund Ltd",
+    "state": "United Kingdom",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Buy new men’s designer clothing, branded apparel and premium sportswear overstock; ongoing supply partnerships",
+    "eligibility": "Explicit buying signal; reconfirm before outreach",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 16 Oct 2026"
+  },
+  {
+    "id": 112,
+    "org": "DTM",
+    "state": "Bangladesh",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Factories wanted for ongoing European workwear programs: polos, shirts, uniforms, jackets and trousers",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 1 Oct 2026"
+  },
+  {
+    "id": 113,
+    "org": "Mahrab Sourcing",
+    "state": "Bangladesh",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Three purchase orders for 640,000 tube-body T-shirts each; destination France; delivery through December 2026",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 28 Sep 2026"
+  },
+  {
+    "id": 114,
+    "org": "StylO Global Sourcing",
+    "state": "India / USA market",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Seeking manufacturer for 18,000 women’s long-sleeve jersey garments for US market; email directly, no application portal required",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 14 Sep 2026"
+  },
+  {
+    "id": 115,
+    "org": "Halfticket Apparels",
+    "state": "India",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Baby and toddler outfit manufacturers, preferably near Indore",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 8 Sep 2026"
+  },
+  {
+    "id": 116,
+    "org": "vasko",
+    "state": "India",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Low-MOQ sneaker assembly using brand-supplied outsoles, insoles and upper materials",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 2 Sep 2026"
+  },
+  {
+    "id": 117,
+    "org": "DONFIT",
+    "state": "India",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Manufacturing partners for technical T-shirts and men’s and women’s performance apparel",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 31 Aug 2026"
+  },
+  {
+    "id": 118,
+    "org": "Angelo Volo",
+    "state": "United Kingdom",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Private-label statement-jacket manufacturer in Portugal or Türkiye",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 23 Aug 2026"
+  },
+  {
+    "id": 119,
+    "org": "Monterow",
+    "state": "India",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Factories producing puffer, bomber, quilted and fashion winter jackets",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 21 Aug 2026"
+  },
+  {
+    "id": 120,
+    "org": "Aurelio Sourcing",
+    "state": "Bangladesh",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Buying original export-quality garments, cancelled orders and surplus stock; small or bulk lots",
+    "eligibility": "Explicit buying signal; reconfirm before outreach",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 20 Aug 2026"
+  },
+  {
+    "id": 121,
+    "org": "FZ-FASHION",
+    "state": "Bangladesh",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Seeking factory for potential 300,000 printed T-shirt order",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 16 Aug 2026"
+  },
+  {
+    "id": 122,
+    "org": "FZ-FASHION",
+    "state": "Bangladesh",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Seeking woven-bottom factories for denim pants, twill shorts and cargo pants for upcoming production",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 10 Aug 2026"
+  },
+  {
+    "id": 123,
+    "org": "Ollii Kids",
+    "state": "India",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Low-MOQ knitwear production for children’s clothing in Tiruppur",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 10 Aug 2026"
+  },
+  {
+    "id": 124,
+    "org": "Padam Creations",
+    "state": "India / UK market",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Factory sought for UK export order of printed T-shirts, 20,000 total",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 31 Jul 2026"
+  },
+  {
+    "id": 125,
+    "org": "HumanTruck101",
+    "state": "South Africa",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Clothing manufacturing partner for a new brand",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 27 Jul 2026"
+  },
+  {
+    "id": 126,
+    "org": "Boreland",
+    "state": "India",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "OEM manufacturing of premium formal and dress socks for its footwear collection",
+    "eligibility": "Supplier / manufacturer search; reconfirm current project",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 21 Jul 2026"
+  },
+  {
+    "id": 127,
+    "org": "Bron Distribution",
+    "state": "United States / Canada",
+    "project": "Apparel / footwear / workwear",
+    "deadline": "",
+    "scope": "Buy branded wholesale sneakers and apparel shipped to the US or Canada",
+    "eligibility": "Explicit buying signal; reconfirm before outreach",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "B2B sourcing",
+    "dateLabel": "Signal 25 Apr 2026"
+  },
+  {
+    "id": 128,
+    "org": "On Point Wholesale Group / Mark Zlita",
+    "state": "Location not verified",
+    "project": "Athletic and lifestyle footwear, including On and New Balance-tier brands",
+    "deadline": "",
+    "scope": "Public LinkedIn post says the company buys full loads, pays upfront and is onboarding brand-direct / authorised footwear supply partners.",
+    "eligibility": "Recent public buying signal; verify before outreach",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Inventory buyers",
+    "dateLabel": "Signal Nov 2026"
+  },
+  {
+    "id": 129,
+    "org": "TheFreeShelf / Shomon Enterprise",
+    "state": "India (Gurugram)",
+    "project": "Bulk branded apparel, footwear, export surplus, closeouts and stocklots",
+    "deadline": "",
+    "scope": "LinkedIn company page describes the organisation as direct end-buyers and says it buys and holds bulk inventory itself for commercial operations.",
+    "eligibility": "Recent public buying signal; verify before outreach",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Inventory buyers",
+    "dateLabel": "Signal Nov 2026"
+  },
+  {
+    "id": 130,
+    "org": "Caine Andrews / Caino's Clobber",
+    "state": "United Kingdom",
+    "project": "Branded clothing stock: overstock, old-season, end-of-line, returns, cancelled orders and excess inventory",
+    "deadline": "",
+    "scope": "LinkedIn profile activity states he is actively buying branded clothing stock and has posted 'CASH BUYER READY' / ready to buy now.",
+    "eligibility": "Recent public buying signal; verify before outreach",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Inventory buyers",
+    "dateLabel": "Signals Sep to Nov 2026"
+  },
+  {
+    "id": 131,
+    "org": "Kamil Kuczyński / ZONE2 TRADE",
+    "state": "Poland / European purchasing area",
+    "project": "Branded apparel and footwear, sneakers, return pallets, overstock, customer returns and stocklots",
+    "deadline": "",
+    "scope": "Public LinkedIn profile states ZONE2 TRADE is actively purchasing footwear, sneakers and apparel across Europe and seeks regular stock supply.",
+    "eligibility": "Recent public buying signal; verify before outreach",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Inventory buyers",
+    "dateLabel": "Signal 2026"
+  },
+  {
+    "id": 132,
+    "org": "Anglian Learning",
+    "state": "United Kingdom",
+    "project": "School uniforms",
+    "deadline": "",
+    "scope": "Competitive tender for school uniform provision; estimated contract value £1.84m excluding VAT in the fetched notice.",
+    "eligibility": "Active notice reported; check portal for amendments",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Public tenders",
+    "dateLabel": "Due 18 Dec 2026"
+  },
+  {
+    "id": 133,
+    "org": "Columbia Public Schools",
+    "state": "United States",
+    "project": "Athletic uniforms, apparel and equipment",
+    "deadline": "",
+    "scope": "RFP C-28001 volume-purchase agreement for athletic uniforms, apparel and equipment.",
+    "eligibility": "Active notice reported; check portal for amendments",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Public tenders",
+    "dateLabel": "Due 9 Dec 2026"
+  },
+  {
+    "id": 134,
+    "org": "Swedish Armed Forces (Försvarsmakten)",
+    "state": "Sweden",
+    "project": "Safety shoes and high-visibility vests",
+    "deadline": "",
+    "scope": "Open tender for protective clothing and footwear.",
+    "eligibility": "Active notice reported; check portal for amendments",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Public tenders",
+    "dateLabel": "Due 24 Dec 2026"
+  },
+  {
+    "id": 135,
+    "org": "Northern Ireland Health and Social Care bodies",
+    "state": "United Kingdom",
+    "project": "Healthcare tunics, support-services uniforms and workwear",
+    "deadline": "",
+    "scope": "Tender 6305553 for uniforms across Northern Ireland health and social care bodies; estimated value £11,023,983.25 excluding VAT.",
+    "eligibility": "Active notice reported; check portal for amendments",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Public tenders",
+    "dateLabel": "Due 21 Dec 2026"
+  },
+  {
+    "id": 136,
+    "org": "Ubico Ltd",
+    "state": "United Kingdom",
+    "project": "PPE, workwear, uniforms, safety footwear and gloves",
+    "deadline": "",
+    "scope": "Tender for a fully managed supply service replacing existing PPE, uniform and safety footwear contract.",
+    "eligibility": "Active notice reported; check portal for amendments",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Public tenders",
+    "dateLabel": "Due 10 Dec 2026"
+  },
+  {
+    "id": 137,
+    "org": "Caesar Rodney School District",
+    "state": "United States",
+    "project": "Athletic equipment, uniforms, apparel and related supplies",
+    "deadline": "",
+    "scope": "RFP SRS27002-ATHSUPPLY; vendor proposals sought for athletic supplies, uniforms, equipment and apparel.",
+    "eligibility": "Active notice reported; check portal for amendments",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Public tenders",
+    "dateLabel": "Due 11 Dec 2026"
+  },
+  {
+    "id": 138,
+    "org": "AAA Closeout Liquidators",
+    "state": "United States",
+    "project": "Surplus clothing and athletic shoes",
+    "deadline": "",
+    "scope": "Existing source list describes direct purchase of surplus stock from manufacturers, importers and retailers.",
+    "eligibility": "Ongoing buying programme; verify current buying criteria",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Ongoing buyers",
+    "dateLabel": "Ongoing"
+  },
+  {
+    "id": 139,
+    "org": "Just Stock",
+    "state": "United Kingdom",
+    "project": "Surplus ladieswear, menswear, socks and footwear",
+    "deadline": "",
+    "scope": "Official buying page offers direct purchase of bulk excess fashion stock.",
+    "eligibility": "Ongoing buying programme; verify current buying criteria",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Ongoing buyers",
+    "dateLabel": "Ongoing"
+  },
+  {
+    "id": 140,
+    "org": "Overstock Trader",
+    "state": "United States",
+    "project": "Excess apparel, socks and activewear",
+    "deadline": "",
+    "scope": "Existing source list describes direct purchase or buyer-network placement of surplus inventory.",
+    "eligibility": "Ongoing buying programme; verify current buying criteria",
+    "value": null,
+    "kind": "ecommerce",
+    "group": "Ongoing buyers",
+    "dateLabel": "Ongoing"
   }
 ];
