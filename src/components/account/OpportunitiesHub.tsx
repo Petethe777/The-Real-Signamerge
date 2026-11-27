@@ -11,8 +11,13 @@ interface Contact {
   contact_name: string | null;
   email: string | null;
   phone: string | null;
+  details: string[] | null;
   links: { label: string; url: string }[] | null;
 }
+
+type Kind = 'web' | 'ecommerce';
+const KIND_LABEL: Record<Kind, string> = { web: 'Web development', ecommerce: 'E-commerce' };
+const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 const initials = (name: string) =>
   name.split(' ').map((w) => w[0]).join('').slice(0, 2);
@@ -22,6 +27,7 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
   const [contacts, setContacts] = useState<Record<number, Contact>>({});
   const [open, setOpen] = useState<Set<number>>(new Set());
   const [failed, setFailed] = useState(false);
+  const [kind, setKind] = useState<Kind>('web');
   const [state, setState] = useState('All');
 
   // Contact details come from Supabase and can only be read by logged-in users (see supabase/opportunity_contacts.sql)
@@ -35,11 +41,11 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
       });
   }, []);
 
-  const states = useMemo(
-    () => ['All', ...Array.from(new Set(OPPORTUNITIES.map((o) => o.state.replace(' (verify)', ''))))],
-    [],
-  );
-  const shown = OPPORTUNITIES.filter((o) => state === 'All' || o.state.replace(' (verify)', '') === state);
+  const keyOf = (o: (typeof OPPORTUNITIES)[number]) => (o.kind === 'web' ? o.state.replace(' (verify)', '') : o.group);
+  const ofKind = useMemo(() => OPPORTUNITIES.filter((o) => o.kind === kind), [kind]);
+  const states = useMemo(() => ['All', ...Array.from(new Set(ofKind.map(keyOf)))], [ofKind]);
+  const shown = ofKind.filter((o) => state === 'All' || keyOf(o) === state);
+  const count = (k: Kind) => OPPORTUNITIES.filter((o) => o.kind === k).length;
 
   const toggle = (id: number) =>
     setOpen((prev) => {
@@ -58,12 +64,26 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
     >
       <div className="sm-panel">
         <div className="sm-bar">
-          <h1 className="sm-main-title" style={{ margin: 0 }}>Web development opportunities</h1>
+          <h1 className="sm-main-title" style={{ margin: 0 }}>Opportunities</h1>
+          <div className="sm-examples" role="tablist">
+            {(['web', 'ecommerce'] as Kind[]).map((k) => (
+              <button
+                key={k}
+                type="button"
+                role="tab"
+                className="sm-example"
+                aria-pressed={k === kind}
+                onClick={() => { setKind(k); setState('All'); }}
+              >
+                {KIND_LABEL[k]} ({count(k)})
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="sm-body">
           <div className="sm-side">
-            <p className="sm-side-label">Filter by state</p>
+            <p className="sm-side-label">{kind === 'web' ? 'Filter by state' : 'Filter by type'}</p>
             <div className="sm-examples">
               {states.map((s) => (
                 <button key={s} type="button" className="sm-example" aria-pressed={s === state} onClick={() => setState(s)}>
@@ -72,7 +92,7 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
               ))}
             </div>
             <p className="sm-side-hint">
-              Check the original solicitation, addenda and eligibility before bidding. Deadlines require confirmation with the buyer.
+              Check each original source before reaching out or bidding. Signals and deadlines require confirmation with the buyer.
             </p>
           </div>
 
@@ -90,7 +110,7 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
                         <strong>{o.org}</strong>
                         <span>{o.state}</span>
                       </div>
-                      <span className="sm-intent" data-intent="ready">Due {o.deadline}</span>
+                      <span className="sm-intent" data-intent="ready">{o.dateLabel}</span>
                     </div>
                     <blockquote className="sm-post">
                       <strong>{o.project}.</strong> {o.scope}
@@ -110,6 +130,9 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
                             <span>{c.email}</span>
                           )}
                           {c.phone && <span>{c.phone}</span>}
+                          {(c.details ?? []).map((d) =>
+                            isEmail(d) ? <a key={d} className="sm-link" href={`mailto:${d}`}>{d}</a> : <span key={d}>{d}</span>,
+                          )}
                           {c.reference && <span>Reference: {c.reference}</span>}
                           {(c.links ?? []).map((l) => (
                             <a key={l.url} className="sm-link" href={l.url} target="_blank" rel="noreferrer">{l.label}</a>
