@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { AccountShell } from './AccountShell';
-import { CREDIT_PACKS, SUPPORT_EMAIL, formatZar } from '@/data/creditPacks';
+import { AUTO_CHECKOUT, CREDIT_PACKS, SUPPORT_EMAIL, formatZar } from '@/data/creditPacks';
 
 interface Claim {
   id: number;
@@ -27,6 +27,7 @@ export default function BuyCreditsPage() {
   const [agreed, setAgreed] = useState(false);
   const [manual, setManual] = useState(false);       // automatic checkout unavailable: use the static Yoco link
   const [starting, setStarting] = useState(false);
+  const [reason, setReason] = useState<string | null>(null);   // why automatic checkout failed
   const [params] = useSearchParams();
   const payment = params.get('payment');
   const [balance, setBalance] = useState<number | null>(null);
@@ -61,17 +62,36 @@ export default function BuyCreditsPage() {
   }, [payment]);
 
   const startCheckout = async () => {
+    // Switch off in creditPacks.ts to use only the static Yoco links.
+    if (!AUTO_CHECKOUT) {
+      window.open(pack.url, '_blank', 'noopener');
+      setManual(true);
+      return;
+    }
     setStarting(true);
     setMessage(null);
+    setReason(null);
+    let why = 'unknown';
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', { body: { credits } });
       if (!error && data?.redirectUrl) {
         window.location.href = data.redirectUrl;
         return;
       }
-    } catch {
-      /* fall through to the manual payment link */
+      if (error) {
+        const ctx = (error as { context?: Response }).context;
+        const status = ctx?.status;
+        let code = '';
+        try { code = (await ctx?.json())?.error ?? ''; } catch { /* no body */ }
+        why = code || (status === 404 ? 'function_not_deployed' : status ? `http_${status}` : error.name || 'network_error');
+      } else {
+        why = 'no_redirect_url';
+      }
+    } catch (e) {
+      why = e instanceof Error ? e.message : 'unexpected_error';
     }
+    console.error('Automatic checkout failed:', why);
+    setReason(why);
     setStarting(false);
     setManual(true);
   };
@@ -176,9 +196,10 @@ export default function BuyCreditsPage() {
           {starting ? 'Opening Yoco…' : `Continue to Yoco · ${formatZar(pack.zar)}`}
         </button>
 
-        {manual && (
+        {manual && AUTO_CHECKOUT && (
           <div className="sm-card" style={{ margin: '12px 0' }} role="status">
             <strong>Automatic checkout is not available right now</strong>
+            {reason && <p className="sm-field-hint" style={{ margin: '4px 0 0' }}>Reason: <code>{reason}</code></p>}
             <p className="sm-field-hint" style={{ margin: '6px 0' }}>
               You can still pay with our payment link. Use <strong>{email}</strong> at checkout, then enter your receipt
               reference below. We add your credits once the payment is confirmed.
