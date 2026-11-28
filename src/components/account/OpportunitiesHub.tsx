@@ -16,10 +16,7 @@ interface Contact {
 }
 
 type Kind = 'web' | 'ecommerce';
-const YOCO_LINK = 'https://pay.yoco.com/mergemega?amount=';
-const CREDIT_PACKS = [20, 50, 100, 250];
-const DEFAULT_RATE = 16.8; // rand per credit (1 credit = 1 USD); the live value comes from app_settings
-const plural = (n: number) => `${n} credit${n === 1 ? '' : 's'}`;
+const usd = (n: number) => `$${n}`; // 1 credit = 1 USD
 const KIND_LABEL: Record<Kind, string> = { web: 'Web development', ecommerce: 'E-commerce' };
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
@@ -32,24 +29,19 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
   const [contacts, setContacts] = useState<Record<number, Contact>>({});
   const [balance, setBalance] = useState<number | null>(null);
   const [prices, setPrices] = useState<Record<string, number>>({});
-  const [rate, setRate] = useState(DEFAULT_RATE);
   const [busy, setBusy] = useState<number | null>(null);
   const [errors, setErrors] = useState<Record<number, string>>({});
-  const [showBuy, setShowBuy] = useState(false);
   const [kind, setKind] = useState<Kind>('web');
   const [state, setState] = useState('All');
 
   const loadAll = useCallback(async () => {
-    const [w, p, r, u] = await Promise.all([
+    const [w, p, u] = await Promise.all([
       supabase.from('wallets').select('balance').maybeSingle(),
       supabase.from('lead_prices').select('lead_group, credits'),
-      supabase.from('app_settings').select('value').eq('key', 'usd_zar_rate').maybeSingle(),
       supabase.rpc('get_my_unlocked_contacts'),
     ]);
     setBalance((w.data as { balance: number } | null)?.balance ?? 0);
     if (p.data) setPrices(Object.fromEntries((p.data as { lead_group: string; credits: number }[]).map((x) => [x.lead_group, x.credits])));
-    const parsed = parseFloat((r.data as { value: string } | null)?.value ?? '');
-    if (parsed > 0) setRate(parsed);
     if (Array.isArray(u.data)) setContacts(Object.fromEntries((u.data as Contact[]).map((c) => [c.opportunity_id, c])));
   }, []);
 
@@ -63,11 +55,10 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
     if (error) {
       const m = error.message || '';
       const msg = m.includes('insufficient_credits')
-        ? 'Not enough credits. Buy credits to unlock this lead.'
+        ? 'Not enough credits. Use "Buy credits" at the top to top up.'
         : m.includes('contact_not_available')
           ? 'Contact details for this lead are not available yet. You have not been charged.'
           : 'Something went wrong. You have not been charged. Please try again.';
-      if (m.includes('insufficient_credits')) setShowBuy(true);
       setErrors((e) => ({ ...e, [id]: msg }));
       return;
     }
@@ -128,32 +119,11 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
             <div className="sm-card" style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                 <strong>Credits: {balance === null ? '…' : balance}</strong>
-                <span className="sm-side-hint" style={{ margin: 0 }}>1 credit = 1 USD. Credits do not reset each month.</span>
-                <button type="button" className="sm-btn sm-btn-primary" style={{ marginLeft: 'auto' }} onClick={() => setShowBuy((v) => !v)}>
+                <span className="sm-side-hint" style={{ margin: 0 }}>1 credit = $1 USD. Credits do not reset each month.</span>
+                <Link to="/buy-credits" className="sm-btn sm-btn-primary" style={{ marginLeft: 'auto' }}>
                   Buy credits
-                </button>
+                </Link>
               </div>
-              {showBuy && (
-                <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
-                  <div className="sm-examples">
-                    {CREDIT_PACKS.map((n) => {
-                      const rand = Math.ceil(n * rate);
-                      return (
-                        <a key={n} className="sm-btn sm-btn-ghost" href={`${YOCO_LINK}${rand}`} target="_blank" rel="noreferrer">
-                          {n} credits · R{rand.toLocaleString('en-ZA')}
-                        </a>
-                      );
-                    })}
-                  </div>
-                  <span className="sm-side-hint" style={{ margin: 0 }}>
-                    Prices are converted to rand at R{rate.toFixed(2)} per credit. Pay with the same email you signed up with.
-                    Credits are added to your account once your payment is confirmed.
-                  </span>
-                  <button type="button" className="sm-btn sm-btn-ghost" style={{ justifySelf: 'start' }} onClick={loadAll}>
-                    I have paid, refresh my balance
-                  </button>
-                </div>
-              )}
             </div>
             <p className="sm-main-label">{shown.length} opportunities</p>
             <ol className="sm-results" style={{ minHeight: 0 }}>
@@ -212,7 +182,7 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
                               ? 'Unlocking…'
                               : price === undefined
                                 ? 'View contact details'
-                                : `View contact details · ${plural(price)}`}
+                                : `View contact details · ${usd(price)}`}
                           </button>
                           {errors[o.id] && (
                             <span style={{ flexBasis: '100%', fontSize: 13 }} role="alert">{errors[o.id]}</span>
