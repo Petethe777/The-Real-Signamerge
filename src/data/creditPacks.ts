@@ -14,5 +14,8 @@ export const CREDIT_PACKS: CreditPack[] = [
   { credits: 250, usd: 250, zar: 4200, url: 'https://pay.yoco.com/mergemega?amount=4200' },
 ];
 
+/** false = the Continue button opens the static Yoco link. Set true after the create-checkout and yoco-webhook functions are deployed. */
+export const AUTO_CHECKOUT = true;
+
 export const SUPPORT_EMAIL = 'peter@signalmerge.co.za';
 export const formatZar = (n: number) => `R${n.toLocaleString('en-ZA')}`;
