@@ -15,6 +15,7 @@ import ReviewDirectoryPage from "@/app/about/reviews/page";
 import LandingPage from "@/components/landing/LandingPage";
 import ContactSalesPage, { ThankYouPage } from "@/components/account/ContactSalesPage";
 import LoginPage from "@/components/account/LoginPage";
+import BuyCreditsPage from "@/components/account/BuyCreditsPage";
 
 function HomePage() {
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
@@ -95,6 +96,7 @@ export default function App() {
         <Route path="/contact-sales" element={<ContactSalesPage />} />
         <Route path="/thank-you" element={<ThankYouPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/buy-credits" element={<BuyCreditsPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
