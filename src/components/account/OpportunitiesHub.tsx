@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -16,6 +16,10 @@ interface Contact {
 }
 
 type Kind = 'web' | 'ecommerce';
+const YOCO_LINK = 'https://pay.yoco.com/mergemega?amount=';
+const CREDIT_PACKS = [20, 50, 100, 250];
+const DEFAULT_RATE = 16.8; // rand per credit (1 credit = 1 USD); the live value comes from app_settings
+const plural = (n: number) => `${n} credit${n === 1 ? '' : 's'}`;
 const KIND_LABEL: Record<Kind, string> = { web: 'Web development', ecommerce: 'E-commerce' };
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
@@ -24,35 +28,59 @@ const initials = (name: string) =>
 
 /** The workspace for signed-up users. Same look as the landing page demo: filters on the left, opportunity cards on the right. */
 export default function OpportunitiesHub({ handleLogout }: { handleLogout: () => void }) {
+  // Only leads this user has unlocked are ever sent to the browser (see supabase/credits_and_paywall.sql)
   const [contacts, setContacts] = useState<Record<number, Contact>>({});
-  const [open, setOpen] = useState<Set<number>>(new Set());
-  const [failed, setFailed] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [prices, setPrices] = useState<Record<string, number>>({});
+  const [rate, setRate] = useState(DEFAULT_RATE);
+  const [busy, setBusy] = useState<number | null>(null);
+  const [errors, setErrors] = useState<Record<number, string>>({});
+  const [showBuy, setShowBuy] = useState(false);
   const [kind, setKind] = useState<Kind>('web');
   const [state, setState] = useState('All');
 
-  // Contact details come from Supabase and can only be read by logged-in users (see supabase/opportunity_contacts.sql)
-  useEffect(() => {
-    supabase
-      .from('opportunity_contacts')
-      .select('*')
-      .then(({ data, error }) => {
-        if (error || !data) return setFailed(true);
-        setContacts(Object.fromEntries((data as Contact[]).map((c) => [c.opportunity_id, c])));
-      });
+  const loadAll = useCallback(async () => {
+    const [w, p, r, u] = await Promise.all([
+      supabase.from('wallets').select('balance').maybeSingle(),
+      supabase.from('lead_prices').select('lead_group, credits'),
+      supabase.from('app_settings').select('value').eq('key', 'usd_zar_rate').maybeSingle(),
+      supabase.rpc('get_my_unlocked_contacts'),
+    ]);
+    setBalance((w.data as { balance: number } | null)?.balance ?? 0);
+    if (p.data) setPrices(Object.fromEntries((p.data as { lead_group: string; credits: number }[]).map((x) => [x.lead_group, x.credits])));
+    const parsed = parseFloat((r.data as { value: string } | null)?.value ?? '');
+    if (parsed > 0) setRate(parsed);
+    if (Array.isArray(u.data)) setContacts(Object.fromEntries((u.data as Contact[]).map((c) => [c.opportunity_id, c])));
   }, []);
+
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  const unlock = async (id: number) => {
+    setBusy(id);
+    setErrors((e) => ({ ...e, [id]: '' }));
+    const { data, error } = await supabase.rpc('unlock_opportunity', { p_opportunity_id: id });
+    setBusy(null);
+    if (error) {
+      const m = error.message || '';
+      const msg = m.includes('insufficient_credits')
+        ? 'Not enough credits. Buy credits to unlock this lead.'
+        : m.includes('contact_not_available')
+          ? 'Contact details for this lead are not available yet. You have not been charged.'
+          : 'Something went wrong. You have not been charged. Please try again.';
+      if (m.includes('insufficient_credits')) setShowBuy(true);
+      setErrors((e) => ({ ...e, [id]: msg }));
+      return;
+    }
+    const row = data as Contact & { balance: number };
+    setContacts((prev) => ({ ...prev, [id]: row }));
+    setBalance(row.balance);
+  };
 
   const keyOf = (o: (typeof OPPORTUNITIES)[number]) => (o.kind === 'web' ? o.state.replace(' (verify)', '') : o.group);
   const ofKind = useMemo(() => OPPORTUNITIES.filter((o) => o.kind === kind), [kind]);
   const states = useMemo(() => ['All', ...Array.from(new Set(ofKind.map(keyOf)))], [ofKind]);
   const shown = ofKind.filter((o) => state === 'All' || keyOf(o) === state);
   const count = (k: Kind) => OPPORTUNITIES.filter((o) => o.kind === k).length;
-
-  const toggle = (id: number) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
 
   return (
     <AccountShell
@@ -97,11 +125,41 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
           </div>
 
           <div className="sm-main">
+            <div className="sm-card" style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <strong>Credits: {balance === null ? '…' : balance}</strong>
+                <span className="sm-side-hint" style={{ margin: 0 }}>1 credit = 1 USD. Credits do not reset each month.</span>
+                <button type="button" className="sm-btn sm-btn-primary" style={{ marginLeft: 'auto' }} onClick={() => setShowBuy((v) => !v)}>
+                  Buy credits
+                </button>
+              </div>
+              {showBuy && (
+                <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+                  <div className="sm-examples">
+                    {CREDIT_PACKS.map((n) => {
+                      const rand = Math.ceil(n * rate);
+                      return (
+                        <a key={n} className="sm-btn sm-btn-ghost" href={`${YOCO_LINK}${rand}`} target="_blank" rel="noreferrer">
+                          {n} credits · R{rand.toLocaleString('en-ZA')}
+                        </a>
+                      );
+                    })}
+                  </div>
+                  <span className="sm-side-hint" style={{ margin: 0 }}>
+                    Prices are converted to rand at R{rate.toFixed(2)} per credit. Pay with the same email you signed up with.
+                    Credits are added to your account once your payment is confirmed.
+                  </span>
+                  <button type="button" className="sm-btn sm-btn-ghost" style={{ justifySelf: 'start' }} onClick={loadAll}>
+                    I have paid, refresh my balance
+                  </button>
+                </div>
+              )}
+            </div>
             <p className="sm-main-label">{shown.length} opportunities</p>
             <ol className="sm-results" style={{ minHeight: 0 }}>
               {shown.map((o) => {
                 const c = contacts[o.id];
-                const isOpen = open.has(o.id);
+                const price = prices[o.group];
                 return (
                   <li key={o.id} className="sm-card">
                     <div className="sm-card-head">
@@ -121,7 +179,7 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
                     </div>
 
                     <div className="sm-contact">
-                      {isOpen && c ? (
+                      {c ? (
                         <div style={{ display: 'grid', gap: 4, width: '100%' }}>
                           {c.contact_name && <strong>{c.contact_name}</strong>}
                           {c.email && c.email.includes('@') ? (
@@ -147,11 +205,18 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
                             type="button"
                             className="sm-btn sm-btn-primary"
                             style={{ marginLeft: 'auto' }}
-                            disabled={!c}
-                            onClick={() => toggle(o.id)}
+                            disabled={busy === o.id || price === undefined}
+                            onClick={() => unlock(o.id)}
                           >
-                            {c ? 'View contact details' : failed ? 'Unavailable' : 'Loading…'}
+                            {busy === o.id
+                              ? 'Unlocking…'
+                              : price === undefined
+                                ? 'View contact details'
+                                : `View contact details · ${plural(price)}`}
                           </button>
+                          {errors[o.id] && (
+                            <span style={{ flexBasis: '100%', fontSize: 13 }} role="alert">{errors[o.id]}</span>
+                          )}
                         </>
                       )}
                     </div>
@@ -163,7 +228,7 @@ export default function OpportunitiesHub({ handleLogout }: { handleLogout: () =>
         </div>
 
         <div className="sm-foot">
-          <p>Signed in. Contact details unlock on each card.</p>
+          <p>Signed in. Pay per lead with credits: unlock only the contacts you want.</p>
           <Link to="/" className="sm-btn sm-btn-ghost">Back to home</Link>
         </div>
       </div>
